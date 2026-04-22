@@ -1,0 +1,17 @@
+# Phase S2 tool allowlist — 落地计划 §6.4
+# extends: global → check-allowlist.sh s2 会先校验 global + deny 再校验本文件的 extends 字段
+extends: global
+
+additional_tools:
+  - { name: spring-boot,            version: "=3.2.5" }
+  - { name: spring-cloud-gateway,   version: ">=4.1,<4.2" }
+  - { name: resilience4j,           version: ">=2.2,<3" }
+  - { name: nimbus-jose-jwt,        version: ">=9,<10" }
+  - { name: springdoc-openapi,      version: ">=2.3,<3" }
+  - { name: testcontainers,         version: ">=1.19,<2" }
+
+additional_deny:
+  - { pattern: "spring-boot-starter-oauth2-resource-server", reason: "本项目选自研 JwtAuthFilter · 禁止混用 OAuth2 Resource Server" }
+  - { pattern: "HS256",                                      reason: "JWT 必须 RS256 · 见 §6.2" }
+  - { pattern: "debug:\\s*true",                             reason: "application.yml 禁止 debug=true" }
+  - { pattern: "(password|secret|token):\\s*[^$\\s].*",      reason: "secrets 必须用 ${XXX:} 占位 · 禁明文" }

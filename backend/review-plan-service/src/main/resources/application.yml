@@ -1,8 +1,27 @@
+# review-plan-service · 落地计划 §6.7 Step 11
 server:
   port: 8083
 
 spring:
   application:
     name: review-plan-service
-  main:
-    web-application-type: none
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/review_plan}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [health, info, prometheus]
+  endpoint:
+    health:
+      probes:
+        enabled: true
