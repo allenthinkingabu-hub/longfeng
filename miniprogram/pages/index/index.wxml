@@ -1,0 +1,34 @@
+<view class="container">
+  <!-- 上传按钮 -->
+  <view class="upload-card" bindtap="chooseAndUpload">
+    <image class="upload-icon" src="/assets/camera.svg" mode="aspectFit" />
+    <text class="upload-text">拍照 / 选择错题图片</text>
+    <text class="upload-sub">AI 自动识别并分析错误原因</text>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="section-title" wx:if="{{questions.length > 0}}">
+    历史错题 ({{questions.length}})
+  </view>
+
+  <view wx:if="{{questions.length === 0}}" class="empty-tip">
+    <text>暂无错题记录，点击上方上传第一张错题吧</text>
+  </view>
+
+  <view class="question-list">
+    <view
+      class="question-item"
+      wx:for="{{questions}}"
+      wx:key="id"
+      bindtap="goDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="item-left">
+        <view class="subject-tag">{{item.subject || '未知学科'}}</view>
+        <text class="question-preview">{{item.questionText || '（题目识别中...）'}}</text>
+        <text class="item-meta">{{item.knowledgePoint}} · {{item.difficulty}}</text>
+      </view>
+      <view class="item-arrow">›</view>
+    </view>
+  </view>
+</view>

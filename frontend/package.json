@@ -1,0 +1,16 @@
+{
+  "name": "longfeng-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Longfeng frontend monorepo · pnpm workspace · S0 skeleton",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,21 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/h5: {}
+
+  apps/miniapp: {}
+
+  packages/api-contracts: {}
+
+  packages/shared-logic: {}
+
+  packages/telemetry: {}
+
+  packages/ui-kit: {}

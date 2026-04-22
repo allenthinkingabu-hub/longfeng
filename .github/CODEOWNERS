@@ -1,0 +1,38 @@
+# CODEOWNERS — 落地计划 §3.4
+# 格式：<path-pattern>  @team-or-user
+
+# backend
+/backend/wrongbook-service/         @backend-team
+/backend/ai-analysis-service/       @backend-team @ai-team
+/backend/review-plan-service/       @backend-team
+/backend/file-service/              @backend-team
+/backend/anonymous-service/         @backend-team @security-team
+/backend/gateway/                   @platform-team
+/backend/common/                    @backend-team
+/backend/pom.xml                    @platform-team
+/backend/checkstyle.xml             @platform-team
+
+# frontend
+/frontend/apps/h5/                  @frontend-team
+/frontend/apps/miniapp/             @miniapp-team
+/frontend/packages/api-contracts/   @backend-team @frontend-team
+/frontend/packages/ui-kit/          @design-team @frontend-team
+/frontend/packages/shared-logic/    @frontend-team
+/frontend/packages/telemetry/       @frontend-team @platform-team
+
+# infra / deployment
+/helm/                              @sre-team
+/infra/                             @sre-team
+/.github/workflows/                 @platform-team
+/ops/scripts/                       @platform-team @sre-team
+
+# docs / plan / spec
+/design/                            @architect-team
+/design-system/                     @design-team
+/docs/adr/                          @architect-team
+/docs/allowlist/                    @platform-team @security-team
+/docs/ACCEPTANCE_REPORT_TEMPLATE.md @qa-team
+
+# state / continuity
+/state/                             @platform-team
+/logs/                              @platform-team

@@ -1,0 +1,29 @@
+=== JDK ===
+openjdk version "25" 2025-09-16
+OpenJDK Runtime Environment (build 25+36-3489)
+OpenJDK 64-Bit Server VM (build 25+36-3489, mixed mode, sharing)
+=== Maven ===
+Apache Maven 3.9.15 (98b2cdbfdb5f1ac8781f537ea9acccaed7922349)
+Maven home: /opt/homebrew/Cellar/maven/3.9.15/libexec
+Java version: 25.0.2, vendor: Homebrew, runtime: /opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home
+Default locale: en_AU, platform encoding: UTF-8
+OS name: "mac os x", version: "26.3", arch: "aarch64", family: "mac"
+=== Docker ===
+Docker version 29.2.1, build a5c7197
+=== Compose ===
+Docker Compose version v5.1.0
+=== kubectl ===
+clientVersion:
+  buildDate: "2026-04-15T18:01:22Z"
+  compiler: gc
+  gitCommit: 7b8c6cf0edd376b3d7c2f255142977c7f93db258
+  gitTreeState: clean
+  gitVersion: v1.35.4
+  goVersion: go1.26.2
+  major: "1"
+  minor: "35"
+  platform: darwin/arm64
+kustomizeVersion: v5.7.1
+
+=== Git ===
+git version 2.51.0

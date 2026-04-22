@@ -1,0 +1,11 @@
+apiVersion: v2
+name: umbrella
+description: S0 skeleton umbrella chart · wraps 6 service charts
+type: application
+version: 0.0.1
+appVersion: "0.0.1"
+dependencies:
+  # Populated in Phase S10 · entries will reference local subcharts
+  # - name: gateway            version: 0.0.1 repository: "file://../gateway"
+  # - name: wrongbook-service  version: 0.0.1 repository: "file://../wrongbook-service"
+  # ...etc

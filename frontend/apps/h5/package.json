@@ -1,0 +1,13 @@
+{
+  "name": "@longfeng/h5",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S0 skeleton · Vite 5 + React 18 + Konsta UI (iOS-style) · real app in Phase S7",
+  "scripts": {
+    "build": "echo \"[h5] skeleton build noop\"",
+    "dev": "echo \"[h5] skeleton dev noop\"",
+    "test": "echo \"[h5] skeleton test noop\"",
+    "lint": "echo \"[h5] skeleton lint noop\"",
+    "typecheck": "echo \"[h5] skeleton typecheck noop\""
+  }
+}

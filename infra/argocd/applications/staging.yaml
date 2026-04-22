@@ -1,0 +1,31 @@
+# S0 skeleton · ArgoCD Application for staging
+# Real sync + auto-rollback wired in Phase S10
+# source.repoURL needs to be set once user provides Git URL
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longfeng-staging
+  namespace: argocd
+  labels:
+    env: staging
+    app: longfeng
+spec:
+  project: longfeng
+  source:
+    repoURL: "PLACEHOLDER_GIT_URL"
+    path: helm/umbrella
+    targetRevision: main
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-staging.yaml   # populated in S10
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longfeng-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

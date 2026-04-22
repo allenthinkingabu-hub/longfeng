@@ -1,0 +1,29 @@
+# S0 skeleton · ArgoCD Application for prod
+# Real sync gated by release-v* tag in Phase S10
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longfeng-prod
+  namespace: argocd
+  labels:
+    env: prod
+    app: longfeng
+spec:
+  project: longfeng
+  source:
+    repoURL: "PLACEHOLDER_GIT_URL"
+    path: helm/umbrella
+    # Prod tracks tagged releases only — manual promote via gh release
+    targetRevision: release-v1.0.0
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml    # populated in S10
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longfeng-prod
+  syncPolicy:
+    automated: null
+    syncOptions:
+      - CreateNamespace=true

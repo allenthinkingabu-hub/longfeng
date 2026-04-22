@@ -1,0 +1,64 @@
+# Global deny list — 落地计划 §1.6 规则 B
+# 任何 Phase 均不得出现下列工具 / 模式
+# check-allowlist.sh 扫描 deny_patterns 和 deny_tools，命中即 exit 1
+
+deny_tools:
+  # Design GUI (Code-as-Design 决策 · Sd 备忘 §4)
+  - { name: figma,       reason: "Code-as-Design 决策禁用 · Sd 备忘 §4" }
+  - { name: sketch,      reason: "Code-as-Design 决策禁用" }
+  - { name: adobe-xd,    reason: "Code-as-Design 决策禁用" }
+  - { name: invision,    reason: "Code-as-Design 决策禁用" }
+
+  # API testing GUI
+  - { name: postman-gui, reason: "API 测试必须代码化（curl/httpx/playwright）" }
+  - { name: insomnia-gui, reason: "API 测试必须代码化" }
+
+  # CI / other obsolete
+  - { name: jenkins,     reason: "CI 统一 GitHub Actions · §17" }
+
+  # Netflix OSS (ADR 0003 / 0004 / 0007)
+  - { name: eureka,      reason: "ADR 0003 · Nacos 取代" }
+  - { name: hystrix,     reason: "ADR 0004 · Sentinel 取代" }
+  - { name: ribbon,      reason: "ADR 0004 · Spring Cloud LoadBalancer 取代" }
+  - { name: zuul,        reason: "ADR 0007 · Spring Cloud Gateway 取代" }
+  - { name: archaius,    reason: "ADR 0009 · Micrometer 取代" }
+  - { name: turbine,     reason: "ADR 0009 · Sentinel Dashboard 取代" }
+
+  # Persistence (ADR 0006)
+  - { name: mybatis,     reason: "ADR 0006 · JPA+QueryDSL 唯一持久层" }
+  - { name: mybatis-plus,reason: "ADR 0006" }
+
+  # Distributed transaction (ADR 0002)
+  - { name: seata,       reason: "ADR 0002 · Outbox + RocketMQ 事务消息" }
+
+  # AI (ADR 0008)
+  - { name: langchain4j, reason: "ADR 0008 · Spring AI 唯一方案" }
+
+deny_patterns:
+  # Container tags
+  - { pattern: "image:[^[:space:]]*:latest([[:space:]]|$)", reason: "禁止 latest tag · §19 安全基线" }
+
+  # Tailwind arbitrary values (Sd Token-First)
+  - { pattern: "w-\\[[0-9]+px\\]",  reason: "Tailwind arbitrary values 禁用 · Sd 决策备忘 §4" }
+  - { pattern: "h-\\[[0-9]+px\\]",  reason: "Tailwind arbitrary values 禁用" }
+
+  # CI bypass
+  - { pattern: "skipTests=true",    reason: "跳过测试禁用 · §1.4 第 7 条" }
+  - { pattern: "-DskipTests=true",  reason: "跳过测试禁用" }
+  - { pattern: "--no-verify",       reason: "跳过 pre-commit hook 禁用" }
+
+  # Privilege escalation (must not appear in scripts committed to Git)
+  - { pattern: "^sudo[[:space:]]",  reason: "Agent 永不提权 · §1.6 规则 B" }
+
+  # Legacy Spring Cloud Netflix annotations
+  - { pattern: "@EnableEurekaClient",  reason: "ADR 0003 · 禁用 Eureka" }
+  - { pattern: "@HystrixCommand",      reason: "ADR 0004 · 禁用 Hystrix" }
+  - { pattern: "@GlobalTransactional", reason: "ADR 0002 · 禁用 Seata" }
+
+  # MyBatis annotations
+  - { pattern: "@MapperScan",   reason: "ADR 0006 · 禁用 MyBatis" }
+  - { pattern: "BaseMapper<",   reason: "ADR 0006 · 禁用 MyBatis-Plus" }
+
+  # Direct LLM API calls (must go through Spring AI)
+  - { pattern: "new RestTemplate\\(\\)[^;]*openai",      reason: "ADR 0008 · 必须走 Spring AI ChatClient" }
+  - { pattern: "new RestTemplate\\(\\)[^;]*dashscope",   reason: "ADR 0008 · 必须走 Spring AI ChatClient" }

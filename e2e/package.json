@@ -1,0 +1,10 @@
+{
+  "name": "@longfeng/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright E2E test root · SC-01..SC-15 · real suites in Phase S9",
+  "scripts": {
+    "test": "echo \"[e2e] skeleton test noop (Phase S9)\"",
+    "smoke": "echo \"[e2e] skeleton smoke noop (Phase S9)\""
+  }
+}

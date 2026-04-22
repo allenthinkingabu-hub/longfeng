@@ -1,0 +1,198 @@
+# Sd phase inter-task contracts — path + sha256 + exposed symbols.
+# Created during sd-t03 because the file was absent at Sd start.
+# Every edge records: upstream → downstream, the exact artifact set, and what
+# symbols / selectors the downstream is expected to consume.
+
+version: 1
+phase: sd
+updated_at: "2026-04-22T22:00:00Z"
+
+edges:
+
+  - from: sd-t02-tokens-from-apple-design-md
+    to:   sd-t03-style-dictionary-transpile
+    artifacts:
+      - path: design/system/tokens/color.json
+        sha256: eed7b6832cb6a0c5fc0b6635aced6c98f1b31a5c1244e3c9602133e47ab440cf
+      - path: design/system/tokens/typography.json
+        sha256: 1c31a7e4b316eeb71aabcb45fc119aea68c2ac6f9321a956e02e6d36cc26ae7e
+      - path: design/system/tokens/spacing.json
+        sha256: 6280bc138d3303015145f0bdcc4cb30e8de0c1c5902d4493c73c80506e1e1a69
+      - path: design/system/tokens/radius.json
+        sha256: 296ef3a4aa43ae3fbc70b950f9e7808d8b27941e932a4dd9864a2e94a101ef7e
+      - path: design/system/tokens/shadow.json
+        sha256: bfe088a7683ed809f8a777154b953f2c6a36c735345a070567f967762ac6d74d
+      - path: design/system/tokens/motion.json
+        sha256: 95d4a43ccad8b8734ec50ad58bddc69e90a450147ae4bbeaf02133d274ba178a
+    contract:
+      format: "classic SD (value + type); root wraps all tokens under `tkn`; $metadata / _meta are non-token metadata."
+      required_fields:
+        - "color.json._meta.platform_overrides.wechat.saturation_delta (number)"
+        - "shadow.*.wechat_override (optional string, full shadow shorthand)"
+      naming: "path derives CSS var as --tkn-<group>-<name>-<variant>, kebab-cased"
+
+  - from: sd-t03-style-dictionary-transpile
+    to:   sd-t04-components-base
+    artifacts:
+      - path: frontend/packages/ui-kit/build-tokens.mjs
+        sha256: 73c3519e5a4cebe35d44fd8ab3d1a7da06995391c3f8bd0dd28a7b15d6d5e62e
+        role: build-script
+      - path: frontend/packages/ui-kit/src/tokens.css
+        sha256: ec9f10d631d1a643f443428478144a27a00f48865579bb5be71777ecb8bdcb4b
+        role: h5-css-variables
+        selector: ":root"
+        var_count: 150
+        consumers: ["@lf/ui-kit H5 (Vite + Konsta UI)"]
+      - path: frontend/packages/ui-kit/src/tokens.wxss
+        sha256: 37e29f71fcb652e79e70b97139983557f5dd733a22de48f0cd5f84fede6d4b0d
+        role: miniprogram-wxss-variables
+        selector: "page"
+        var_count: 150
+        transforms_applied:
+          - "color/wechat-saturation-boost (delta=+12, clamp 0..100)"
+          - "shadow/wechat-override (uses shadow.*.wechat_override when present)"
+        consumers: ["@lf/ui-kit WeChat miniprogram (Vant Weapp)"]
+      - path: frontend/packages/ui-kit/src/tokens.ts
+        sha256: 9da3b4498d3f0f5466b37ac30aa2777444ba4aad10b3562eed6977c5ff19a88f
+        role: typed-constants
+        exports: [tkn, Tkn]
+        top_level_groups: [color, subject, motion, radius, shadow, spacing, font, type]
+        consumers: ["@lf/ui-kit React 18 components"]
+    contract:
+      import_examples:
+        - 'import { tkn, type Tkn } from "@lf/ui-kit/src/tokens";'
+        - '@import "@lf/ui-kit/src/tokens.css"; /* H5 app root */'
+        - '@import "@lf/ui-kit/src/tokens.wxss"; /* app.wxss for miniprogram */'
+      invariants:
+        - "tokens.css and tokens.wxss MUST have identical variable name sets; only color/shadow values differ."
+        - "tokens.ts values always match tokens.css values (wxss is platform-only override)."
+        - "Consumers MUST NOT invent new color tokens — extend tokens/*.json upstream instead."
+
+# -----------------------------------------------------------------------------
+# S1 DDL interfaces · 落地计划 §1.8 规则 C · 跨 Phase 契约登记
+# provided_by: s1 · kind: ddl · downstream S2/S3/S4/S5/S7/S8/S11 必须经此契约读 DDL
+# 每条 path + sha256(dev baseline) + 暴露符号（表名）
+# -----------------------------------------------------------------------------
+interfaces:
+  - provided_by: s1
+    kind: ddl-group
+    description: "Flyway V1.0.* migrations · pgvector 1024-dim · 21 public tables · 落地计划 §5.6"
+    path: backend/common/src/main/resources/db/migration
+    frozen_at: "2026-04-22T06:35:00Z"
+
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.001__extension_pgvector.sql
+    sha256: 5e36c080b01ee771a1d700bc7737d1a6dd200cf68af978ce810546d3939cea26
+    symbols: ["EXTENSION vector", "EXTENSION pgcrypto"]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.002__user_account.sql
+    sha256: aa13a3985581537280d20e78ade999bbf81ab78824ab3e7abe669a43f161becc
+    symbols: [user_account]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.003__calendar_node.sql
+    sha256: 51fa60edaab1031c2fc5fdfa2dac7c0c4c3b81fa70a4acd90d39e5e0aea21f6d
+    symbols: [calendar_node]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.005__user_settings.sql
+    sha256: 213608a5337b173df827ce8e239e34815567270ffdf3ddd78e80493a6939763f
+    symbols: [user_settings]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.010__wrong_item.sql
+    sha256: 452e4122f8f1fb5028464607ee21731742ed30f6eb522e50456ca79d0265c204
+    symbols: [wrong_item, idx_wrong_item_embedding]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.011__wrong_item_tag.sql
+    sha256: 7ed992a10dc01360453e31dd2d4c0ed60a5e76049ed114933a03e4c8450a7c94
+    symbols: [wrong_item_tag]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.012__wrong_item_analysis.sql
+    sha256: 91e8a99b29ea5980fc439867c551bff62b57af877f8b892a34486d9dd57b7383
+    symbols: [wrong_item_analysis]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.013__wrong_item_image.sql
+    sha256: 7eafaa1847ce0fe320f3756f099cd23c2f17423874a45bb85d9dd9a46cdcbd31
+    symbols: [wrong_item_image]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.014__tag_taxonomy.sql
+    sha256: a9249294dd64e0c76b8f06408d89a214e97c9a3a30cbafdfbe196725d7cf6e5b
+    symbols: [tag_taxonomy]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.016__review_plan.sql
+    sha256: 8184a871864b4766dfa006eb158a2ec40176ab319aaa3d0bd9e06a62788fefed
+    symbols: [review_plan]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.018__review_event.sql
+    sha256: a5aa664c65e0eaa3a82c0aa2c4b779dc20bbc3ce2a4f88e02922e4e44e8d7a7c
+    symbols: [review_event]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.030__guest_session.sql
+    sha256: 0780c6b9af5cbe4596831040e99650180048a6066c599701df4208abb7e769cc
+    symbols: [guest_session]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.031__guest_consent.sql
+    sha256: cbb15eea627e2faf5cc54e245ad71ee27c667ad60785f356dab849afd19b5c50
+    symbols: [guest_consent]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.032__guest_quota.sql
+    sha256: 352177bef1a3feac981ffd9eba21dee5e2c4ebe859828384c0c8cc392951f442
+    symbols: [guest_quota]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.033__guest_wrong_item.sql
+    sha256: 73169a0616c1839caeeaf8dd1b680c73a472a5dbcc31b966b76dbdbdbc201ba8
+    symbols: [guest_wrong_item]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.034__share_card.sql
+    sha256: 736e21f7192dd3298c52ed70e86b5c94afb3204c9cb67eec69ceb801dc206a74
+    symbols: [share_card]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.035__share_access_log.sql
+    sha256: 1ac20cd1ba404305cb6fd6ab951d1ffed4c87bc77c3b1af88d4261b6bb75ba46
+    symbols: [share_access_log]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.036__observer_session.sql
+    sha256: ee47c8032fac7feb58a8b28fdd2e30b527cba3772a267b24cd7074daac432701
+    symbols: [observer_session]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.037__observer_grant.sql
+    sha256: 791e3a33c5eb2e63a36bb41bf352caa89de498144e6fbcc4b37ee9fbdba84c65
+    symbols: [observer_grant]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.050__audit_log.sql
+    sha256: 3213819275c6b9babbde692217547849b60ecc3ff08de05000544e584a43b123
+    symbols: [audit_log]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.051__quota_bucket.sql
+    sha256: a7c2c387c380e7e20ae4079283e9491c1e3b6223fba05c1d27190f7b5e1b59e3
+    symbols: [quota_bucket]
+  - provided_by: s1
+    kind: ddl
+    path: backend/common/src/main/resources/db/migration/V1.0.052__idem_key.sql
+    sha256: 3462d9d58bfbf7ff946eb51212a2cb49de4cf4de5d9f86a32fa85d3caedb4268
+    symbols: [idem_key]
+
+  - provided_by: s1
+    kind: arch-doc
+    path: design/arch/s1-data.md
+    exempt: true
+    exempt_reason: "B 级 · DDL 即数据架构 · 落地计划 §5.2"
