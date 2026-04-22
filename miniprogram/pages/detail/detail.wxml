@@ -1,0 +1,61 @@
+<view class="container">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-box">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:elif="{{error}}" class="error-box">
+    <text class="error-text">{{error}}</text>
+  </view>
+
+  <!-- 详情内容 -->
+  <block wx:elif="{{question}}">
+    <!-- 原题图片 -->
+    <view class="image-section" bindtap="previewImage">
+      <image
+        class="question-image"
+        src="{{question.imageUrl}}"
+        mode="widthFix"
+        show-menu-by-longpress="true"
+      />
+      <text class="image-hint">点击查看大图</text>
+    </view>
+
+    <!-- 学科 + 难度 -->
+    <view class="tags-row">
+      <view class="tag tag-subject">{{question.subject || '未知学科'}}</view>
+      <view class="tag tag-difficulty">{{question.difficulty || '未知难度'}}</view>
+    </view>
+
+    <!-- 知识点 -->
+    <view class="card" wx:if="{{question.knowledgePoint}}">
+      <text class="card-label">知识点</text>
+      <text class="card-content">{{question.knowledgePoint}}</text>
+    </view>
+
+    <!-- 题目原文 -->
+    <view class="card" wx:if="{{question.questionText}}">
+      <text class="card-label">题目</text>
+      <text class="card-content">{{question.questionText}}</text>
+    </view>
+
+    <!-- 错误答案 -->
+    <view class="card card-wrong" wx:if="{{question.wrongAnswer}}">
+      <text class="card-label">错误答案</text>
+      <text class="card-content wrong-text">{{question.wrongAnswer}}</text>
+    </view>
+
+    <!-- 正确答案 -->
+    <view class="card card-correct" wx:if="{{question.correctAnswer}}">
+      <text class="card-label">正确答案</text>
+      <text class="card-content correct-text">{{question.correctAnswer}}</text>
+    </view>
+
+    <!-- 详细解析 -->
+    <view class="card" wx:if="{{question.analysis}}">
+      <text class="card-label">解题分析</text>
+      <text class="card-content analysis-text">{{question.analysis}}</text>
+    </view>
+  </block>
+</view>

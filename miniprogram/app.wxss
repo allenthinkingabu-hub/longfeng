@@ -1,0 +1,8 @@
+page {
+  background-color: #f5f5f5;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+.container {
+  padding: 20rpx;
+}

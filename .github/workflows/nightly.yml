@@ -1,0 +1,17 @@
+name: nightly
+
+on:
+  schedule:
+    # Every day at 18:00 UTC = 02:00 CST
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+# 占位 · S9 Phase 补齐全量 E2E (Playwright × 15 SC)
+jobs:
+  nightly-placeholder:
+    name: nightly-placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "Nightly full E2E pipeline will be populated in Phase S9."

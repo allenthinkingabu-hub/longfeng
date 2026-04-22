@@ -1,0 +1,115 @@
+.container {
+  padding: 24rpx;
+  padding-bottom: 60rpx;
+}
+
+.loading-box, .error-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 28rpx;
+}
+
+.image-section {
+  background: #000;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  position: relative;
+}
+
+.question-image {
+  width: 100%;
+  display: block;
+}
+
+.image-hint {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 22rpx;
+  padding: 8rpx 16rpx;
+  border-top-left-radius: 12rpx;
+}
+
+.tags-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.tag {
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+}
+
+.tag-subject {
+  background: #EBF4FF;
+  color: #4A90D9;
+}
+
+.tag-difficulty {
+  background: #FFF4E6;
+  color: #E67E22;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-wrong {
+  border-left: 6rpx solid #e74c3c;
+}
+
+.card-correct {
+  border-left: 6rpx solid #27ae60;
+}
+
+.card-label {
+  display: block;
+  font-size: 22rpx;
+  color: #aaa;
+  margin-bottom: 10rpx;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+.card-content {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.wrong-text {
+  color: #e74c3c;
+}
+
+.correct-text {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.analysis-text {
+  color: #444;
+  line-height: 1.8;
+}

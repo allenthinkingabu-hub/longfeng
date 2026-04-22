@@ -1,0 +1,9 @@
+# S0 skeleton values · real config in Phase S10
+image:
+  repository: placeholder-harbor/longfeng/ai-analysis-service
+  tag: "0.0.1"      # never use 'latest' — §1.6 deny_patterns
+  pullPolicy: IfNotPresent
+replicaCount: 1
+service:
+  type: ClusterIP
+  port: 8080

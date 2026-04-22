@@ -1,0 +1,14 @@
+{
+  "name": "@longfeng/telemetry",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S0 skeleton · Sentry + OTEL Web SDK wrappers for H5 and miniapp",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"[telemetry] skeleton build noop\"",
+    "test": "echo \"[telemetry] skeleton test noop\"",
+    "lint": "echo \"[telemetry] skeleton lint noop\"",
+    "typecheck": "echo \"[telemetry] skeleton typecheck noop\""
+  }
+}

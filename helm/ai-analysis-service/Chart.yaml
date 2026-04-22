@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ai-analysis-service
+description: S0 skeleton chart · populated in Phase S10
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

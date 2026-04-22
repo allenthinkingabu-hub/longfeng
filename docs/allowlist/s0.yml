@@ -1,0 +1,11 @@
+# Phase S0 tool allowlist — 落地计划 §4.4
+# 扩展基于 global.yml · 本 Phase 额外允许的工具放 additional_tools
+# check-allowlist.sh s0 读取 global + s0 合并
+
+extends: global
+additional_tools:
+  - { name: yq, version: ">=4", purpose: "YAML CLI（S0 白名单脚本实现依赖）" }
+  - { name: jq, version: ">=1.7", purpose: "JSON CLI" }
+  - { name: rsync, version: ">=3", purpose: "S0 Phase 内部迁移场景" }
+
+additional_deny: []

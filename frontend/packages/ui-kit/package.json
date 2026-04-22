@@ -1,0 +1,14 @@
+{
+  "name": "@longfeng/ui-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S0 skeleton · Sd-driven component library · tokens + components populated in Phase Sd",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo \"[ui-kit] skeleton build noop (Phase Sd)\"",
+    "test": "echo \"[ui-kit] skeleton test noop\"",
+    "lint": "echo \"[ui-kit] skeleton lint noop\"",
+    "typecheck": "echo \"[ui-kit] skeleton typecheck noop\""
+  }
+}

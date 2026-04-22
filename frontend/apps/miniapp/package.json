@@ -1,0 +1,12 @@
+{
+  "name": "@longfeng/miniapp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S0 skeleton · 原生 WeChat 小程序 + Vant Weapp · real app in Phase S7",
+  "scripts": {
+    "build": "echo \"[miniapp] skeleton build noop\"",
+    "test": "echo \"[miniapp] skeleton test noop\"",
+    "lint": "echo \"[miniapp] skeleton lint noop\"",
+    "typecheck": "echo \"[miniapp] skeleton typecheck noop\""
+  }
+}

@@ -1,0 +1,60 @@
+# Global tool allowlist — 落地计划 §1.3 YAML 化
+# 规则 A · 层级：全局白名单 + Phase 白名单 + 禁止清单
+# 每条含 name / version / purpose
+
+tools:
+  # Core toolchain
+  - { name: git,     version: ">=2.40", purpose: "版本管理" }
+  - { name: bash,    version: ">=5",    purpose: "Shell" }
+  - { name: mvn,     version: ">=3.9",  purpose: "后端构建 Maven" }
+  - { name: node,    version: ">=20",   purpose: "前端运行时 · Node LTS 基线（本地可 25）" }
+  - { name: pnpm,    version: ">=9",    purpose: "前端包管理 workspace" }
+  - { name: docker,  version: ">=24",   purpose: "容器化" }
+  - { name: kubectl, version: ">=1.28", purpose: "集群操作" }
+  - { name: helm,    version: ">=3.13", purpose: "Chart 管理" }
+  - { name: argocd,  version: ">=2.9",  purpose: "GitOps 部署" }
+  - { name: yq,      version: ">=4",    purpose: "YAML CLI 处理" }
+  - { name: jq,      version: ">=1.7",  purpose: "JSON CLI 处理" }
+
+  # Backend stack (Alibaba family + Spring AI)
+  - { name: spring-boot,           version: "3.2.5",     purpose: "后端运行时" }
+  - { name: spring-cloud,          version: "2023.0.1",  purpose: "微服务编排" }
+  - { name: spring-cloud-alibaba,  version: "2023.0.1.0",purpose: "Nacos/Sentinel/RocketMQ" }
+  - { name: spring-ai,             version: "1.0.0-M1",  purpose: "LLM 抽象" }
+  - { name: hibernate,             version: "6",         purpose: "JPA 实现" }
+  - { name: querydsl,              version: "5.0.0",     purpose: "类型安全 Query" }
+  - { name: flyway,                version: ">=10",      purpose: "DB migration" }
+  - { name: rocketmq-spring,       version: "5.1",       purpose: "MQ" }
+  - { name: sentinel,              version: "1.8.8",     purpose: "流控/熔断" }
+  - { name: xxl-job,               version: "2.4",       purpose: "调度" }
+
+  # Data layer
+  - { name: postgresql, version: "16",  purpose: "关系库" }
+  - { name: pgvector,   version: "0.6", purpose: "向量扩展" }
+  - { name: redis,      version: "7",   purpose: "缓存 + Bloom" }
+  - { name: nacos,      version: "2.3", purpose: "注册配置中心" }
+
+  # Frontend / Design
+  - { name: vite,             version: "5",  purpose: "H5 构建" }
+  - { name: react,            version: "18", purpose: "H5 UI 框架" }
+  - { name: konsta-ui,        version: "3",  purpose: "H5 iOS 风格组件库" }
+  - { name: style-dictionary, version: "4",  purpose: "Design Token 转译" }
+  - { name: storybook,        version: "8",  purpose: "组件目录" }
+  - { name: "@axe-core/cli",  version: "4",  purpose: "A11y 扫描" }
+  - { name: chromatic,        version: "2024", purpose: "视觉回归" }
+  - { name: mermaid,          version: "11", purpose: "流程图" }
+  - { name: svgo,             version: "3",  purpose: "SVG 优化" }
+  - { name: i18next,          version: "23", purpose: "国际化" }
+  - { name: eslint-plugin-i18next, version: "6", purpose: "禁止硬编码中文" }
+
+  # Test
+  - { name: playwright, version: "1.42", purpose: "E2E 自动化" }
+
+  # Observability
+  - { name: micrometer, version: ">=1.12", purpose: "Metrics SDK" }
+  - { name: otel,       version: ">=1.35", purpose: "OpenTelemetry 追踪" }
+  - { name: prometheus, version: "latest-stable", purpose: "指标采集" }
+  - { name: grafana,    version: "latest-stable", purpose: "可视化" }
+  - { name: sentry,     version: "latest-stable", purpose: "错误追踪" }
+  - { name: loki,       version: "latest-stable", purpose: "日志" }
+  - { name: tempo,      version: "latest-stable", purpose: "分布式追踪" }

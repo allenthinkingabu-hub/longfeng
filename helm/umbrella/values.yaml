@@ -1,0 +1,4 @@
+# S0 skeleton umbrella values · real cross-service config in Phase S10
+global:
+  imageRegistry: placeholder-harbor
+  imageTag: "0.0.1"

@@ -1,0 +1,16 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'release-v*'
+
+# 占位 · S10 Phase 补齐蓝绿部署 + 自动回滚
+jobs:
+  release-placeholder:
+    name: release-placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "Release pipeline (blue/green + ArgoCD sync) will be populated in Phase S10."

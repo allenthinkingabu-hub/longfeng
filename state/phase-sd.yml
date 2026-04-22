@@ -1,0 +1,90 @@
+phase_id: sd
+run_id: "20260422-180000"
+updated_at: "2026-04-22T22:00:00Z"
+upstream_tags_verified: [s0-done]
+design_gate:
+  biz_gate: exempt   # Sd 豁免 Design Gate（§1.5 C 级豁免）
+  arch_gate: exempt
+tasks:
+  - id: sd-t02-tokens-from-apple-design-md
+    status: done
+    started_at: "2026-04-22T18:00:00Z"
+    finished_at: "2026-04-22T19:30:00Z"
+    attempt: 1
+    outputs:
+      - design-system/MASTER.md
+      - design-system/apple-base.decision.md
+      - design/system/tokens/color.json
+      - design/system/tokens/typography.json
+      - design/system/tokens/spacing.json
+      - design/system/tokens/radius.json
+      - design/system/tokens/shadow.json
+      - design/system/tokens/motion.json
+      - design/system/tokens/README.md
+      - design/system/components.md
+    outputs_hash:
+      design-system/MASTER.md: "sha256:10fb3a8a956a087763394c591b82cb9d6aa7d3c894cd5eae8d444088e5fae46c"
+      design-system/apple-base.decision.md: "sha256:ca9ece869dade7c6b5578d36e13d42de65b9a3e361ac86c5aa8ea95c149877f3"
+      design/system/tokens/color.json: "sha256:eed7b6832cb6a0c5fc0b6635aced6c98f1b31a5c1244e3c9602133e47ab440cf"
+      design/system/tokens/typography.json: "sha256:1c31a7e4b316eeb71aabcb45fc119aea68c2ac6f9321a956e02e6d36cc26ae7e"
+      design/system/tokens/spacing.json: "sha256:6280bc138d3303015145f0bdcc4cb30e8de0c1c5902d4493c73c80506e1e1a69"
+      design/system/tokens/radius.json: "sha256:296ef3a4aa43ae3fbc70b950f9e7808d8b27941e932a4dd9864a2e94a101ef7e"
+      design/system/tokens/shadow.json: "sha256:bfe088a7683ed809f8a777154b953f2c6a36c735345a070567f967762ac6d74d"
+      design/system/tokens/motion.json: "sha256:95d4a43ccad8b8734ec50ad58bddc69e90a450147ae4bbeaf02133d274ba178a"
+      design/system/tokens/README.md: "sha256:4e8757c466a9b6af4e29d4790bcf721f62f3750091eb9e8ef18029d439868ae7"
+      design/system/components.md: "sha256:e231fab5f33fd5044a2994a30e3999e94434fde29dc3df1e55244c1ac6d29609"
+    self_verification:
+      json_valid: true
+      subject_colors_4_present: true
+      platform_overrides_present: true
+      components_count: 20
+      master_no_arbitrary_tailwind: true
+      master_no_cjk: true
+      all_files_present: true
+    notes: >
+      Git operations skipped per user instruction ("GIT 暂时没有，不考虑GIT执行其他").
+      ui-ux-pro-max skill invoked; skill output path/colors did not match requirements,
+      so MASTER.md and all token files were authored directly from apple.design.md.
+      Next task: Sd Step 3 — Style Dictionary 4.x build (tokens.css / tokens.wxss / tokens.ts).
+
+  - id: sd-t03-style-dictionary-transpile
+    status: done
+    started_at: "2026-04-22T21:20:00Z"
+    finished_at: "2026-04-22T22:00:00Z"
+    attempt: 1
+    upstream_verified:
+      - "sd-t02 outputs_hash == actual sha256 of 6 token JSONs (all 6 match)"
+    outputs:
+      - frontend/packages/ui-kit/package.json
+      - frontend/packages/ui-kit/build-tokens.mjs
+      - frontend/packages/ui-kit/src/tokens.css
+      - frontend/packages/ui-kit/src/tokens.wxss
+      - frontend/packages/ui-kit/src/tokens.ts
+    outputs_hash:
+      frontend/packages/ui-kit/build-tokens.mjs: "sha256:73c3519e5a4cebe35d44fd8ab3d1a7da06995391c3f8bd0dd28a7b15d6d5e62e"
+      frontend/packages/ui-kit/src/tokens.css:   "sha256:ec9f10d631d1a643f443428478144a27a00f48865579bb5be71777ecb8bdcb4b"
+      frontend/packages/ui-kit/src/tokens.wxss:  "sha256:37e29f71fcb652e79e70b97139983557f5dd733a22de48f0cd5f84fede6d4b0d"
+      frontend/packages/ui-kit/src/tokens.ts:    "sha256:9da3b4498d3f0f5466b37ac30aa2777444ba4aad10b3562eed6977c5ff19a88f"
+    self_verification:
+      upstream_sha256_match: true
+      build_exit_code: 0
+      tokens_json_unchanged: true
+      css_var_count: 150
+      wxss_var_count: 150
+      wxss_selector_is_page: true
+      wxss_saturation_boost_applied: true
+      shadow_wechat_override_applied: true
+      ts_import_ok: true
+      ts_exports: [tkn, Tkn]
+      ts_top_level_groups: [color, subject, motion, radius, shadow, spacing, font, type]
+    next_step: sd-t04-components-base
+    notes: >
+      state/interfaces.yml did not exist at Sd start — created fresh in this task
+      with the sd-t02 → sd-t03 → sd-t04 contract entries.
+      source path corrected to design/system/tokens/*.json (prompt template said
+      design-system/tokens/*.json; real location from sd-t02 is design/system/tokens/).
+      Workspace setup skipped in favor of installing style-dictionary directly under
+      frontend/packages/ui-kit/ (no monorepo root package.json yet).
+      Colors already at 100% saturation in the source (primary, info, subject.physics,
+      subject.english) remain unchanged on wxss because boost clamps to 100 — this is
+      mathematically correct, not a transform failure (see scratch summary sample table).
