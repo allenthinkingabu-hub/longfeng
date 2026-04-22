@@ -10,9 +10,17 @@
 # 4. --trace-biz（v1.5）：0.2 领域模型实体名必须在 0.1 业务架构图节点 label 可见
 set -euo pipefail
 
-PHASE="${1:?usage: check-arch-consistency.sh <phase-id> [--trace-biz]}"
+PHASE="${1:?usage: check-arch-consistency.sh <phase-id> [--trace-biz|--dry-run]}"
 TRACE_BIZ=false
-[[ "${2:-}" == "--trace-biz" ]] && TRACE_BIZ=true
+DRY_RUN=false
+# Accept --trace-biz and --dry-run in any position after phase id (落地计划 §1.7 Rule E)
+for arg in "${@:2}"; do
+  case "$arg" in
+    --trace-biz) TRACE_BIZ=true ;;
+    --dry-run)   DRY_RUN=true ;;
+    *) echo "unknown flag: $arg"; exit 2 ;;
+  esac
+done
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
@@ -37,18 +45,44 @@ fi
 
 command -v yq >/dev/null 2>&1 || { echo "FAIL: yq not installed"; exit 1; }
 
+# Extract YAML front matter only (lines between the first two `---` lines).
+# Handles three patterns authored across S0/S1/S2/S3:
+#   (1) pure YAML (opening `---`, body all YAML, no closing marker — S1 style)
+#   (2) opening `---` + closing `---` + minimal body (S0/S2 exempt style)
+#   (3) opening `---` + closing `---` + long markdown body with Mermaid/OpenAPI (S3+ non-exempt style)
+# yq v4 treats the whole file as a YAML stream of documents, so markdown tokens like
+# `**bold**` or backtick code fences break the parse. Pre-extracting FM avoids that.
+FRONTMATTER=$(awk 'NR==1 && /^---$/{in_fm=1; next} in_fm && /^---$/{exit} in_fm{print}' "$ARCH_DOC")
+
 # 1. Exempt phases: front matter `exempt: true` → pass
-EXEMPT=$(yq '.exempt' "$ARCH_DOC" 2>/dev/null || echo "null")
+EXEMPT=$(echo "$FRONTMATTER" | yq '.exempt' 2>/dev/null || echo "null")
 if [[ "$EXEMPT" == "true" ]]; then
   echo "[arch-consistency] phase=$PHASE exempted · skipping symbol scan"
   exit 0
 fi
 
-# 2. Non-exempt: gate_status must be approved
-GATE=$(yq '.gate_status' "$ARCH_DOC" 2>/dev/null || echo "draft")
-if [[ "$GATE" != "approved" ]]; then
+# 2. Non-exempt: gate_status must be approved (skipped in --dry-run per 落地计划 §1.7 Rule E)
+GATE=$(echo "$FRONTMATTER" | yq '.gate_status' 2>/dev/null || echo "draft")
+if ! $DRY_RUN && [[ "$GATE" != "approved" ]]; then
   echo "FAIL: $ARCH_DOC gate_status=$GATE (need 'approved')"
   exit 1
+fi
+
+# In --dry-run, verify internal structure only: 0-6 section headers present
+if $DRY_RUN; then
+  MISSING_SECS=0
+  for sec in "^## 0\. 业务架构图" "^## 1\. " "^## 2\. " "^## 3\. " "^## 4\. " "^## 5\. " "^## 6\. "; do
+    if ! grep -qE "$sec" "$ARCH_DOC"; then
+      echo "DRY-RUN MISS: section header matching '$sec' not in $ARCH_DOC"
+      MISSING_SECS=$((MISSING_SECS+1))
+    fi
+  done
+  if [[ "$MISSING_SECS" -gt 0 ]]; then
+    echo "FAIL: $MISSING_SECS section header(s) missing (dry-run structural check)"
+    exit 1
+  fi
+  echo "[arch-consistency] phase=$PHASE dry-run OK (structural · gate_status=$GATE allowed)"
+  exit 0
 fi
 
 # 3. Scan new/changed code symbols in the diff window

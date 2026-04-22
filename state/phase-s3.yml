@@ -1,0 +1,64 @@
+phase_id: s3
+run_id: 20260422-s3-kickoff
+updated_at: 2026-04-22T19:05:00Z
+upstream_tags_verified:
+  - s0-done
+  - s1-done
+  - s2-done
+design_gate:
+  biz_gate: draft
+  arch_gate: draft
+  arch_doc: design/arch/s3-wrongbook.md
+dor_depends_on:
+  - id: V1.0.010__wrong_item.sql
+    role: core-aggregate-root-table
+  - id: V1.0.011__wrong_item_tag.sql
+    role: many-to-many-association
+  - id: V1.0.013__wrong_item_image.sql
+    role: child-entity-image
+  - id: V1.0.014__tag_taxonomy.sql
+    role: static-lookup
+  - id: V1.0.050__audit_log.sql
+    role: cross-cutting-audit
+port_allocation:
+  wrongbook-service: 8081  # aligned with S2 gateway route; plan §7 mentions 8083 (drift)
+tasks:
+  - id: s3-t00-dor-verify
+    title: DoR verify · s2-done tag remote · S1 migrations · Docker ports
+    status: done
+  - id: s3-t01-branch
+    title: git checkout -b feature/s3-wrongbook s2-done
+    status: done
+  - id: s3-t02-arch-doc-biz
+    title: design/arch/s3-wrongbook.md §0-§1 draft (G-Biz inquiry pending)
+    status: in_progress
+  - id: s3-t03-g-biz-inquiry
+    title: AskUserQuestion ≥3 questions · special_requirements filled
+    status: pending
+  - id: s3-t04-biz-gate-approved
+    title: biz_gate=approved · User /biz-ok
+    status: pending
+  - id: s3-t05-arch-doc-design
+    title: §2-§6 architecture design · 6 sections complete
+    status: pending
+  - id: s3-t06-arch-gate-approved
+    title: gate_status=approved · tag s3-arch-frozen
+    status: pending
+  - id: s3-t07-allowlist-pom-flyway
+    title: docs/allowlist/s3.yml + pom deps + V1.0.019__wrong_item_outbox.sql
+    status: pending
+  - id: s3-t08-entity-querydsl
+    title: 4 @Entity + PgVectorUserType + Repo + Q classes
+    status: pending
+  - id: s3-t09-service-controller
+    title: Service/IdempotencyService/Controller/DTO/Mapper/Producer
+    status: pending
+  - id: s3-t10-it-contract-openapi
+    title: WrongItemIT · contract IT · openapi/wrongbook.yaml export
+    status: pending
+  - id: s3-t11-ci-verify
+    title: CI · mvn verify · check-arch-consistency strict
+    status: pending
+  - id: s3-t12-tag-done
+    title: commit + tag s3-done + push
+    status: pending
