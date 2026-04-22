@@ -1,0 +1,54 @@
+phase_id: s1
+run_id: 20260422-063957
+updated_at: "2026-04-22T13:14:02Z"
+upstream_tags_verified:
+  - s0-done
+design_gate:
+  biz_gate: approved # §1.7 G-Biz · 本 Phase B 级 · A1-A8 + Q1-Q2 已签 · 见 design/arch/s1-data.md front matter.special_requirements
+  arch_gate: exempt # §5.2 · B 级适用性 · 0.2 架构设计豁免 · check-arch-consistency.sh 识别 exempt:true 放行
+# 本 Phase 无跨 Phase 契约消费（S0 只打 skeleton tag · 无 interfaces.yml 条目）· upstream_tags_verified 已兜底
+dor_depends_on: []
+tasks:
+  - id: s1-t01-branch-allowlist-state
+    status: done
+    step_refs: [plan-§5.7-step-1]
+  - id: s1-t02-pom-flyway-pgvector
+    status: done
+    blocked_by: [s1-t01-branch-allowlist-state]
+    step_refs: [plan-§5.7-step-2]
+  - id: s1-t03-write-23-v-scripts
+    status: done
+    blocked_by: [s1-t02-pom-flyway-pgvector]
+    step_refs: [plan-§5.7-step-3]
+  - id: s1-t04-write-3-u-scripts
+    status: done
+    blocked_by: [s1-t03-write-23-v-scripts]
+    step_refs: [plan-§5.7-step-4]
+  - id: s1-t05-flyway-migrate-it
+    status: done
+    blocked_by: [s1-t03-write-23-v-scripts]
+    step_refs: [plan-§5.7-step-5]
+  - id: s1-t06-vector-repository-it
+    status: done
+    blocked_by: [s1-t05-flyway-migrate-it]
+    step_refs: [plan-§5.7-step-6]
+  - id: s1-t07-ddl-count-sh
+    status: done
+    blocked_by: [s1-t03-write-23-v-scripts]
+    step_refs: [plan-§5.7-step-7]
+  - id: s1-t08-ddl-idempotency-sh
+    status: done
+    blocked_by: [s1-t03-write-23-v-scripts]
+    step_refs: [plan-§5.7-step-8]
+  - id: s1-t09-local-green-run
+    status: done
+    blocked_by:
+      - s1-t04-write-3-u-scripts
+      - s1-t06-vector-repository-it
+      - s1-t07-ddl-count-sh
+      - s1-t08-ddl-idempotency-sh
+    step_refs: [plan-§5.7-step-9, plan-§5.8-V-S1-01-09]
+  - id: s1-t10-commit-tag-interfaces
+    status: pending
+    blocked_by: [s1-t09-local-green-run]
+    step_refs: [plan-§5.7-step-10, plan-§1.8-rule-C]

@@ -1,0 +1,12 @@
+# Phase S1 tool allowlist — 落地计划 §5.4 / §5.7 Step 1
+# check-allowlist.sh s1 合并本文件 + global.yml + global-deny.yml
+extends: global
+additional_tools:
+  - { name: flyway-maven-plugin, version: ">=10", purpose: "Flyway CLI through Maven" }
+  - { name: psql,                version: ">=16", purpose: "DDL 自检 · ddl-count.sh" }
+  - { name: testcontainers,      version: ">=1.19", purpose: "FlywayMigrateIT / VectorRepositoryIT 使用的 pgvector/pgvector:pg16 容器" }
+  - { name: hibernate-core,      version: ">=6",  purpose: "JPA 运行时 · ADR 0006" }
+
+additional_deny:
+  - { pattern: "^[[:space:]]*DROP[[:space:]]+TABLE[[:space:]]", reason: "V 前缀禁止 DROP · 必须走 U 前缀 undo" }
+  - { pattern: "ALTER[[:space:]]+TABLE[[:space:]]+.+[[:space:]]+ADD[[:space:]]+COLUMN[[:space:]]+.+NOT[[:space:]]+NULL(?![[:space:]]+DEFAULT)", reason: "非空列必须带 DEFAULT 或分两步迁移" }

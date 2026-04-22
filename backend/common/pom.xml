@@ -14,12 +14,101 @@
   <artifactId>common</artifactId>
   <packaging>jar</packaging>
   <name>common</name>
-  <description>Shared utilities / domain primitives / DTOs (library module)</description>
+  <description>Shared utilities + Flyway DDL migrations (S1) · refs plan §5</description>
+
+  <properties>
+    <flyway.version>10.15.0</flyway.version>
+    <pgvector.version>0.1.6</pgvector.version>
+    <testcontainers.version>1.20.4</testcontainers.version>
+  </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.pgvector</groupId>
+      <artifactId>pgvector</artifactId>
+      <version>${pgvector.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>${flyway.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+      <version>${flyway.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <version>${flyway.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <locations>
+            <location>classpath:db/migration</location>
+          </locations>
+          <sqlMigrationPrefix>V</sqlMigrationPrefix>
+          <!-- undoSqlMigrationPrefix removed · Flyway 10 community edition does not support undo (Teams-only).
+               U-scripts remain in src/main/resources/db/undo/ as dev-only reference · see plan §5.1 A1. -->
+          <baselineOnMigrate>false</baselineOnMigrate>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
