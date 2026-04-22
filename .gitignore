@@ -42,6 +42,8 @@ Thumbs.db
 !.env.example
 *.pem
 *.key
+# Exception · S2 落地计划 §6.6 · 公开 dev mock RS256 public key · 私钥永不入仓 · S10 vault 替换
+!docs/dev/jwt-dev-pubkey.pem
 kubeconfig
 
 # Logs (keep dir, ignore contents)

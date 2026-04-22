@@ -14,12 +14,13 @@
   <artifactId>common</artifactId>
   <packaging>jar</packaging>
   <name>common</name>
-  <description>Shared utilities + Flyway DDL migrations (S1) · refs plan §5</description>
+  <description>Shared utilities + Flyway DDL (S1) + S2 base (TenantContext / ApiResult / BizException / GlobalExceptionHandler) · refs plan §5 §6</description>
 
   <properties>
     <flyway.version>10.15.0</flyway.version>
     <pgvector.version>0.1.6</pgvector.version>
     <testcontainers.version>1.20.4</testcontainers.version>
+    <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
   </properties>
 
   <dependencies>
@@ -28,6 +29,12 @@
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!-- S1 持久层 · common 汇聚 JPA · downstream 服务若不需 DB 须在启动类 exclude DataSource/Hibernate/Flyway 自动装配 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -54,6 +61,20 @@
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
       <version>${flyway.version}</version>
+    </dependency>
+
+    <!-- S2 · nimbus-jose-jwt · RS256 gateway filter + common 反射用 -->
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
+      <version>${nimbus-jose-jwt.version}</version>
+    </dependency>
+
+    <!-- S2 · spring-boot-starter-web optional · common 可引用 @RestControllerAdvice 不会传递给 WebFlux gateway -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -104,8 +125,6 @@
             <location>classpath:db/migration</location>
           </locations>
           <sqlMigrationPrefix>V</sqlMigrationPrefix>
-          <!-- undoSqlMigrationPrefix removed · Flyway 10 community edition does not support undo (Teams-only).
-               U-scripts remain in src/main/resources/db/undo/ as dev-only reference · see plan §5.1 A1. -->
           <baselineOnMigrate>false</baselineOnMigrate>
         </configuration>
       </plugin>

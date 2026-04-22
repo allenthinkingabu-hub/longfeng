@@ -40,11 +40,11 @@ jobs:
       - name: Run check-arch-consistency.sh s0 (exempt)
         run: bash ops/scripts/check-arch-consistency.sh s0
 
-  # 占位 · S2 补齐完整后端 CI（单测 · 契约 · SAST · 覆盖率）
+  # 落地计划 §6.7 Step 15 · S2 落地后端 CI（SmokeIT + RouteIT · 后续 Phase 加 SAST/覆盖率）
   backend-ci:
-    name: backend-ci (skeleton build)
-    runs-on: ubuntu-latest
     needs: [ allowlist-check ]
+    name: backend-ci
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -53,9 +53,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Build backend skeleton
+      - name: Backend verify (SmokeIT + RouteIT)
         working-directory: backend
-        run: mvn -q -B -T 1C -DskipTests package
+        run: mvn -q -B -T 1C verify -Dtest='*SmokeIT,*RouteIT' -Dsurefire.failIfNoSpecifiedTests=false
 
   # 占位 · S6 补齐前端 CI（lint + test + build + 覆盖率）
   frontend-ci:

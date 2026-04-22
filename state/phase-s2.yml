@@ -1,0 +1,85 @@
+phase_id: s2
+run_id: 20260422-s2-complete
+updated_at: 2026-04-22T18:40:00Z
+upstream_tags_verified:
+  - s1-done
+design_gate:
+  biz_gate: exempt
+  arch_gate: exempt
+  exempt_doc: design/arch/s2-platform.md
+dor_depends_on:
+  - id: V1.0.010__wrong_item.sql
+    role: downstream-entity-will-consume-from-s3
+  - id: V1.0.016__review_plan.sql
+    role: downstream-entity-will-consume-from-s5
+  - id: V1.0.050__audit_log.sql
+    role: downstream-cross-cutting
+tasks:
+  - id: s2-t01-branch
+    title: git checkout -b feature/s2-backend s1-done
+    status: done
+    next_step: null
+  - id: s2-t01_5-arch-doc
+    title: design/arch/s2-platform.md exempt skeleton
+    status: done
+    next_step: null
+  - id: s2-t02-allowlist
+    title: docs/allowlist/s2.yml
+    status: done
+    next_step: null
+  - id: s2-t03-jwt-pubkey
+    title: docs/dev/jwt-dev-pubkey.pem (RS256 mock)
+    status: done
+    next_step: null
+  - id: s2-t04-pom-deps
+    title: 7 modules pom.xml dependencies
+    status: done
+    next_step: null
+  - id: s2-t05-common-base
+    title: common public base classes
+    status: done
+    next_step: null
+  - id: s2-t06-global-exception
+    title: common GlobalExceptionHandler @RestControllerAdvice
+    status: done
+    next_step: null
+  - id: s2-t07-gateway-filters
+    title: gateway 3 GlobalFilter (TraceId/Jwt/RateLimit)
+    status: done
+    next_step: null
+  - id: s2-t08-gateway-yaml
+    title: gateway application.yml with 5 routes
+    status: done
+    next_step: null
+  - id: s2-t09-health-controller
+    title: 5 services HealthController
+    status: done
+    next_step: null
+  - id: s2-t10-openapi-config
+    title: 5 services OpenApiConfig
+    status: done
+    next_step: null
+  - id: s2-t11-service-yaml
+    title: 5 services application.yml
+    status: done
+    next_step: null
+  - id: s2-t12-mockmvc-smoke
+    title: 5 MockMvcSmokeIT
+    status: done
+    next_step: null
+  - id: s2-t13-gateway-route-it
+    title: GatewaySmokeIT + GatewayRouteIT
+    status: done
+    next_step: null
+  - id: s2-t14-mvn-verify
+    title: mvn -T 1C verify all green
+    status: done
+    next_step: null
+  - id: s2-t15-ci-job
+    title: .github/workflows/ci.yml backend-ci upgrade
+    status: done
+    next_step: null
+  - id: s2-t16-tag-and-commit
+    title: check-allowlist.sh + commit + tag s2-done
+    status: done
+    next_step: null

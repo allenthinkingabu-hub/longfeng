@@ -196,3 +196,99 @@ interfaces:
     path: design/arch/s1-data.md
     exempt: true
     exempt_reason: "B 级 · DDL 即数据架构 · 落地计划 §5.2"
+
+  # ---------------------------------------------------------------------------
+  # S2 platform interfaces · 落地计划 §6 · 公共基础 + 网关 Filter 链 · Design Gate exempt
+  # downstream S3/S4/S5/S7/S8/S11 通过 common Jar + gateway 路由矩阵消费
+  # ---------------------------------------------------------------------------
+  - provided_by: s2
+    kind: arch-doc
+    path: design/arch/s2-platform.md
+    sha256: 3330a84527becd15cba27931d75fd3b8d3e44f7617c5b39ebdfde27c5d8d1eb7
+    exempt: true
+    exempt_reason: "公共基础组件 · 网关 + 5 微服务骨架 + Filter 链 · 以框架搭建为主 · 无业务聚合根"
+
+  - provided_by: s2
+    kind: allowlist
+    path: docs/allowlist/s2.yml
+    sha256: fe51a09745fc9728082dd16dd218da15244a78c76e28707fbf0ed5cda5b85068
+    symbols: [spring-boot-3.2.5, spring-cloud-gateway-4.1, resilience4j-2.2, nimbus-jose-jwt-9, springdoc-openapi-2.3, testcontainers-1.19]
+
+  - provided_by: s2
+    kind: dev-asset
+    path: docs/dev/jwt-dev-pubkey.pem
+    sha256: ac3dc9e3b511a9c08e9d8356dbe07024e98522da0c482754c77cd7f72404b9e7
+    symbols: [RS256 public key · mock · S10 vault replaces]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/context/TenantContext.java
+    sha256: b75bd64a1363f3462d634844cf4ab81e8f01c3af762956b3c64792bf25f3cc0d
+    symbols: [TenantContext, set, setTraceId, tenant, userId, traceId, clear]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/dto/ApiResult.java
+    sha256: d2d1fb8d4f61206a603bbccbd1de94575d358e252a4549d0d984bae337a1d467
+    symbols: [ApiResult, ok, fail]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/domain/BaseEntity.java
+    symbols: [BaseEntity, createdAt, updatedAt, createdBy, updatedBy, version]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/exception/ErrorCode.java
+    symbols: [ErrorCode, AUTH_401, FORBIDDEN_403, VALIDATION_400, NOT_FOUND_404, CONFLICT_409, RATE_429, INTERNAL_500]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/exception/BizException.java
+    symbols: [BizException]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/exception/GlobalExceptionHandler.java
+    sha256: 3055a66c5bf3c38f8969bd96546a98e4cae4dc049aa0b9f4dd7ca3f60e374417
+    symbols: [GlobalExceptionHandler, handleBiz, handleValidation, handleAny]
+
+  - provided_by: s2
+    kind: java-base
+    path: backend/common/src/main/java/com/longfeng/common/filter/TraceIdFilter.java
+    symbols: [TraceIdFilter, HEADER=X-Trace-Id, MDC_KEY=traceId]
+
+  - provided_by: s2
+    kind: gateway-filter
+    path: backend/gateway/src/main/java/com/longfeng/gateway/filter/TraceIdFilter.java
+    sha256: b3d3233484222a9c5763b62adfade29b52d715e43e8628af84b8345488cb764f
+    symbols: [TraceIdFilter, ORDER=-200, X-Trace-Id]
+
+  - provided_by: s2
+    kind: gateway-filter
+    path: backend/gateway/src/main/java/com/longfeng/gateway/filter/JwtAuthFilter.java
+    sha256: 3aa05e60a718fe73253ac81d7df84305a2356b19fa48b89bacdc0e5744544088
+    symbols: [JwtAuthFilter, ORDER=-100, RS256, X-User-Id, code=40101]
+
+  - provided_by: s2
+    kind: gateway-filter
+    path: backend/gateway/src/main/java/com/longfeng/gateway/filter/RateLimitFilter.java
+    sha256: f8ab96fc3c0fcc44098c2abdf517337683404225f0cf4a2fae2ceacab838e68a
+    symbols: [RateLimitFilter, ORDER=-60, RateLimiterRegistry]
+
+  - provided_by: s2
+    kind: gateway-config
+    path: backend/gateway/src/main/resources/application.yml
+    sha256: 0b0630633bf06e0a4d4c38837fc3620b82cf6b1b4d77e32023739278950ff81f
+    symbols:
+      - "route:wrongbook-api → /api/v1/wrongbook/** → :8081"
+      - "route:ai-api → /api/v1/ai/** → :8082"
+      - "route:review-api → /api/v1/review/** → :8083"
+      - "route:file-api → /api/v1/file/** → :8084"
+      - "route:anon-api → /api/v1/anon/** → :8085"
+
+  - provided_by: s2
+    kind: service-port-matrix
+    description: "Port matrix: gateway=8080 · wrongbook=8081 · ai-analysis=8082 · review-plan=8083 · file=8084 · anonymous=8085"
+    symbols: [8080, 8081, 8082, 8083, 8084, 8085]
+

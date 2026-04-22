@@ -14,7 +14,12 @@
   <artifactId>gateway</artifactId>
   <packaging>jar</packaging>
   <name>gateway</name>
-  <description>S0 skeleton · gateway · real deps land in later phases</description>
+  <description>S2 · Spring Cloud Gateway + 3 GlobalFilter (TraceId / Jwt-RS256 / RateLimit) · plan §6</description>
+
+  <properties>
+    <resilience4j.version>2.2.0</resilience4j.version>
+    <springdoc.version>2.3.0</springdoc.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -22,9 +27,55 @@
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- Spring Cloud Gateway (reactive / WebFlux) -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <!-- Resilience4j Reactor · §6.4 允许 · Sentinel Gateway Adapter 能力缺口回退（见 ADR 0004） -->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-reactor</artifactId>
+      <version>${resilience4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-ratelimiter</artifactId>
+      <version>${resilience4j.version}</version>
+    </dependency>
+
+    <!-- springdoc for reactive -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-test</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>
