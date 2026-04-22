@@ -1,6 +1,6 @@
 phase_id: s1
 run_id: 20260422-063957
-updated_at: "2026-04-22T13:14:02Z"
+updated_at: "2026-04-22T13:17:04Z"
 upstream_tags_verified:
   - s0-done
 design_gate:
@@ -49,6 +49,6 @@ tasks:
       - s1-t08-ddl-idempotency-sh
     step_refs: [plan-§5.7-step-9, plan-§5.8-V-S1-01-09]
   - id: s1-t10-commit-tag-interfaces
-    status: pending
+    status: done
     blocked_by: [s1-t09-local-green-run]
     step_refs: [plan-§5.7-step-10, plan-§1.8-rule-C]
