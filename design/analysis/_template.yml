@@ -1,0 +1,78 @@
+# 落地计划 §1.5 Phase 结构契约 0.0.5 · Business Analysis YAML 模板
+# v1.7 schema 1.0 → v1.8 schema 1.1（加 critical + verification_matrix 五类）
+#
+# 复制方式（各 Phase 进入前 Planner Agent 执行）：
+#   cp design/analysis/_template.yml design/analysis/<phase-id>-business-analysis.yml
+#   填充 sc_covered / ac_coverage[] / narrative
+#
+# 机械约束：
+#   - sc_covered 必须 = sc-phase-mapping.yml 里 owner_phases 含本 phase 的 SC 集合（check-business-match.sh --slots）
+#   - 每个 ac_coverage[] 必含 critical: bool + verification_matrix 五类（V-S0-19 Python 硬校验）
+#   - critical=true 的 AC · Verifier Agent 必须 100% 独立复写（run-verifier.sh default）
+#   - critical 六项触发标准：涉钱 / 权限 / 删除 / 并发 / 合规 / 未成年人数据（本项目儿童教育 · 几乎全 true）
+
+schema_version: 1.1
+
+phase_id: "<phase-id>"          # 例：s3 / s7 / s11
+sc_covered:                     # 本 Phase 声明覆盖的 SC 集合 · 必须与 sc-phase-mapping.yml 对齐
+  - "SC-XX"
+
+narrative: |
+  （散文 · 本 Phase 业务说理 · 200-500 字 · 回答"做什么 + 为什么这样做"）
+  见 业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-XX 的锚点。
+
+ac_coverage:
+  - ac_id: "SC-XX.AC-Y"
+    statement: "<AC 原文 · 从 acceptance-criteria-signed.yml 或方案 §2B 抄>"
+    critical: false             # 六项触发：涉钱/权限/删除/并发/合规/未成年人数据 · 任一 → true
+    critical_reason: ""         # critical=true 时必填 · 例："涉未成年人数据 + 软删"
+
+    domain_entities:            # 本 AC 触及的领域实体（arch.md §1 领域模型里必有）
+      - WrongItem
+    user_journey:               # 本 AC 的用户旅程（前端/跨域 Phase 填）
+      - "用户点击拍照按钮 → 选择相册 → 上传 → 后端识别 → 返回错题卡片"
+    upstream_contract:          # 上游依赖（调本 Phase 之前的 API/事件）
+      - "file-service /upload (S6)"
+    downstream_contract:        # 下游产出（本 AC 产的 API/事件/数据）
+      - "ai-analysis-service topic: wrongitem.created"
+
+    four_role_slots:            # 四角色锚点 · 前端 Phase = ux_anchor · 后端 = observable_behavior_anchor
+      architect_anchor: "design/arch/<phase>.md ## AC: SC-XX.AC-Y"
+      dev_anchor: "<backend/frontend 主实现文件路径 · commit 时填 hash>"
+      qa_anchor: "<测试类/方法名 · 含 @CoversAC 注解>"
+      ux_anchor: ""             # 前端 Phase · 填 design/mockups/<screen>.html 或 Sd manifest 条目
+      observable_behavior_anchor: ""  # 后端 Phase · 填 API 契约 OpenAPI path 或 metric 名
+
+    risks:                      # 本 AC 的风险点（Planner 切卡 + Verifier 复写时的关注项）
+      - "LLM 超时 → 降级占位（见 SC-06）"
+
+    verification_matrix:        # v1.8 五类强制覆盖 · matrix 行数 == @CoversAC 测试方法数
+      happy_path:
+        - id: "happy_path.0"
+          given: "用户已登录 · 相册选中 5MB 内 PNG"
+          when: "POST /wrongitems 含 image_ref"
+          then: "返回 201 + wrong_item_id · outbox 产 wrongitem.created"
+
+      error_paths:
+        - id: "error_paths.0"
+          given: "相册选中 15MB PNG（超 10MB 上限）"
+          when: "POST /wrongitems"
+          then: "返回 413 · 响应体含 traceId + error_code=IMAGE_TOO_LARGE"
+
+      boundary:
+        - id: "boundary.0"
+          given: "相册选中 exactly 10MB PNG"
+          when: "POST /wrongitems"
+          then: "返回 201（边界接受）"
+
+      observable:               # 后端必填 · 前端可空（用 visual 替）
+        - id: "observable.0"
+          given: "happy_path.0 触发后"
+          when: "查询 Prometheus api_request_duration_seconds{path=/wrongitems}"
+          then: "p95 < 500ms · 计数器非 0"
+
+      visual:                   # 前端必填 · 后端可空
+        - id: "visual.0"
+          given: "拍照页 1440×900"
+          when: "Playwright headless 截图 vs baseline/sc01-capture.png"
+          then: "pixel diff ≤ 3%（列表页阈值）"
