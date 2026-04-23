@@ -3,9 +3,9 @@ phase_id: s5
 biz_gate: approved
 biz_approved_by: "@allen"
 biz_approved_at: "2026-04-23T18:00:00+08:00"
-gate_status: draft                   # G-Arch 阶段补完 §1-6 后 → approved + 打 s5-arch-frozen tag
-approved_by: ""
-approved_at: ""
+gate_status: approved                # G-Arch 通过 · User @allen /arch-ok @ 2026-04-23T18:30
+approved_by: "@allen"
+approved_at: "2026-04-23T18:30:00+08:00"
 exempt: false                        # A 级 Phase · 非豁免
 phase_level: A
 sources:
@@ -504,6 +504,8 @@ components:
 | `review.due` | 出 | `{planId: long, userId: long, wrongItemId: long, nodeIndex: int, dueAt: ISO8601}` | S6 notification-service | ADR 0005 兜底 |
 | `review.completed` | 出 | `{planId: long, wrongItemId: long, userId: long, quality: int, nodeIndex: int, nextReviewAt: ISO8601, easeFactorAfter: number, mastered: bool}` | S8 前端 polling + S10 监控 | ADR 0005 兜底 |
 | `review.mastered` | 出 | `{wrongItemId: long, userId: long, masteredAt: ISO8601}` | S8 前端 + S10 | ADR 0005 兜底 |
+
+> **Note**：`design/analysis/_template.yml` 示例里的 `wrongitem.created` 是通用模板占位 topic（非 S5 入出站）· S5 入站实际为 `wrongbook.item.analyzed`（S4 out）· S5 不订阅也不生产 `wrongitem.created`。
 
 **JSON Schema 示例（review.completed）**：
 
