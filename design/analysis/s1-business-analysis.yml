@@ -1,0 +1,315 @@
+# 落地计划 §1.5 B 级适用性 · S1 DDL 数据契约精简版
+# 签字来源：reports/retrofit/s1-plan.md @allen 2026-04-23T17:20:00+08:00 direct-reply
+# 精简规则（B 级 vs A 级的差异）：
+#   - sc_covered 空（S1 不在任何 SC 的 owner_phases · 见 sc-phase-mapping.yml）
+#   - supports_sc 全量（S1 作为数据基座支撑 SC-01..SC-15 全部落盘）
+#   - 无 four_role_slots（§1.5 B 级"无 four_role_slots"）· 保留 architect_anchor + observable_behavior_anchor
+#   - ac 改用 S1.DDL-AC-1..8 命名（S1 无 SC 归属 · 非标 SC-XX.AC-Y · 见 plan §五 #2 签字决策）
+#   - verification_matrix 一对多映射到 FlywayMigrateIT / VectorRepositoryIT 现有 @Test + ddl-count.sh + SQL 静态扫描
+#   - AC 分行硬约束走豁免（§1.5 B 级 0.7 值=选 · 无 @CoversAC 注解 · 无 [SC-XX-ACY] commit 前缀 · arch 不按 AC 分节）
+#   - Verifier 独立复写走 §26.2 豁免条款 4 类推（DDL 无业务代码逻辑 · 复写 ≈ 重复机械断言 · 无信号增益）
+
+schema_version: 1.1
+
+phase_id: s1
+phase_level: B                        # v1.8_v1.9 升级计划 §三改动 3 · AC 分行硬约束=选
+sc_covered: []                        # S1 不拥有任何 SC
+supports_sc:                          # B 级精简版新字段 · S1 作为数据基座支撑的 SC 全集
+  - SC-01
+  - SC-02
+  - SC-03
+  - SC-04
+  - SC-05
+  - SC-06
+  - SC-07
+  - SC-08
+  - SC-09
+  - SC-10
+  - SC-11
+  - SC-12
+  - SC-13
+  - SC-14
+  - SC-15
+
+narrative: |
+  S1 是 AI 错题本项目的数据契约基座：把方案 §3 定义的 18+ 张表（基础域 / 错题域 / 匿名域 / 审计域）
+  通过 Flyway 版本化 V 脚本落到 PostgreSQL 16 + pgvector 0.6。本 Phase 按 §1.5 B 级适用性执行——
+  0.1 业务理解已完成（假设 A1-A8 + 歧义 Q1-Q2 均已 User 签字 · 见 arch/s1-data.md front matter）·
+  0.2 架构设计豁免（DDL 即数据架构文档 · 权威符号源在 backend/common/src/main/resources/db/migration/ V 脚本）。
+
+  S1 不拥有任何业务 SC（sc-phase-mapping.yml 15 SC 的 owner_phases 均不含 s1）· 但通过 supports_sc
+  15 SC 全量声明：任何 SC 的数据落盘 / 外键关联 / 审计事件都依赖 S1 的 DDL 契约。因此本 YAML 的 ac_coverage
+  按 §5.1 A1-A8 假设改写为 8 条 DDL 契约 AC（S1.DDL-AC-1..8）· 覆盖版本化 / 主键 / 时间戳 / JSONB /
+  软删除 / FK / 学科枚举 / 审计 append-only 八大 schema 级断言。critical=true 共 5 条（A1/A2/A5/A6/A8 ·
+  涉合规 / 并发 / 删除 / 未成年人数据保护）· critical=false 共 3 条（A3/A4/A7 · 性能与数据完整性 ·
+  不触六项触发标准）。
+
+  Verifier 独立复写走 §26.2 豁免条款 4 类推（DDL 契约无业务代码逻辑 · 独立复写 ≈ 重复
+  FlywayMigrateIT 机械断言 · 无信号增益）· 详见 reports/retrofit/s1-plan.md §二 Step 5。
+
+ac_coverage:
+  - ac_id: "S1.DDL-AC-1"
+    statement: "所有 DDL 通过 Flyway V 脚本版本化 · 禁止手改/GUI 导出/psql 交互式 CREATE TABLE · U 脚本仅 3 个（V010/V016/V030 · 本地开发重置用 · 生产禁用）"
+    source: "落地计划 §5.1 A1 · 方案 §3.1 DDL 约定"
+    critical: true
+    critical_reason: "合规 · K12 库变更需审计可追溯 · 手改绕过版本化等于失控"
+    domain_entities: [FlywaySchemaHistory, "db.migration/*.sql", "db.undo/*.sql"]
+    upstream_contract: []
+    downstream_contract: ["所有 S2+ 服务的 JPA Entity 映射"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md front matter sources"
+      observable_behavior_anchor: "mvn flyway:info 无 Pending/Failed · ddl-idempotency.sh 双跑无差异"
+    risks:
+      - "V 脚本人为删改 · 幂等断言识别（V-S1-05）"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "空库"
+          when: "mvn flyway:migrate"
+          then: "全部 V 脚本按序执行 · flyway_schema_history 无 Failed · FlywayMigrateIT#migrate_all_v_scripts_and_assert_schema 绿"
+      error_paths:
+        - id: "error_paths.0"
+          given: "V 脚本内含 DROP TABLE 关键字"
+          when: "check-allowlist.sh s1"
+          then: "exit 非 0（additional_deny 命中）· V-S1-07"
+      boundary:
+        - id: "boundary.0"
+          given: "已 migrate 的库"
+          when: "ddl-idempotency.sh 双跑"
+          then: "第二次 migrate 无 Pending · migrationsExecuted == 0"
+      observable:
+        - id: "observable.0"
+          given: "migrate 完成后"
+          when: "psql SELECT count(*) FROM flyway_schema_history WHERE success=false"
+          then: "== 0"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-2"
+    statement: "主键统一 BIGINT PRIMARY KEY with Snowflake 应用生成（§5.1 A2 Override）· UUID 仅匿名域 anon_visitor.anon_id 使用 · 其他表不用 UUID 不用 bigserial"
+    source: "落地计划 §5.1 A2 · 方案 §3.1 / §3.3"
+    critical: true
+    critical_reason: "并发 · 匿名域身份隔离 · 错用 bigserial 会在高并发下暴露用户增长规模"
+    domain_entities: [user_account, wrong_item, review_plan, anon_visitor, audit_log, outbox]
+    upstream_contract: []
+    downstream_contract: ["S2+ JPA @Id / @GeneratedValue 配置对齐 Snowflake"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A2"
+      observable_behavior_anchor: "psql \\d+ <table> 输出主键列类型断言"
+    risks:
+      - "若遗忘 Snowflake 生成器 · 会退化到序列 · 违反 A2"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查所有业务表主键列"
+          then: "除 anon_visitor.anon_id 为 uuid 外 · 其他主键均为 bigint（非 bigserial）"
+      error_paths:
+        - id: "error_paths.0"
+          given: "V 脚本误写 id bigserial PRIMARY KEY"
+          when: "V-S1-04 FlywayMigrateIT 运行"
+          then: "当前测试未严格断言 · TODO: 后续 S3/S4 落 Entity 时 JPA @GeneratedValue 不匹配会暴露"
+      boundary: []
+      observable:
+        - id: "observable.0"
+          given: "产线运行一周后"
+          when: "查 wrong_item.id 最大值"
+          then: "不呈现严格单调序列（Snowflake ID 非连续）"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-3"
+    statement: "时间戳统一 timestamptz（带时区 · 默认 UTC）· 业务时间（mastered_at / completed_at / expires_at）允许 NULL 表示未发生 · session TIMEZONE=UTC（§5.1 Q1 回答）· 前端按 user_profile.timezone 换算"
+    source: "落地计划 §5.1 A3 + Q1 · 方案 §3.1"
+    critical: false
+    critical_reason: ""
+    domain_entities: ["wrong_item.mastered_at", "review_plan.next_review_at", "guest_session.expires_at", "audit_log.created_at"]
+    upstream_contract: []
+    downstream_contract: ["前端按 user_profile.timezone 换算"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.Q1 / A3"
+      observable_behavior_anchor: "psql SELECT data_type FROM information_schema.columns WHERE column_name LIKE '%_at'"
+    risks:
+      - "若某表用了 timestamp (无时区) · 跨时区用户会看到错位时间"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查所有 *_at 列"
+          then: "全部为 timestamp with time zone"
+      error_paths: []
+      boundary:
+        - id: "boundary.0"
+          given: "业务时间列如 wrong_item.mastered_at"
+          when: "插入 NULL"
+          then: "允许（语义：未掌握）"
+      observable:
+        - id: "observable.0"
+          given: "PostgreSQL session"
+          when: "SHOW timezone"
+          then: "UTC"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-4"
+    statement: "JSONB 字段统一配 GIN 索引（全字段 GIN · 非路径索引 · §5.1 A4）· 路径索引按 ops-query-plan 观测后按需加 · 本 Phase 先全 GIN"
+    source: "落地计划 §5.1 A4 · 方案 §3.5"
+    critical: false
+    critical_reason: ""
+    domain_entities: ["wrong_item.tags_jsonb", "wrong_item_analysis.payload_jsonb", "audit_log.payload_jsonb"]
+    upstream_contract: []
+    downstream_contract: ["S3 Repository 查询用 @> 操作符走 GIN"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A4"
+      observable_behavior_anchor: "psql \\di+ 查 GIN 索引计数"
+    risks: []
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查 pg_indexes WHERE indexdef LIKE '%USING gin%'"
+          then: "计数 ≥ 3（对应 3 个主要 JSONB 列）· V-S1-02 间接断言 indexes≥23"
+      error_paths: []
+      boundary: []
+      observable:
+        - id: "observable.0"
+          given: "向 wrong_item.tags_jsonb 插入 1000 行"
+          when: "EXPLAIN ANALYZE SELECT ... WHERE tags_jsonb @> '[\"tag1\"]'"
+          then: "使用 Bitmap Index Scan on gin_idx（非 Seq Scan）"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-5"
+    statement: "软删除列 deleted_at + 分区索引 WHERE deleted_at IS NULL（业务主表一律带此列 · 审计域除外）"
+    source: "落地计划 §5.1 A5 · 方案 §3.1"
+    critical: true
+    critical_reason: "删除 + 合规 + 未成年人数据 · GDPR / 儿童个人信息保护法要求被遗忘软删除保留审计痕迹"
+    domain_entities: [user_account, wrong_item, wrong_item_analysis, review_plan, guest_session, guest_wrong_item, share_card]
+    upstream_contract: []
+    downstream_contract: ["S3 Controller 软删接口 · S8 查询时过滤 deleted_at IS NULL"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A5"
+      observable_behavior_anchor: "psql \\di+ 查 partial index WHERE deleted_at IS NULL"
+    risks:
+      - "若某业务表漏加 deleted_at · 下游 S3 Controller 无法软删 · 必须物理删 · 违反合规"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查所有业务主表列"
+          then: "wrong_item / review_plan / guest_session 等均有 deleted_at timestamptz NULL 列"
+      error_paths:
+        - id: "error_paths.0"
+          given: "audit_log 表（append-only · DDL-AC-8 规定）"
+          when: "psql 查列"
+          then: "无 deleted_at 列（审计域无软删）"
+      boundary:
+        - id: "boundary.0"
+          given: "partial index"
+          when: "psql 查 pg_indexes WHERE indexdef LIKE '%deleted_at IS NULL%'"
+          then: "计数 ≥ 5（对应主业务表）"
+      observable:
+        - id: "observable.0"
+          given: "软删 wrong_item.id=123"
+          when: "UPDATE SET deleted_at=now()"
+          then: "后续 SELECT ... WHERE deleted_at IS NULL 查询不命中 · EXPLAIN 走 partial index"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-6"
+    statement: "外键策略：业务主表间 FK + ON DELETE RESTRICT（禁止级联删除 · 防止误操作连锁）· 事件类表（outbox / review_event / audit_log）不走 FK（性能 · 事件可独立于源实体存在）"
+    source: "落地计划 §5.1 A6 · 方案 §3.2 / §3.4"
+    critical: true
+    critical_reason: "删除 + 未成年人数据保护 · 级联删除错误会连锁清除儿童用户的错题+复习+审计记录"
+    domain_entities: ["wrong_item->user_account (FK RESTRICT)", "wrong_item_analysis->wrong_item (FK RESTRICT)", outbox, review_event, audit_log]
+    upstream_contract: []
+    downstream_contract: ["S3/S5 删除操作感知外键 RESTRICT 行为 · 必须先软删/归档下游"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A6"
+      observable_behavior_anchor: "psql 查 pg_constraint contype='f' confdeltype"
+    risks:
+      - "若误写 ON DELETE CASCADE · 删除 user_account 会连锁清 wrong_item → wrong_item_analysis"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查 pg_constraint contype='f'"
+          then: "计数 ≥ 14 · 且所有 confdeltype 均为 r (RESTRICT)"
+      error_paths:
+        - id: "error_paths.0"
+          given: "已存在 wrong_item 引用 user_account.id=1"
+          when: "DELETE FROM user_account WHERE id=1"
+          then: "抛 23503 foreign_key_violation"
+      boundary:
+        - id: "boundary.0"
+          given: "outbox 表"
+          when: "psql \\d outbox 查外键"
+          then: "无 FK（事件表允许孤儿）"
+      observable:
+        - id: "observable.0"
+          given: "V-S1-02 ddl-count.sh"
+          when: "执行"
+          then: "fks ≥ 14（§5.3 目标硬约束）"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-7"
+    statement: "学科字典（subject）采用 CHECK 约束枚举（math / physics / chinese / english / ...）· 不做动态 ALTER TYPE 管理（避免运行时风险 · §5.1 A7）"
+    source: "落地计划 §5.1 A7 · 方案 §2A.2"
+    critical: false
+    critical_reason: ""
+    domain_entities: ["wrong_item.subject", "tag_taxonomy.subject"]
+    upstream_contract: []
+    downstream_contract: ["S7 录入 UI 下拉选项 · S3 校验层与 CHECK 枚举一致"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A7"
+      observable_behavior_anchor: "psql 查 pg_constraint contype='c' conname LIKE '%subject%'"
+    risks: []
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "migrate 完成"
+          when: "psql 查 wrong_item 表的 CHECK 约束"
+          then: "存在 subject IN (...) 枚举约束"
+      error_paths:
+        - id: "error_paths.0"
+          given: "向 wrong_item.subject 插入 unknown"
+          when: "INSERT"
+          then: "抛 23514 check_violation"
+      boundary: []
+      observable:
+        - id: "observable.0"
+          given: "V-S1-02 ddl-count.sh"
+          when: "执行"
+          then: "checks ≥ 12（§5.3 目标硬约束）"
+      visual: []
+
+  - ac_id: "S1.DDL-AC-8"
+    statement: "审计域（audit_log）append-only · 无 UPDATE/DELETE · 无 deleted_at 列 · 仅 created_at · 由归档 job 迁冷存（S10 之后）· §5.1 A8"
+    source: "落地计划 §5.1 A8 · 方案 §3.4"
+    critical: true
+    critical_reason: "合规 · 儿童个人信息保护法 + 审计不可篡改硬要求"
+    domain_entities: [audit_log]
+    upstream_contract: ["所有 S3+ 服务写入 audit_log 走 INSERT only"]
+    downstream_contract: ["S10 归档 job 读取 audit_log 迁冷存"]
+    four_role_slots:
+      architect_anchor: "design/arch/s1-data.md special_requirements.A8"
+      observable_behavior_anchor: "SQL 静态扫描 V1.0.050__audit_log.sql"
+    risks:
+      - "若后续 Phase 误加 deleted_at 列到 audit_log · 违反 append-only"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "V1.0.050__audit_log.sql"
+          when: "静态扫描"
+          then: "无 UPDATE / DELETE SQL · 无 deleted_at 列 DDL · 无 ON DELETE CASCADE 触发器"
+      error_paths:
+        - id: "error_paths.0"
+          given: "向 audit_log.id=1 的行发起 UPDATE"
+          when: "psql"
+          then: "当前无触发器拦截 · TODO: S10 归档时补 RULE 或触发器禁 UPDATE"
+      boundary:
+        - id: "boundary.0"
+          given: "audit_log 表结构"
+          when: "psql \\d audit_log"
+          then: "无 deleted_at 列"
+      observable:
+        - id: "observable.0"
+          given: "migrate 完成"
+          when: "psql 查 audit_log 列"
+          then: "仅含 id / actor_type / action / payload / created_at 等 · 无软删列"
+      visual: []
