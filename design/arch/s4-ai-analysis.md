@@ -507,3 +507,37 @@ IT 的 `PIIRedactorAssertion` 断言 LLM 请求 body 含占位符且不含原 PI
 - 引用 ADR 0002 · Outbox over Seata
 - 引用 ADR 0006 · JPA + QueryDSL over MyBatis（硬绑定）
 - 引用 ADR 0008 · Spring AI over LangChain4j（硬绑定）
+
+## 8. 符号清单（Symbol Registry · G-Arch 硬门禁兜底）
+
+本节穷举本 Phase 引入的所有代码符号 · `check-arch-consistency.sh` 严格模式会匹配代码改动中出现的 class/interface/API 路径名到本文件中（§1.7 规则 C）。
+
+**聚合 / 实体**：`WrongItemAnalysis` · `AiUsageLog` · `ItemChangedEvent`
+
+**Provider & LLM**：`LlmProvider` · `HttpLlmProvider` · `StubProvider` · `ProviderRouter` · `NoProviderException` · `AllProvidersFailedException` · `LlmCallException` · `LlmTransportException`
+
+**Service**：`AnalysisService` · `PIIRedactor` · `PromptTemplates`
+
+**MQ**：`WrongItemChangedConsumer`
+
+**Controller**：`AnalysisController` · `HealthController`
+
+**Repository**：`WrongItemAnalysisRepository` · `AiUsageLogRepository`
+
+**Config**：`LlmConfig` · `OpenApiConfig`
+
+**Support**：`SnowflakeIdGenerator`
+
+**Application**：`Application`
+
+**Test 支撑**：`AiAnalysisIntegrationTestBase` · `AnalysisE2EIT` · `MockMvcSmokeIT` · `PIIRedactorTest` · `TestStubs` · `StubHandle` · `Endpoint` · `ChatResponse` · `EmbedResponse` · `CapturedMessage` · `BodyBuilder` · `ChatParser` · `EmbedParser`
+
+**REST paths** (4 domain + 2 probe)：
+- `GET /analysis/{itemId}`
+- `POST /analysis/{itemId}/retry`
+- `GET /analysis/provider`
+- `GET /analysis/{itemId}/similar`
+
+**RocketMQ topics**：订阅 `wrongbook.item.changed`（S3 发布）
+
+**SQL 表**：新增 `ai_usage_log`（V1.0.023）· 写 `wrong_item_analysis`（S1 V1.0.012）· UPDATE `wrong_item.embedding`
