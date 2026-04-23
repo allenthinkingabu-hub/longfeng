@@ -1,0 +1,42 @@
+phase_id: s4
+run_id: 20260423-s4-kickoff
+updated_at: 2026-04-23T06:00:00Z
+upstream_tags_verified:
+  - s3-done
+design_gate:
+  biz_gate: draft
+  arch_gate: draft
+  arch_doc: design/arch/s4-ai-analysis.md
+dor_depends_on:
+  - id: wrong_item.embedding
+    role: embedding-write-back-target
+  - id: wrongbook.item.changed
+    role: rocketmq-topic-subscription
+  - id: V1.0.012__wrong_item_analysis.sql
+    role: analysis-table-from-S1
+port_allocation:
+  ai-analysis-service: 8082   # S2 gateway route confirmed
+migration_renumber:
+  reason: "plan §8.7 step 2 uses V1.0.020__ai_usage_log.sql but S3 already consumed V1.0.020 for wrong_item_version · this Phase renumbers to V1.0.023"
+  final: V1.0.023__ai_usage_log.sql
+tasks:
+  - id: s4-t01-dor-branch
+    status: done
+  - id: s4-t02-arch-biz-draft
+    status: in_progress
+  - id: s4-t03-g-biz-inquiry
+    status: pending
+  - id: s4-t04-arch-design
+    status: pending
+  - id: s4-t05-g-arch-sign
+    status: pending
+  - id: s4-t06-allowlist-pom-flyway
+    status: pending
+  - id: s4-t07-core-providers-pii-prompt
+    status: pending
+  - id: s4-t08-entity-service-consumer-controller
+    status: pending
+  - id: s4-t09-it-wiremock-openapi
+    status: pending
+  - id: s4-t10-ci-verify-tag
+    status: pending
