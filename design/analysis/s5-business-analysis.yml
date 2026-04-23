@@ -1,0 +1,279 @@
+# 落地计划 §9.0.5 · S5 Phase review-plan-service · Business Analysis YAML
+# schema_version 1.1（v1.8 AC 分行硬约束必 · A 级 Phase · 含 critical + verification_matrix 五类）
+#
+# 本 YAML _stage: entry · biz_gate: draft · 待 User 经 G-Biz 主动征询（§25 Playbook Step 5 · §1.7 规则 A'）
+# 签字后 bump 到 biz_gate: approved · dev_anchor/qa_anchor 执行中回填（_stage: exit 前）。
+#
+# ⚠️ 已识别两层冲突（待 User G-Biz 裁决）：
+#   Q-A [SC 归属冲突]：
+#     - 主执行档 §9.0.5 骨架写 sc_covered=[SC-06, SC-09]
+#     - design/sc-phase-mapping.yml（S0 Retrofit v1.7 权威）实际 owner_phases∋s5 的 SC = [SC-07, SC-08, SC-09, SC-10]
+#     - SC-06 owner_phases=[s4]（非 s5）· SC-08 与 SC-09 的 owner_phases 第一位是 s8（s5 为次要协作）
+#   Q-B [数据模型冲突]：
+#     - §9.0.5 AC-1 描述"落 1 条 active review_plan（next_review_at 动态）"
+#     - §9.3 目标 + §9.7 Step 5 createSevenNodes + §9.8 V-S5-03 要求"恰好 7 行"
+#     - 两种设计路径不同（单行动态 vs 预物化 7 行）· 数据模型 / 算法 / Job 扫描范围均受影响
+#
+# 本 entry 版暂按 sc-phase-mapping 真实值填 [SC-07, SC-08, SC-09, SC-10]（mapping 是 S0 v1.7 权威登记 + 本仓库实际 yml 唯一源）
+# G-Biz 裁决后 · exit 版按 User 决策调整 sc_covered 与 AC 编号
+
+schema_version: 1.1
+
+phase_id: s5
+phase_level: A                           # v1.8_v1.9 升级计划 §三改动 3 · AC 分行硬约束=必
+_stage: entry
+biz_gate: draft
+signed_by: ""
+conflicts_pending:                       # G-Biz 必须裁决 · 未决前禁止 biz_gate=approved
+  - code: Q-A
+    kind: sc_scope_conflict
+    description: "主执行档 §9.0.5 骨架与 sc-phase-mapping.yml S5 的 SC 归属不一致 · 已按 mapping 填 [SC-07..SC-10] · 待 User 最终确认"
+  - code: Q-B
+    kind: data_model_conflict
+    description: "§9.0.5 AC-1（单行 plan + 动态 next_review_at）vs §9.3/§9.7 Step 5/§9.8 V-S5-03（预物化 7 行 node_index 0..6）· 数据模型和算法路径两种 · 待 User 裁决"
+  - code: Q-C
+    kind: algorithm_branch
+    description: "§9.1 Q1 · SM-2 quality<3 时 ease_factor reset 到 2.5 还是保留原值（目前按 SM-2 论文 reset）"
+  - code: Q-D
+    kind: business_parameter
+    description: "§9.1 Q2 · T0 节点首次复习时刻（立即 / 当晚 20:00 / 创建后 2h · 目前假设 创建后 2h）"
+  - code: Q-E
+    kind: tz_policy
+    description: "§9.1 Q3 · 跨时区每日定义（user_profile.timezone / 全局 Asia/Shanghai · 目前假设按 profile）"
+
+sc_covered:                              # 暂按 sc-phase-mapping 真实值（待 Q-A 裁决）
+  - SC-07                                # 艾宾浩斯复习计划生成 · phase_owner=s5
+  - SC-08                                # 复习任务执行与打分 · phase_owner=s8 (s5 次要协作)
+  - SC-09                                # 学情分析卡片 · phase_owner=s8 (s5 次要协作)
+  - SC-10                                # 通用日历节点绑定 · phase_owner=s5
+
+narrative: |
+  S5 是 AI 错题本项目的"复习节奏节拍器" —— review-plan-service 后端服务。
+  职责：(a) 消费 S4 产出的 wrongbook.item.analyzed 事件 · 为每条错题建立首个复习计划；
+  (b) 按 SM-2 算法（或艾宾浩斯固定曲线 · 待 Q-B 裁决）驱动复习节奏；
+  (c) XXL-Job 每 5 分钟扫 due 节点 · 发 review.due 事件给 notification-service；
+  (d) 用户完成复习后（POST /review-plans/{id}/complete）同事务更新算法状态并发 review.completed；
+  (e) 为 S8 提供 GET /review-plans 日视图 API + GET /review-stats 学情聚合 API。
+
+  共享 SC：SC-07 (phase_owner=s5 · S5 主导) · SC-10 (phase_owner=s5 · S5 主导)
+           SC-08 (phase_owner=s8 · S5 提供 complete API + 事件) · SC-09 (phase_owner=s8 · S5 提供聚合 API)
+  S5 对 S8 的 downstream_contract 必须严格冻结（review.completed/due/mastered 事件 schema + GET APIs）·
+  任何变更需经 ADR + G-Arch 重审（§1.7 规则 C + §1.8 规则 D）。
+
+  本 Phase 不负责：错题录入（S3）· AI 解析（S4）· 通知推送（S8 / notification-service）·
+  前端 UI（S7/S8）· 匿名态（S11）· 家长监督视图 SC-14 的复习聚合（S5 仅提供数据源 · S8 做视图）。
+
+ac_coverage:
+  # ============ SC-07 · 艾宾浩斯复习计划生成（s5 主产出）============
+  - ac_id: "SC-07.AC-1"
+    title: "首次学习自动建计划（消费 wrongbook.item.analyzed 幂等写 review_plan）"
+    statement: "（待 User 在 acceptance-criteria-signed.yml 的 SC-07.acceptance[] 签字 · 填 threshold/source）"
+    source: "落地计划 §9.0.5 骨架 AC-1（原标 SC-06.AC-1 · Q-A 裁决后定）· 方案 §2B.SC-07"
+    critical: true
+    critical_reason: "并发 · 消费者幂等（S4 重放场景）· 错写多条 plan 会扭曲用户复习节奏 · 属未成年人数据触发"
+    domain_entities: [ReviewPlan, WrongItem, SM2State]
+    upstream_contract:
+      - "from_phase: s4 · event: wrongbook.item.analyzed · payload {itemId, userId, subject}"
+    downstream_contract:
+      - "to_phase: s8 · api: GET /review-plans?date=YYYY-MM-DD · 日视图"
+    user_journey: "S4 发 wrongbook.item.analyzed → S5 Consumer 检查幂等 → 按 Q-B 裁决方式建 plan(s)"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-07.AC-1 · §1 领域模型 · ADR 0013"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: "metric review_plan_create_total · event log topic=wrongbook.item.analyzed consumer offset"
+    risks:
+      - "S4 事件幂等键与 S5 Consumer 幂等键不一致 → 重放可能双写（依赖 wrong_item_id 唯一索引兜底）"
+      - "Q-B 若选'预物化 7 行'· 事务范围 + 唯一索引设计需按 (wrong_item_id, node_index) 复合"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "S4 推 wrongbook.item.analyzed(itemId=1001, userId=42, subject=math)"
+          when: "Consumer 消费该事件"
+          then: "review_plan 新增（1 行 / 7 行 · 按 Q-B 裁决）· status=active · next_review_at 按 Q-D 设置"
+      error_paths:
+        - id: "error_paths.0"
+          given: "Consumer 消费事件时 wrongbook.item_id 不存在（上游孤儿事件）"
+          when: "Consumer 调 Feign 查 wrongbook-service · 404"
+          then: "记 warn 日志 · ACK 事件（不重试 · 不写 plan）· metric review_plan_create_orphan_total +1"
+      boundary:
+        - id: "boundary.0"
+          given: "Consumer 消费同一 wrongbook.item.analyzed 事件两次（MQ 重投）"
+          when: "第二次 Consumer 尝试 INSERT"
+          then: "唯一索引冲突 · 跳过 · review_plan 计数不变"
+      observable:
+        - id: "observable.0"
+          given: "happy_path.0 触发后"
+          when: "查 metric review_plan_create_total{status=success}"
+          then: "计数 +1 · consumer offset 前进"
+      visual: []
+
+  - ac_id: "SC-07.AC-2"
+    title: "艾宾浩斯 T0-T6 节点映射（SM-2 或固定曲线 · 待 Q-B）"
+    statement: "（待 User 在 SC-07.acceptance[] 填 threshold · 特别是 T0..T6 的 ease_factor / interval 是否走动态 SM-2）"
+    source: "落地计划 §9.0.5 AC-3 · design/艾宾浩斯.md · ADR 0013"
+    critical: false
+    critical_reason: ""
+    domain_entities: [SM2State, TimeZoneProfile]
+    upstream_contract: []
+    downstream_contract:
+      - "to_phase: s8 · storage: T0-T6 节点索引（node_index 0..6）· 仅供 S8 可视化"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-07.AC-2 · §1.3 SM-2 vs 固定间隔"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: "pure fn SM2Algorithm · PBT 属性测试 (ease, interval, quality) 三元组"
+    risks:
+      - "Q-D T0 定义歧义（2h / 当晚 20:00 / 立即）· 直接影响 next_review_at 初值"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "首次复习（interval=0 · ease=2.5）· quality=5"
+          when: "SM2Algorithm.compute"
+          then: "nextInterval = 1d · nextEase = clamp(2.6, 1.3, 2.5) = 2.5"
+      error_paths:
+        - id: "error_paths.0"
+          given: "quality 非法值（-1 或 6）"
+          when: "SM2Algorithm.compute"
+          then: "抛 IllegalArgumentException"
+      boundary:
+        - id: "boundary.0"
+          given: "ease 已在地板 1.3 · quality=0"
+          when: "SM2Algorithm.compute"
+          then: "nextEase = 1.3（不再下降）· nextInterval = 1"
+      observable:
+        - id: "observable.0"
+          given: "算法执行 ≥ 1000 次"
+          when: "采样性能"
+          then: "单次 ≤ 10ms（纯函数 · 无 IO）"
+      visual: []
+
+  # ============ SC-08 · 复习任务执行与打分（s8 主产出 · s5 提供后端能力）============
+  - ac_id: "SC-08.AC-1"
+    title: "复习主循环 · POST /review-plans/{id}/complete · 同事务重算 next_review_at + 发 review.completed"
+    statement: "（待 User 在 SC-08.acceptance[] 填 threshold）"
+    source: "落地计划 §9.0.5 AC-2（原标 SC-06.AC-2）· 方案 §2B.SC-08"
+    critical: true
+    critical_reason: "并发 · 乐观锁冲突（dispatch_version）在高并发下需监控 · 涉用户复习进度记录正确性 · 未成年人数据"
+    domain_entities: [ReviewPlan, ReviewEvent, ReviewOutcome, SM2State]
+    upstream_contract:
+      - "from_phase: s8 · api: POST /review-plans/{id}/complete body {quality: 0-5}"
+    downstream_contract:
+      - "to_phase: s8 · event: review.completed · payload {planId, quality, nextReviewAt, easeFactorAfter}"
+      - "to_phase: s8 · event: review.mastered · 连续 3 次 ease≥2.8 触发（连续次数阈值待 Q-G 确认）"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-08.AC-1 · §2 complete 事务 · §3 event sourcing"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: "OpenAPI POST /review-plans/{id}/complete · metric review_complete_p95_ms · histogram review_quality_distribution"
+    risks:
+      - "乐观锁冲突率（dispatch_version）高并发下 > 1% 需告警 · 阈值进 S10"
+      - "同事务包含 INSERT review_event + UPDATE review_plan + 事件发布 · 走 Outbox 兜底（ADR 0005）"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "已存在 active plan (id=P1, ease=2.5, interval=1d)"
+          when: "POST /review-plans/P1/complete {quality: 5}"
+          then: "返回 200 · review_plan 更新 · review_outcome +1 行 · review.completed 事件发出"
+      error_paths:
+        - id: "error_paths.0"
+          given: "plan 不存在或已 mastered（软删）"
+          when: "POST /review-plans/9999/complete"
+          then: "返回 404 · 无副作用"
+        - id: "error_paths.1"
+          given: "body quality=6（越界）"
+          when: "POST /review-plans/P1/complete {quality: 6}"
+          then: "返回 400 · 校验失败"
+      boundary:
+        - id: "boundary.0"
+          given: "两个并发请求同时 POST complete 同一 plan"
+          when: "乐观锁冲突"
+          then: "其中一个返回 409 Conflict · 另一个成功 · 不出现双写 review_outcome"
+      observable:
+        - id: "observable.0"
+          given: "100 次 complete 请求"
+          when: "查 P95"
+          then: "review_complete_p95_ms < 200ms"
+      visual: []
+
+  # ============ SC-09 · 学情分析卡片（s8 主产出 · s5 提供聚合 API）============
+  - ac_id: "SC-09.AC-1"
+    title: "学情洞察数据源 · GET /review-stats · 按 range (week/month/quarter) 聚合"
+    statement: "（待 User 在 SC-09.acceptance[] 填 threshold）"
+    source: "落地计划 §9.0.5 AC SC-09.AC-1 · 方案 §2B.SC-09"
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewEvent, ReviewOutcome]
+    upstream_contract: []
+    downstream_contract:
+      - "to_phase: s8 · api: GET /review-stats?range=week&subject=math · 前端学情页"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-09.AC-1 · §5 聚合 API · ADR 0011"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: "OpenAPI GET /review-stats · metric review_stats_p95_ms"
+    risks:
+      - "review_event 180d 之外历史归档 · 聚合口径变化 · 响应体 warning 字段提示"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "用户 42 本周有 20 次 complete · 10 次 mastered"
+          when: "GET /review-stats?range=week"
+          then: "返回 {correctRate, masteredCount, reviewCount} × 7 day · 聚合正确"
+      error_paths:
+        - id: "error_paths.0"
+          given: "range=year（不支持）"
+          when: "GET /review-stats?range=year"
+          then: "返回 400 · 错误码 INVALID_RANGE"
+      boundary:
+        - id: "boundary.0"
+          given: "用户本周 0 次 complete"
+          when: "GET /review-stats?range=week"
+          then: "返回空数组 · 无异常"
+      observable:
+        - id: "observable.0"
+          given: "DB 内 10 万 review_event 行"
+          when: "GET /review-stats P95"
+          then: "< 500ms"
+      visual: []
+
+  # ============ SC-10 · 通用日历节点绑定（s5 主产出）============
+  - ac_id: "SC-10.AC-1"
+    title: "review_plan 绑定 calendar_node · S5 调 calendar-platform core-service Feign"
+    statement: "（待 User 在 SC-10.acceptance[] 填 threshold）"
+    source: "落地计划 §9.2 外部依赖 · 方案 §2A.6 / §2B.SC-10"
+    critical: true
+    critical_reason: "合规 · 儿童日程数据跨服务流转 · Feign 调用必须带熔断 + 降级占位 · 防雪崩"
+    domain_entities: [ReviewPlan, CalendarNode]
+    upstream_contract: []
+    downstream_contract:
+      - "to_phase: s3 · api: calendar-platform core-service /calendar/nodes · Feign 调"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-10.AC-1 · §3 Feign 契约"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: "Feign client circuit breaker state · fallback cache hit rate"
+    risks:
+      - "core-service 慢导致 review-plan 线程池打满 · 必须 Sentinel/Resilience4j 熔断 + Caffeine 10min cache"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "core-service 正常"
+          when: "S5 调 /calendar/nodes?date=..."
+          then: "返回日历节点列表 · Feign 200"
+      error_paths:
+        - id: "error_paths.0"
+          given: "core-service 超时 > 3s"
+          when: "S5 Feign 调"
+          then: "circuit open · 返回 fallback 本地 cache（staleness ≤ 10min）· metric circuit_open_total +1"
+      boundary:
+        - id: "boundary.0"
+          given: "cache 已过期（> 10min）且 core-service 仍断"
+          when: "GET /review-plans?date=..."
+          then: "返回 503 · 响应体标 source=unavailable · 不硬崩"
+      observable:
+        - id: "observable.0"
+          given: "Feign 调用 1000 次"
+          when: "P95"
+          then: "< 50ms（含 cache 命中）"
+      visual: []
