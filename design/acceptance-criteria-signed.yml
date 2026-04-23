@@ -1,0 +1,108 @@
+# 落地计划 §1.9 Test Oracle Contract · 独立签字文件
+# S0 落空白模板 · 15 SC 占位 · cross_cutting CC-01/CC-02 骨架
+#
+# 硬约束：
+#   - V-S0-13：signed_by 必须为空字符串（S0 禁止预签 · 由各 Phase DoR 前 User 独立签）
+#   - Builder Agent 永远不改本文件（只读）· 若发现 AC 歧义 · Builder 提 issue → User 修订 yml → 重签
+#   - 每个 Phase DoR 校验：check-oracle-source.sh <phase> --phase-ac 必须绿
+#   - 每个 Phase DoD 校验：check-oracle-source.sh <phase> --assertions 扫阈值必须 100% 归位
+#
+# 签字方式（User 独立执行 · 在各 Phase DoR 前完成）：
+#   1. 填每条 AC 的 threshold 与 source 字段
+#   2. 填 signed_by (@github-handle) + signed_at (ISO 8601) + signature_method
+#   3. 通过 GitHub PR 合并（signature_method: github-pr-approve）或本地 GPG 签章
+
+schema_version: 1.0
+
+signed_by: ""                        # 硬约束：S0 禁止预签 · 由 Phase DoR 前 User 独立填
+signed_at: null
+signature_method: ""                 # github-pr-approve | gpg-sign | in-person
+
+criteria:
+  - sc_id: SC-01
+    title: "拍照录入错题"
+    phase_owner: s7
+    acceptance: []                   # User 填 · 每条含 id / statement / oracle_type / threshold / source
+
+  - sc_id: SC-02
+    title: "错题列表分组筛选"
+    phase_owner: s7
+    acceptance: []
+
+  - sc_id: SC-03
+    title: "错题详情查看与标签管理"
+    phase_owner: s7
+    acceptance: []
+
+  - sc_id: SC-04
+    title: "错题软删除与恢复"
+    phase_owner: s7
+    acceptance: []
+
+  - sc_id: SC-05
+    title: "AI 错题解析（文字+图像）"
+    phase_owner: s4
+    acceptance: []
+
+  - sc_id: SC-06
+    title: "AI 解析失败降级与重试"
+    phase_owner: s4
+    acceptance: []
+
+  - sc_id: SC-07
+    title: "艾宾浩斯复习计划生成"
+    phase_owner: s5
+    acceptance: []
+
+  - sc_id: SC-08
+    title: "复习任务执行与打分"
+    phase_owner: s8
+    acceptance: []
+
+  - sc_id: SC-09
+    title: "学情分析卡片（TopN 薄弱项）"
+    phase_owner: s8
+    acceptance: []
+
+  - sc_id: SC-10
+    title: "通用日历节点绑定（复习/自定义）"
+    phase_owner: s5
+    acceptance: []
+
+  - sc_id: SC-11
+    title: "错题图片 OSS 上传与压缩"
+    phase_owner: s6
+    acceptance: []
+
+  - sc_id: SC-12
+    title: "匿名试用体验（device_fp 无账号）"
+    phase_owner: s11
+    acceptance: []
+
+  - sc_id: SC-13
+    title: "匿名试用升级到正式账号数据迁移"
+    phase_owner: s11
+    acceptance: []
+
+  - sc_id: SC-14
+    title: "家长监督视图（家庭组）"
+    phase_owner: s8
+    acceptance: []
+
+  - sc_id: SC-15
+    title: "学科标签层级（subject.tag 两级）"
+    phase_owner: s3
+    acceptance: []
+
+cross_cutting:
+  - id: CC-01
+    statement: "任意 API P95 延迟 < 500ms"
+    oracle_type: performance
+    threshold: ""                    # User 填 · 示例：p95 < 500ms
+    source: "业务与技术解决方案_AI错题本_基于日历系统.md §2A.11 非功能需求"
+
+  - id: CC-02
+    statement: "PII 字段在日志中必须脱敏"
+    oracle_type: compliance
+    threshold: ""                    # User 填 · 示例：grep '手机号原文' logs/ returns 0
+    source: "落地实施计划 §19 合规基线"
