@@ -6,8 +6,9 @@ CREATE TABLE IF NOT EXISTS review_outcome (
   wrong_item_id            BIGINT NOT NULL,
   user_id                  BIGINT NOT NULL,
   quality                  SMALLINT NOT NULL CHECK (quality >= 0 AND quality <= 5),
-  ease_factor_before       NUMERIC(4, 2) NOT NULL CHECK (ease_factor_before >= 1.3 AND ease_factor_before <= 2.5),
-  ease_factor_after        NUMERIC(4, 2) NOT NULL CHECK (ease_factor_after  >= 1.3 AND ease_factor_after  <= 2.5),
+  -- CHECK 范围对齐 S1 V1.0.016 review_plan.ease_factor BETWEEN 1.300 AND 5.000（为 Q-G mastered trigger ease≥2.8 阈值保留上探空间 · 当前 SM-2 guard-rail 夹到 2.5 · 但模型/fixture 可在上限外写入）
+  ease_factor_before       NUMERIC(5, 3) NOT NULL CHECK (ease_factor_before >= 1.300 AND ease_factor_before <= 5.000),
+  ease_factor_after        NUMERIC(5, 3) NOT NULL CHECK (ease_factor_after  >= 1.300 AND ease_factor_after  <= 5.000),
   interval_days_before     INTEGER NOT NULL CHECK (interval_days_before >= 0 AND interval_days_before <= 60),
   interval_days_after      INTEGER NOT NULL CHECK (interval_days_after  >= 0 AND interval_days_after  <= 60),
   completed_at             TIMESTAMPTZ NOT NULL DEFAULT now(),

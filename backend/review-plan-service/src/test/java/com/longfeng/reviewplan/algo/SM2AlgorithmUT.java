@@ -16,7 +16,14 @@ import org.junit.jupiter.api.Test;
  */
 class SM2AlgorithmUT {
 
-  private static final AlgorithmConfig CFG = AlgorithmConfig.defaults();
+  // 本 UT 按"经典 SM-2 范围 [1.3, 2.5]"测试边界 · Service 层的 defaults() 已放宽到 3.0 以支 Q-G mastered
+  private static final AlgorithmConfig CFG =
+      new com.longfeng.reviewplan.algo.AlgorithmConfig(
+          new java.math.BigDecimal("1.3"),
+          new java.math.BigDecimal("2.5"),
+          new java.math.BigDecimal("2.5"),
+          60,
+          new java.math.BigDecimal("0.2"));
 
   // ============================================================
   // happy_path · SM-2 canonical update (quality≥3)
@@ -215,12 +222,12 @@ class SM2AlgorithmUT {
   }
 
   @Test
-  @DisplayName("config defaults have expected values")
+  @DisplayName("config defaults have expected values (easeMax=3.0 留 Q-G mastered 空间)")
   void config_defaults_sanity() {
     AlgorithmConfig c = AlgorithmConfig.defaults();
     assertThat(c.easeInit()).isEqualByComparingTo("2.5");
     assertThat(c.easeMin()).isEqualByComparingTo("1.3");
-    assertThat(c.easeMax()).isEqualByComparingTo("2.5");
+    assertThat(c.easeMax()).isEqualByComparingTo("3.0");
     assertThat(c.intervalMaxDays()).isEqualTo(60);
   }
 

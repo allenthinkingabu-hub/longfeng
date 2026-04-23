@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  * Controller 视业务需要判 503 CALENDAR_DEPENDENCY_DOWN.
  */
 @Component
+@ConditionalOnProperty(value = "review.feign.enabled", havingValue = "true", matchIfMissing = true)
 public class CalendarFeignClientFallback implements CalendarFeignClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(CalendarFeignClientFallback.class);
