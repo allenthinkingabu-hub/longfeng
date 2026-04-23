@@ -98,12 +98,13 @@ if [[ -n "$CHANGED_FILES" ]]; then
   # funnel into sort -u. `|| true` on the grep keeps set -o pipefail happy when no lines hit.
   while IFS= read -r f; do
     [[ -f "$REPO_ROOT/$f" ]] || continue
-    (grep -hE '(class |interface |@RequestMapping|@PostMapping|@GetMapping|@PutMapping|@DeleteMapping|topic:|CREATE TABLE)' "$REPO_ROOT/$f" 2>/dev/null || true) | \
-      sed -E '
-        s/.*(class|interface) ([A-Z][A-Za-z0-9]+).*/\2/
-        s/.*"(\/[a-z0-9\-\/_{}]+)".*/\1/
-        s/.*topic:[[:space:]]*([a-z0-9\.\-]+).*/\1/
-        s/.*CREATE TABLE[[:space:]]+([a-z_][a-z0-9_]*).*/\1/I
+    { grep -hE '(class |interface |@RequestMapping|@PostMapping|@GetMapping|@PutMapping|@DeleteMapping|topic:|CREATE TABLE)' "$REPO_ROOT/$f" 2>/dev/null || true; } | \
+      { grep -vE '^[[:space:]]*(\*|//|/\*)' || true; } | \
+      sed -nE '
+        s/.*(class|interface) ([A-Z][A-Za-z0-9]+).*/\2/p
+        s/.*"(\/[a-z0-9\-\/_{}]+)".*/\1/p
+        s/.*topic:[[:space:]]*([a-z0-9\.\-]+).*/\1/p
+        s/.*CREATE TABLE[[:space:]]+([a-z_][a-z0-9_]*).*/\1/Ip
       '
   done <<< "$CHANGED_FILES" | sort -u > /tmp/arch-symbols-$$.txt
   SYMBOLS=$(cat /tmp/arch-symbols-$$.txt)

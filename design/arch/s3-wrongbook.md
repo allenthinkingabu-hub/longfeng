@@ -650,3 +650,44 @@ CREATE INDEX idx_wrong_item_outbox_status ON wrong_item_outbox(status, created_a
 - 引用 **ADR 0002** · Outbox over Seata（硬绑定 · 禁 Seata 关键字）
 - 引用 **ADR 0006** · JPA + QueryDSL over MyBatis（硬绑定 · allowlist 禁 MyBatis）
 - 引用 **ADR 0008** · Spring AI over LangChain4j（S4 预埋 · 本 Phase 不触）
+
+## 8. 符号清单（Symbol Registry · G-Arch 硬门禁兜底）
+
+本节穷举本 Phase 引入的所有代码符号 · `check-arch-consistency.sh` 严格模式会匹配代码改动中出现的 class/interface/API 路径名到本文件中，以此保持架构文档与代码一对一可溯源（§1.7 规则 C）。新增符号必须同步追加本节。
+
+**聚合根 / 实体**：`WrongItem` · `WrongItemTag` · `WrongItemImage` · `TagTaxonomy` · `WrongAttempt` · `WrongItemOutbox` · `AuditLog`
+
+**值对象 / 枚举 / 支持类**：`WrongItemStatus` · `SnowflakeIdGenerator` · `WrongItemChangedEvent`
+
+**Repository 层**：`WrongItemRepository` · `WrongItemTagRepository` · `WrongItemImageRepository` · `TagTaxonomyRepository` · `WrongAttemptRepository` · `WrongItemOutboxRepository` · `AuditLogRepository`
+
+**Service 层**：`WrongItemService` · `WrongAttemptService` · `IdempotencyService` · `NotFoundException`
+
+**MQ**：`WrongItemProducer`
+
+**Controller 层**：`WrongItemController` · `WrongAttemptController` · `HealthController` · `WrongbookExceptionHandler`
+
+**Config**：`JpaConfig` · `JsonConfig` · `OpenApiConfig`
+
+**Application**：`Application`
+
+**DTO**：`CreateWrongItemReq` · `UpdateWrongItemReq` · `AddTagReq` · `ConfirmImageReq` · `SetDifficultyReq` · `CreateAttemptReq` · `WrongItemVO` · `WrongItemTagVO` · `WrongItemImageVO` · `WrongItemPageVO` · `WrongAttemptVO`
+
+**Test 支撑**：`WrongbookIntegrationTestBase` · `TestMqConfig` · `RecordingRocketMQTemplate` · `WrongItemIT` · `WrongItemApiContractIT` · `MockMvcSmokeIT`
+
+**REST paths**（7 URL 模板 · 11 操作）：
+- `POST /wrongbook/items`
+- `GET /wrongbook/items`
+- `GET /wrongbook/items/{id}`
+- `PATCH /wrongbook/items/{id}`
+- `DELETE /wrongbook/items/{id}`
+- `POST /wrongbook/items/{id}/tags`
+- `DELETE /wrongbook/items/{id}/tags/{tagCode}`
+- `POST /wrongbook/items/{id}/images`
+- `POST /wrongbook/items/{id}/difficulty`
+- `POST /wrongbook/items/{id}/attempts`
+- `GET /wrongbook/items/{id}/attempts`
+
+**RocketMQ topic**：`wrongbook.item.changed`（thin payload · 见 §4.2）
+
+**SQL 表（新增 · Flyway V1.0.019..022）**：`wrong_item_outbox` · `wrong_attempt`（wrong_item 扩列 version/difficulty · §4.4）
