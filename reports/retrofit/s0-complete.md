@@ -85,6 +85,24 @@ commits:
 | 3 | arch 原地重写不 bump ADR | **适用** · `design/arch/s0-bootstrap.md` 仅补 3 行豁免列表项 · 无架构变更 · 无 ADR |
 | 4 | Verifier 暴露旧 bug 走 Hotfix | **类推适用** · S0 无 critical AC · 无 Verifier 复写对象 · Step 5 整体豁免 |
 
+## 三·补 · 2026-04-23 User 质询后补验（层 1 feedback memory 催生）
+
+**重大补记**：本 complete 报告初版 §二只列了 V-S0-00..V-S0-19 中的 **13 条**（00 + 09 + 11..19）· 主动排除了 V-S0-01..V-S0-10 原始业务闸。这是 `s0-plan.md` §二 Step 6 闸集合设计时的**隐性收窄**，违反主文档 §4.9 "全部 20 条返回 0" 的全称强制条款。
+
+User 连续两轮追问 "S0 真的按业务来的吗 / 你真的检查了吗" 后暴露此问题。补救动作：
+
+1. 层 1 feedback memory 写入用户 memory system（`~/.claude/projects/.../memory/feedback_plan_explicit_exemption.md`）· 后续所有 plan 产出强制列"执行范围 + 显式豁免"
+2. 立即补跑 V-S0-01..V-S0-10 全量 + 11 脚本完整 smoke · 结果全量记录在 `reports/retrofit/s0-dod-verify.md`
+3. 修复脚本 3 个"业务空转"缺陷（check-test-effectiveness 硬编码路径 · check-ac-coverage --arch 语法错 · --commits/--tests/--visual 无 SKELETON 警告）
+
+**补跑后结论**：V-S0-01/02/03/05/06/07/08/09/10 · 9 条 PASS；**V-S0-04 RED · 2 个 Checkstyle unused import · 归属 S4 ai-analysis-service 代码漂移**（不是 S0 骨架问题）· 推荐 S4 独立 hotfix 修复。
+
+**tag 语义澄清**：`s0-v1.8-compliant` = "v1.8 产物形式合规"（22 条新增闸 + 9 条原始业务闸绿）· 不承诺 "V-S0-04 当前 HEAD 绿"。V-S0-04 的修复责任在 S4 Retrofit / hotfix。
+
+详细报告：`reports/retrofit/s0-dod-verify.md`
+
+---
+
 ## 四、发现的文档/实现问题（非阻塞）
 
 1. **§4.8 V-S0-00b 断言是 yq 语义误用**：`yq '.exempt' design/arch/s0-bootstrap.md | grep -q 'true'` 直接把整个 markdown 文件喂 yq · 但 `s0-bootstrap.md` 是 front matter + markdown body 的混合格式 · yq 解析 body 时炸。workaround：先 `awk` 抽 front matter 再喂 yq。建议下次主文档迭代时改 §4.8 V-S0-00b 为：

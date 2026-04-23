@@ -28,45 +28,67 @@ fi
 
 case "$MODE" in
   --arch)
-    # TODO: 非豁免 Phase · 扫 arch.md 每个 ## AC: SC-XX-ACY 节 + 五行齐全
-    # grep -c '^## AC: SC-' > 0 · 每节 awk block 内含 API:/Domain:/Event:/Error:/NFR: 五行
+    # 非豁免 Phase · 扫 arch.md 每个 ## AC: SC-XX-ACY 节 + 五行齐全
     if [[ -z "$ARCH_DOC" ]]; then
       echo "FAIL: phase=$PHASE arch doc missing (expected design/arch/${PHASE}.md or ${PHASE}-*.md)"
       exit 1
     fi
-    AC_COUNT=$(grep -cE '^## AC: SC-[0-9]+\.AC-[0-9]+' "$ARCH_DOC" 2>/dev/null || echo 0)
-    if [[ "${AC_COUNT:-0}" -eq 0 ]]; then
+    # 注意：不要用 `|| echo 0` · grep -c 在无匹配时返回 0 且 exit 1 · 与 echo 叠成 "0\n0" 破坏数字比较
+    AC_COUNT=$(grep -cE '^## AC: SC-[0-9]+\.AC-[0-9]+' "$ARCH_DOC" 2>/dev/null) || AC_COUNT=0
+    AC_COUNT="${AC_COUNT:-0}"
+    if [[ "$AC_COUNT" -eq 0 ]]; then
       echo "FAIL: phase=$PHASE arch doc $ARCH_DOC 未按 ## AC: SC-XX-ACY 分节（§1.5 约束 #13）"
       exit 1
     fi
-    # TODO: per-AC 五行齐全验证 · 由各 Phase V-SX-20 首次调用时补完整块解析
-    echo "[ac-coverage] phase=$PHASE --arch skeleton OK · AC sections=$AC_COUNT · TODO: per-AC 5-line check"
+    # 五行齐全检查（每个 AC 节必含 API: / Domain: / Event: / Error: / NFR:）
+    MISS_LINES=0
+    while IFS= read -r AC_HEADER; do
+      [[ -z "$AC_HEADER" ]] && continue
+      # 抽取该 AC 节到下一个 ## 或 EOF 之间的 body
+      AC_BODY=$(awk -v hdr="$AC_HEADER" '
+        $0 == hdr { in_ac=1; next }
+        in_ac && /^## / { exit }
+        in_ac { print }
+      ' "$ARCH_DOC")
+      for line_key in "API:" "Domain:" "Event:" "Error:" "NFR:"; do
+        if ! echo "$AC_BODY" | grep -qE "^-[[:space:]]+\*?\*?${line_key}" 2>/dev/null \
+          && ! echo "$AC_BODY" | grep -qE "^[[:space:]]*${line_key}" 2>/dev/null; then
+          echo "MISS: $AC_HEADER 缺 '${line_key}' 行（§1.5 约束 #13 要求 API/Domain/Event/Error/NFR 五行齐全）"
+          MISS_LINES=$((MISS_LINES+1))
+        fi
+      done
+    done < <(grep -E '^## AC: SC-[0-9]+\.AC-[0-9]+' "$ARCH_DOC" 2>/dev/null)
+    if [[ "$MISS_LINES" -gt 0 ]]; then
+      echo "FAIL: phase=$PHASE arch $ARCH_DOC 有 $MISS_LINES 处五行不齐（AC sections=$AC_COUNT）"
+      exit 1
+    fi
+    echo "[ac-coverage] phase=$PHASE --arch OK · AC sections=$AC_COUNT · 五行齐全"
     exit 0
     ;;
 
   --commits)
     # Retrofit Phase 传 --since <retrofit-start-commit> 只看增量（§26.2 豁免条款 2）
     SINCE="${3:-}"
-    SINCE_OPT=""
-    [[ -n "$SINCE" ]] && SINCE_OPT="--since=$SINCE"
-    # TODO: git log <SINCE_OPT> · 扫业务 commit message · 每条须含 [SC-XX-ACY] 前缀
-    # （Retrofit [RETROFIT-v1.8] / Hotfix [HOTFIX-v1.8] / V19-UPGRADE 等豁免白名单）
-    echo "[ac-coverage] phase=$PHASE --commits skeleton OK · TODO: 各 Phase V-SX-20 首次调用时补"
+    # S0 骨架：commit 前缀扫描的完整逻辑（SC-XX-ACY 前缀判定 + retrofit/hotfix 白名单）留各 Phase V-SX-20 首次调用时补
+    echo "WARN: [ac-coverage] phase=$PHASE --commits · 本子命令仍是 SKELETON · exit 0 仅表示脚手架可执行 · 实际 commit 前缀扫描未做"
+    echo "  · 非豁免 Phase 的 V-SX-20 首次调用时必须补完整逻辑：git log ${SINCE:+--since=$SINCE} · 每业务 commit 必含 [SC-XX-ACY] 前缀"
+    echo "  · 请调用者不要把本次 exit 0 解读为真实合规"
     exit 0
     ;;
 
   --tests)
-    # TODO: 后端 Java grep -rE '@CoversAC\("SC-[0-9]+\.AC-[0-9]+#[a-z_]+\.[0-9]+"\)'
-    # TODO: 前端 TS grep -rE '@CoversAC|t\.coversAC\(' (测试 runner adapter)
-    # TODO: 交叉：matrix 行数 == @CoversAC 方法数 · 不允许多不允许少
-    echo "[ac-coverage] phase=$PHASE --tests skeleton OK · TODO: 各 Phase V-SX-20 首次调用时补"
+    # S0 骨架：@CoversAC 扫描 + matrix 行数等式留各 Phase V-SX-20 首次调用时补
+    echo "WARN: [ac-coverage] phase=$PHASE --tests · 本子命令仍是 SKELETON · exit 0 仅表示脚手架可执行 · 实际 @CoversAC 扫描未做"
+    echo "  · 非豁免 Phase 的 V-SX-20 首次调用时必须补完整逻辑：扫测试方法 @CoversAC 注解 · matrix 行数 == 方法数"
+    echo "  · 请调用者不要把本次 exit 0 解读为真实合规"
     exit 0
     ;;
 
   --visual)
-    # TODO: 前端 Phase · Playwright headless 1440×900 固定字体 · 截图与 baseline 对比
-    # TODO: diff ≤ 列表页 3% · 富交互页 8%（阈值从 design/system/screenshots/baseline/manifest.yml 读）
-    echo "[ac-coverage] phase=$PHASE --visual skeleton OK · TODO: Sd + 各前端 Phase V-SX-20 首次调用时补"
+    # S0 骨架：Playwright diff vs baseline 留 Sd.10 + 前端 Phase V-SX-20 首次调用时补
+    echo "WARN: [ac-coverage] phase=$PHASE --visual · 本子命令仍是 SKELETON · exit 0 仅表示脚手架可执行 · 实际视觉 diff 未做"
+    echo "  · Sd.10 + 前端 Phase（S7/S8/S11 前端 AC）V-SX-20 首次调用时必须补：Playwright headless 1440×900 · diff ≤ 3%/8%"
+    echo "  · 请调用者不要把本次 exit 0 解读为真实合规"
     exit 0
     ;;
 

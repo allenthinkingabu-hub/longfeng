@@ -25,20 +25,23 @@ if [[ -n "$ARCH_DOC" ]]; then
   fi
 fi
 
-# S0 骨架：识别技术栈 · 实际 mutation 执行留给各 Phase 首次调用时补
-BACKEND_POM="$REPO_ROOT/backend/${PHASE}-service/pom.xml"
-FRONTEND_PKG="$REPO_ROOT/frontend/apps/${PHASE}/package.json"
+# 识别技术栈：项目 backend module 名是业务域名（wrongbook/ai-analysis/review-plan/file/anonymous/gateway/common）
+# 不是 <phase>-service 命名 · 不能按 phase_id 硬编码路径
+# 改为：检测 backend/ 和 frontend/ 是否含有非空的业务代码 · 识别项目级技术栈
+BACKEND_HAS_POM=false
+FRONTEND_HAS_PKG=false
+[[ -n "$(find "$REPO_ROOT/backend" -maxdepth 2 -name 'pom.xml' -not -path "*/common/*" 2>/dev/null | head -1)" ]] && BACKEND_HAS_POM=true
+[[ -f "$REPO_ROOT/frontend/package.json" ]] && FRONTEND_HAS_PKG=true
+
 STACK=""
-[[ -f "$BACKEND_POM" ]] && STACK="backend-java"
-[[ -f "$FRONTEND_PKG" ]] && STACK="${STACK:-frontend-ts}"
+$BACKEND_HAS_POM  && STACK="${STACK}backend-java "
+$FRONTEND_HAS_PKG && STACK="${STACK}frontend-ts"
+STACK="${STACK:-unknown}"
 
-if [[ -z "$STACK" ]]; then
-  echo "[test-effectiveness] phase=$PHASE no pom/package found · skeleton exit 0 · 各 Phase 首次调用时补"
-  exit 0
-fi
-
-# TODO: backend-java → mvn -Ppitest · 解析 target/pit-reports/mutations.xml · kill_rate ≥ 60
-# TODO: frontend-ts → pnpm stryker run · 解析 reports/mutation/mutation.json · kill_rate ≥ 60
-# TODO: kill_rate < 60 → 产 reports/phase-${PHASE}-mutation.md 含弱测试方法剪枝清单
-echo "[test-effectiveness] phase=$PHASE stack=$STACK skeleton OK · TODO: 各 Phase 首次调用时补 mutation 实际执行"
+# S0 骨架：实际 mutation 执行留给各 Phase 首次调用时补
+# 每 Phase 的测试文件实际路径由 Phase 自己的 pom/package 声明 · 本脚本不猜
+echo "WARN: [test-effectiveness] phase=$PHASE stack=$STACK · 本脚本仍是 SKELETON · exit 0 仅表示脚手架可执行 · 实际 mutation 未跑"
+echo "  · backend-java 技术栈：各 Phase V-SX-13 首次调用时补 mvn -Ppitest · 解析 target/pit-reports/mutations.xml · kill_rate ≥ 60"
+echo "  · frontend-ts 技术栈：各前端 Phase 首次调用时补 pnpm stryker run · 解析 reports/mutation/mutation.json · kill_rate ≥ 60"
+echo "  · 请调用者不要把本次 exit 0 解读为真实合规"
 exit 0
