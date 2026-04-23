@@ -40,7 +40,7 @@ v_assertions:
   V-S3-10_outbox_table: PASS   # WrongItemIT#outboxTablePresent
   V-S3-11_allowlist_no_mybatis: PASS
   V-S3-12_arch_consistency: PASS   # DIFF_BASE=s2-done · 0 missing symbols
-  V-S3-13_tags_remote: PENDING   # tag s3-done 待本 commit 之后推
+  V-S3-13_tags_remote: PASS      # s3-arch-frozen + s3-done 已推远端（2026-04-23）
 drift_log:
   - id: D1
     decision: Add wrong_item.version (V1.0.020) per Q1-R1 · JPA @Version Long
@@ -96,4 +96,4 @@ tasks:
   - id: s3-t11-ci-verify
     status: done
   - id: s3-t12-tag-done
-    status: in_progress
+    status: done
