@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /** Smoke test · {@code GET /actuator/health} should return UP · 落地计划 §6.7 Step 12. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-class MockMvcSmokeIT {
+class MockMvcSmokeIT extends AiAnalysisIntegrationTestBase {
 
   @Autowired private MockMvc mvc;
 

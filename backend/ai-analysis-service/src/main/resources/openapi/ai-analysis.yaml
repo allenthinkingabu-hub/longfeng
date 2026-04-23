@@ -1,0 +1,124 @@
+openapi: 3.0.1
+info:
+  title: ai-analysis-service
+  version: 1.0.0
+servers:
+- url: http://localhost:8082
+  description: Generated server url
+paths:
+  /analysis/{itemId}/retry:
+    post:
+      tags:
+      - analysis-controller
+      operationId: retry
+      parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /ready:
+    get:
+      tags:
+      - health-controller
+      operationId: ready
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultString'
+  /live:
+    get:
+      tags:
+      - health-controller
+      operationId: live
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultString'
+  /analysis/{itemId}:
+    get:
+      tags:
+      - analysis-controller
+      operationId: latest
+      parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /analysis/{itemId}/similar:
+    get:
+      tags:
+      - analysis-controller
+      operationId: similar
+      parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: k
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 3
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+  /analysis/provider:
+    get:
+      tags:
+      - analysis-controller
+      operationId: provider
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+components:
+  schemas:
+    ApiResultString:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: string
+        traceId:
+          type: string

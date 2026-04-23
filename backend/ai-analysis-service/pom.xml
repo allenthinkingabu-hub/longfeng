@@ -14,10 +14,16 @@
   <artifactId>ai-analysis-service</artifactId>
   <packaging>jar</packaging>
   <name>ai-analysis-service</name>
-  <description>S2 · ai-analysis-service skeleton · web + actuator + openapi · plan §6</description>
+  <description>S4 · ai-analysis-service · LLM consumer + PII + Sentinel + pgvector similar [plan §8]</description>
 
   <properties>
-    <springdoc.version>2.3.0</springdoc.version>
+    <springdoc.version>2.5.0</springdoc.version>
+    <rocketmq-spring.version>2.3.1</rocketmq-spring.version>
+    <rocketmq-client.version>5.3.1</rocketmq-client.version>
+    <jackson-jsr310.version>2.17.1</jackson-jsr310.version>
+    <wiremock.version>3.9.1</wiremock.version>
+    <okhttp.version>4.12.0</okhttp.version>
+    <awaitility.version>4.2.1</awaitility.version>
   </properties>
 
   <dependencies>
@@ -26,6 +32,7 @@
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -35,14 +42,82 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!-- S4 · RocketMQ consumer · §8.4 -->
+    <dependency>
+      <groupId>org.apache.rocketmq</groupId>
+      <artifactId>rocketmq-spring-boot-starter</artifactId>
+      <version>${rocketmq-spring.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.rocketmq</groupId>
+      <artifactId>rocketmq-client</artifactId>
+      <version>${rocketmq-client.version}</version>
+    </dependency>
+
+    <!-- S4 · LLM 客户端（okhttp · allowlist §8.4 · WebClient 兼容）· Spring AI 1.0.0-M1 仓库不稳定时走 okhttp 封装 -->
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>${okhttp.version}</version>
+    </dependency>
+
+    <!-- S4 · Sentinel 熔断 + 限流 · §8.4 首选 -->
+    <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+    </dependency>
+
+    <!-- Jackson JSR-310 -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>${jackson-jsr310.version}</version>
+    </dependency>
+
+    <!-- pgvector 适配（S3 引入 · 此 Phase 需查询 embedding） -->
+    <dependency>
+      <groupId>com.pgvector</groupId>
+      <artifactId>pgvector</artifactId>
+      <version>0.1.6</version>
+    </dependency>
+
+    <!-- OpenAPI -->
+    <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>${springdoc.version}</version>
     </dependency>
 
+    <!-- Test · WireMock + Awaitility · §8.4 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>${wiremock.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>${awaitility.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -52,6 +127,29 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <parameters>true</parameters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <id>prepare-agent-it</id>
+            <goals><goal>prepare-agent-integration</goal></goals>
+          </execution>
+          <execution>
+            <id>report-it</id>
+            <phase>verify</phase>
+            <goals><goal>report-integration</goal></goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

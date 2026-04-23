@@ -49,6 +49,10 @@ jobs:
         env:
           DIFF_BASE: s2-done
         run: bash ops/scripts/check-arch-consistency.sh s3
+      - name: arch-consistency · s4 (strict · diff vs s3-done)
+        env:
+          DIFF_BASE: s3-done
+        run: bash ops/scripts/check-arch-consistency.sh s4
 
   # 落地计划 §6.7 §7.7 · 后端 CI（S2 骨架 + S3 wrongbook-service 全绿）
   backend-ci:
@@ -89,8 +93,13 @@ jobs:
       - name: Backend S3 full verify (wrongbook-service)
         working-directory: backend
         run: mvn -q -B -pl wrongbook-service -am verify
+      - name: Backend S4 full verify (ai-analysis-service)
+        working-directory: backend
+        run: mvn -q -B -pl ai-analysis-service -am verify
       - name: S3 allowlist
         run: bash ops/scripts/check-allowlist.sh s3
+      - name: S4 allowlist
+        run: bash ops/scripts/check-allowlist.sh s4
 
   # 占位 · S6 补齐前端 CI（lint + test + build + 覆盖率）
   frontend-ci:

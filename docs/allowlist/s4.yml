@@ -1,0 +1,17 @@
+# refs 落地计划 §8.4 工具白名单 · §1.6 规则 B
+# S4 = AI 解析服务 · Spring AI + Sentinel + WireMock
+extends: global
+additional_tools:
+  - { name: spring-ai-openai,                      version: "1.0.0-M1" }
+  - { name: spring-ai-dashscope,                   version: "1.0.0-M1" }
+  - { name: spring-cloud-starter-alibaba-sentinel, version: "2023.0.1.0" }
+  - { name: okhttp,                                version: "4.x" }
+  - { name: wiremock,                              version: "3.x" }
+  - { name: testcontainers,                        version: "1.20.x" }
+  - { name: awaitility,                            version: "4.2.x" }
+  - { name: jackson-module-jsonSchema,             version: "2.17.x" }
+additional_deny:
+  - { pattern: "import\\s+dev\\.langchain4j",                reason: "与 Spring AI 栈不混用 · §1.6 Hard Deny" }
+  - { pattern: "new\\s+RestTemplate\\(\\)[^;]*(dashscope|openai|qwen|gpt-)", reason: "LLM 调用必须走 Spring AI ChatClient · 禁止 RestTemplate 直连" }
+  - { pattern: "sk-[A-Za-z0-9]{20,}",                       reason: "OpenAI/Dashscope API Key 明文 · 必须 ${AI_API_KEY}" }
+  - { pattern: "api[_-]?key\\s*[:=]\\s*\"[A-Za-z0-9-]{20,}\"", reason: "API Key 明文赋值禁止" }

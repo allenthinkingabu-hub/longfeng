@@ -1,4 +1,4 @@
-# ai-analysis-service · 落地计划 §6.7 Step 11
+# ai-analysis-service · 落地计划 §8.7 · S4 configuration
 server:
   port: 8082
 
@@ -6,9 +6,44 @@ spring:
   application:
     name: ai-analysis-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/ai_analysis}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wrongbook}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:wb}
+    hikari:
+      minimum-idle: 3
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    out-of-order: true
+    locations: classpath:db/migration
+  ai:
+    dashscope:
+      api-key: ${AI_API_KEY:stub-key}
+      chat.options.model: ${DASHSCOPE_CHAT_MODEL:qwen-plus}
+      embedding.options.model: ${DASHSCOPE_EMBED_MODEL:text-embedding-v2}
+    openai:
+      api-key: ${AI_API_KEY:stub-key}
+      chat.options.model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
+      embedding.options.model: ${OPENAI_EMBED_MODEL:text-embedding-3-small}
+
+feature:
+  llm-provider: ${FEATURE_LLM_PROVIDER:dashscope}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV:localhost:9876}
+  consumer:
+    group: ai-analysis-cg
+
+snowflake:
+  worker-id: ${SNOWFLAKE_WORKER_ID:2}
 
 springdoc:
   api-docs:
