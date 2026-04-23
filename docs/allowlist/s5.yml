@@ -1,0 +1,17 @@
+# refs 落地计划 §9.4 工具白名单 · §1.6 规则 B
+# S5 = review-plan-service · XXL-Job + OpenFeign + Sentinel + RocketMQ + Caffeine + Testcontainers
+extends: global
+additional_tools:
+  - { name: xxl-job-core,                          version: "2.4.x" }
+  - { name: spring-cloud-starter-openfeign,        version: "4.1.x" }
+  - { name: spring-cloud-starter-alibaba-sentinel, version: "2023.0.1.0" }
+  - { name: rocketmq-spring-boot-starter,          version: "2.3.x" }
+  - { name: caffeine,                              version: "3.1.x" }
+  - { name: testcontainers,                        version: "1.20.x" }
+  - { name: awaitility,                            version: "4.2.x" }
+additional_deny:
+  - { pattern: "Thread\\.sleep\\(",                         reason: "业务代码禁 Thread.sleep · 测试走 awaitility · §9.4" }
+  - { pattern: "@Scheduled\\(",                             reason: "应用级定时禁 · 统一走 XXL-Job · §9.4 + ADR 0015" }
+  - { pattern: "ease_factor\\s*=\\s*[0-9.]+",               reason: "SM-2 阈值禁硬编码 · 必须走 AlgorithmConfig · §9.4" }
+  - { pattern: "INTERVAL_DAYS\\s*=\\s*\\{[^}]*\\}",          reason: "SM-2 间隔数组禁硬编码 · Nacos 动态下发" }
+  - { pattern: "spring-boot-starter-oauth2-resource-server", reason: "本项目选自研 JwtAuthFilter · §6.4 禁 OAuth2 混用" }
