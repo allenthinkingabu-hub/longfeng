@@ -159,42 +159,472 @@ flowchart LR
 
 ---
 
-## 1. 领域模型（Domain Model · G-Arch 待完成 · 按 AC 分节五行齐全）
+## 1. 领域模型（Domain Model）
 
-> **G-Arch 待补**：Mermaid classDiagram（ReviewPlan / ReviewEvent / ReviewOutcome / SM2State）+ stateDiagram-v2（active → mastered）· **按 AC: SC-07.AC-1 / SC-07.AC-2 / SC-08.AC-1 / SC-09.AC-1 / SC-10.AC-1 分节**（v1.8 § 1.5 约束 #13 · 每 AC 子节五行齐全 API/Domain/Event/Error/NFR）。
+### 1.1 类图（Mermaid classDiagram）
 
-（TBD · Step 7 Planner 切卡前必须完成）
+```mermaid
+classDiagram
+  class ReviewPlan {
+    +Long id
+    +Long wrongItemId
+    +Long userId
+    +Integer nodeIndex  0..6
+    +BigDecimal easeFactor  1.3-2.5
+    +Integer intervalDays  0-60
+    +Instant scheduledAt
+    +Instant nextReviewAt
+    +Integer consecutiveGoodCount  0..3
+    +PlanStatus status  active|mastered
+    +Long dispatchVersion  乐观锁
+    +Instant completedAt
+    +Instant deletedAt  软删
+    --
+    +createSevenNodes(wrongItemId,userId,baseInstant) ReviewPlan[]
+    +updateOnComplete(quality,cfg) ReviewPlan
+    +markMastered() void
+    +isMastered() boolean
+  }
+  class ReviewOutcome {
+    +Long id
+    +Long planId
+    +Integer quality  0..5
+    +Instant completedAt
+    +BigDecimal easeFactorBefore
+    +BigDecimal easeFactorAfter
+    +Integer intervalDaysBefore
+    +Integer intervalDaysAfter
+  }
+  class ReviewEvent {
+    +Long id
+    +Long planId
+    +Instant triggeredAt
+    +Instant dueAt
+    +Instant dispatchedAt
+    +EventType type  due|completed|mastered
+  }
+  class SM2Algorithm {
+    <<pure function>>
+    +compute(ease,interval,quality,cfg) SM2Result
+  }
+  class AlgorithmConfig {
+    <<@ConfigurationProperties>>
+    +BigDecimal easeMin  1.3
+    +BigDecimal easeMax  2.5
+    +BigDecimal easeInit  2.5
+    +Integer intervalMaxDays  60
+    +BigDecimal qualityPenaltyStep  0.2
+  }
 
-## 2. 数据流（Data Flow · G-Arch 待完成）
+  ReviewPlan "7" --o "1" WrongItem : one-to-7-nodes
+  ReviewPlan "1" --> "*" ReviewOutcome : records
+  ReviewPlan "1" --> "*" ReviewEvent : dispatches
+  ReviewPlan ..> SM2Algorithm : uses
+  SM2Algorithm ..> AlgorithmConfig : reads
+```
 
-> **G-Arch 待补**：Mermaid sequenceDiagram · 3 条路径（消费 analyzed → 7 行 / complete 单节点 / XXL-Job 扫 due）· AC 分节同 §1。
+### 1.2 状态机（stateDiagram-v2）
 
-（TBD）
+```mermaid
+stateDiagram-v2
+  [*] --> active: Consumer INSERT 7 行
+  active --> active: complete · SM-2 更新自身
+  active --> mastered: 连续 3 次 ease≥2.8 (Q-G)
+  mastered --> [*]: 全 7 行 deleted_at=now
+  note right of mastered
+    触发 · 发 review.mastered 事件
+    软删所有 7 行（聚合根级别）
+  end note
+```
 
-## 3. 事件契约（Events & Contracts · G-Arch 待完成）
+### 1.3 聚合根不变量（Aggregate Invariants）
 
-> **G-Arch 待补**：OpenAPI YAML 片段（5 端点 · `GET /review-plans?date=` `POST /review-plans/{id}/complete` `POST /review-plans/batch-reset` `GET /review-plans/{id}` `GET /review-stats`）· RocketMQ JSON Schema（4 topic：`wrongbook.item.analyzed` 入 · `review.due/completed/mastered` 出）· Feign 契约（wrongbook + notification + calendar core-service）· AC 分节同 §1。
+- **I-1**：一条 `wrong_item` 同时至多 1 套 7 行 `review_plan`（唯一索引 `(wrong_item_id, node_index)` where `deleted_at IS NULL`）
+- **I-2**：每行 `ease_factor ∈ [1.3, 2.5]` 且 `interval_days ∈ [0, 60]`（`AlgorithmConfig` guard-rail）
+- **I-3**：`status=mastered` 的行 `deleted_at` 必非空；`status=active` 的行 `deleted_at` 必空
+- **I-4**：任意 `complete` 只 UPDATE `node_index=当前节点` 的单行 · 不级联后续节点（Q-F）
+- **I-5**：触发 mastered 时一次性更新所有 7 行 status=mastered + deleted_at + 发 1 条 review.mastered 事件（Q-G · 聚合根原子性）
 
-（TBD）
+### 1.4 按 AC 分节五行（v1.8 § 1.5 约束 #13 · G-Arch 硬前提）
 
-## 4. 非功能指标（NFR · G-Arch 待完成）
+#### AC: SC-07.AC-1 · Consumer 幂等 INSERT 7 行
 
-> **G-Arch 待补**：SLO（SM-2 ≤10ms · XXL-Job QPS≤100 · Feign P95≤50ms · 通知时效≤1min）· 容量（1 万 DAU × 70 行/人 = 70 万行 · review_event 180d ≈ 200 万行）· 可用性 99.9% · 成本。
+- **API**：内部 `WrongItemAnalyzedConsumer.onMessage(WrongItemAnalyzedEvent)` · 订阅 `topic: wrongbook.item.analyzed` · 消费组 `review-plan-cg`
+- **Domain**：`ReviewPlanService.createSevenNodes(wrongItemId, userId, baseInstant)` → `ReviewPlan[7]` · 偏移 `[2h, 1d, 2d, 4d, 7d, 14d, 30d]` · 每行 `ease=2.5`
+- **Event**：入 `wrongbook.item.analyzed {itemId, userId, subject, analyzedAt}` · 出无（内部幂等 INSERT）· 出站事件在 complete 阶段
+- **Error**：`409 Conflict` 唯一索引冲突 → `ON CONFLICT DO NOTHING` · ACK · `review_plan_create_duplicate_total +1`；`wrong_item` 404 → ACK · log warn · `orphan_total +1`
+- **NFR**：Consumer P95 ≤ 100ms（7 行 batchInsert）· QPS ≤ 50（S4 发事件速率上限）· DB 连接池占用 ≤ 2 conn/请求
 
-（TBD）
+#### AC: SC-07.AC-2 · SM2Algorithm 纯函数
 
-## 5. 外部依赖（External Dependencies · G-Arch 待完成）
+- **API**：`SM2Algorithm.compute(BigDecimal ease, Integer interval, Integer quality, AlgorithmConfig cfg) → SM2Result(nextEase, nextInterval)` · `@Validated` quality ∈ [0, 5]
+- **Domain**：`quality < 3` → `nextEase = cfg.easeInit(2.5)`, `nextInterval = 1`（reset · Q-C）；`quality ≥ 3` → `nextEase = clamp(ease + (0.1 - (5-q)*(0.08+(5-q)*0.02)), cfg.easeMin, cfg.easeMax)`, `nextInterval = min(cfg.intervalMaxDays, round(interval * nextEase))`
+- **Event**：无（纯函数无副作用）
+- **Error**：`IllegalArgumentException` for quality ∉ [0, 5] · `IllegalStateException` for ease ∉ [cfg.easeMin, cfg.easeMax]
+- **NFR**：单次 ≤ 10ms（纯函数）· 无 IO · 无 allocation beyond `SM2Result`
 
-> **G-Arch 待补**：XXL-Job 2.4 · wrongbook-service Feign · notification-service Feign · calendar-platform core-service Feign + Sentinel + Caffeine · RocketMQ 5.1 · PostgreSQL 16 · Nacos 2.3。
+#### AC: SC-08.AC-1 · POST complete + 乐观锁 + mastered
 
-（TBD）
+- **API**：`POST /review-plans/{id}/complete` body `{quality: 0-5}` · 返回 `200/{planId, nextReviewAt, easeFactorAfter}` 或 `404/409/410` · OpenAPI 见 §3.1
+- **Domain**：`ReviewPlanService.complete(planId, quality)` 单事务：SELECT FOR UPDATE → `SM2Algorithm.compute` → UPDATE `review_plan SET ease_factor, interval_days, next_review_at, completed_at, dispatch_version+1 WHERE id=? AND dispatch_version=?` → INSERT `review_outcome` → Outbox INSERT `review_plan_outbox(event_type=completed)`。若命中 mastered 条件（连续 3 次 ease≥2.8） → UPDATE 所有 7 行 status=mastered + deleted_at · Outbox INSERT `review.mastered`
+- **Event**：出 `review.completed {planId, quality, nextReviewAt, easeFactorAfter}` + 可选 `review.mastered {wrongItemId, masteredAt}` · 走 Outbox 事务消息（ADR 0005）· 消费方 S8
+- **Error**：`404 PLAN_NOT_FOUND` / `400 INVALID_QUALITY (quality ∉ [0,5])` / `409 Conflict` 乐观锁冲突 / `410 PLAN_MASTERED`（已 mastered 再 POST）· GlobalExceptionHandler 统一回填 `ApiResult`
+- **NFR**：P95 ≤ 200ms（单事务 · 含 SELECT FOR UPDATE + 2 条 UPDATE/INSERT + Outbox）· 409 率 ≤ 1%（并发高时需监控 · 超 1% 告警进 S10）· QPS ≤ 200
 
-## 6. ADR 候选（ADR Candidates · G-Arch 待完成）
+#### AC: SC-09.AC-1 · GET /review-stats 聚合 API
 
-> **G-Arch 待补**：
-> - **ADR 0013 · SM-2 over Ebbinghaus 固定间隔**（本 Phase 新立 · 决策依据 Q-B/C/F · 动态反馈 vs 固定曲线 · ease_factor 自适应）
-> - 引用 ADR 0005（RocketMQ 事务消息 · review.due/completed/mastered 走 Outbox 兜底）
-> - 引用 ADR 0006（JPA over MyBatis）
-> - 引用 ADR 0011（查询走 JPA 不引入 CQRS · §9.2 §5）
+- **API**：`GET /review-stats?range={week|month|quarter}&subject={opt}` header `X-User-Timezone` → `200/[{date, correctRate, masteredCount, reviewCount}]` + 可选 `warnings[]`
+- **Domain**：`ReviewStatsService.aggregate(userId, range, subject, timezone)` · JPA 聚合（ADR 0011）· `SELECT date(completed_at AT TIME ZONE ?) as d, count(quality>=3), count(status=mastered), count(*) FROM review_outcome JOIN review_plan ... GROUP BY d`
+- **Event**：无（纯查询）
+- **Error**：`400 INVALID_RANGE` (range ∉ [week, month, quarter]) · `400 INVALID_TIMEZONE` (ZoneId 非法 · 降级默认 Asia/Shanghai) · 响应 `warnings=[{code:PARTIAL_HISTORY}]` when range 跨 180d
+- **NFR**：P95 ≤ 500ms · 10 万 review_event 行规模 · 命中 `(subject, completed_at)` 复合索引（S1 已建）· Caffeine L2 cache 5min TTL
 
-（TBD · 打 `s5-arch-frozen` tag 前所有 ADR 必须落档到 `docs/adr/`）
+#### AC: SC-10.AC-1 · Feign 调 core-service + Sentinel 熔断 + Caffeine
+
+- **API**：`CalendarFeignClient.getNodes(date)` via Spring Cloud OpenFeign 4.1 · `@FeignClient(name="core-service", fallback=CalendarFeignClientFallback.class)` · `@GetMapping("/calendar/nodes")`
+- **Domain**：`CalendarService.findNodes(date)` · `@SentinelResource(value="calendar-nodes", blockHandler="localCache", fallback="localCache")` · Caffeine cache TTL=10min / size=1000 · key 按 `(userId, date)`
+- **Event**：无（Feign 同步调用）
+- **Error**：core-service 超时 > 3s → circuit open · fallback `CalendarFeignClientFallback.getNodes` 返 Caffeine cache · 无 cache 且 core 断 → 上层 `/review-plans?date=` 返 `503 CALENDAR_DEPENDENCY_DOWN · source=unavailable`
+- **NFR**：Sentinel QPS 阈值 500（超 429）· circuit breaker failureRatio > 50% 开熔 · 热身时间 10s · Caffeine hit rate ≥ 80% · P95 ≤ 50ms（含 cache 命中）
+
+## 2. 数据流（Data Flow）
+
+### 2.1 主路径 A · Consumer 消费 analyzed → 7 行 plan（SC-07.AC-1）
+
+```mermaid
+sequenceDiagram
+  participant S4 as S4 · ai-analysis-service
+  participant MQ as RocketMQ
+  participant C as WrongItemAnalyzedConsumer
+  participant SVC as ReviewPlanService
+  participant DB as PostgreSQL
+  S4->>MQ: publish wrongbook.item.analyzed {itemId, userId, subject}
+  MQ->>C: deliver (消费组 review-plan-cg)
+  C->>DB: SELECT count(*) FROM review_plan WHERE wrong_item_id=?
+  alt count == 0
+    C->>SVC: createSevenNodes(itemId, userId, now())
+    SVC->>DB: INSERT 7 rows (node_index 0..6)
+    Note over DB: 唯一索引 (wrong_item_id, node_index) · ON CONFLICT DO NOTHING
+    DB-->>SVC: OK
+    SVC-->>C: ReviewPlan[7]
+  else 已有 plan（MQ 重投）
+    C-->>C: log debug · ACK · skip
+  end
+  C->>MQ: ACK
+```
+
+### 2.2 主路径 B · POST complete 单节点 + Outbox（SC-08.AC-1）
+
+```mermaid
+sequenceDiagram
+  participant S8 as S8 · 前端
+  participant GW as Gateway
+  participant CTL as ReviewPlanController
+  participant SVC as ReviewPlanService
+  participant ALGO as SM2Algorithm
+  participant DB as PostgreSQL
+  participant MQ as RocketMQ (Outbox)
+  S8->>GW: POST /review-plans/P1/complete {quality:5}
+  GW->>CTL: JWT + TraceId
+  CTL->>SVC: complete(P1, 5)
+  SVC->>DB: SELECT FOR UPDATE review_plan WHERE id=P1
+  DB-->>SVC: plan(ease=2.5, interval=2h, dispatch_version=3)
+  SVC->>ALGO: compute(2.5, 2h, 5, cfg)
+  ALGO-->>SVC: SM2Result(ease=2.5, interval=1d)
+  SVC->>DB: UPDATE review_plan SET ease=2.5, interval=1d, next_review_at=+1d, dispatch_version=4 WHERE id=P1 AND dispatch_version=3
+  alt rowsAffected == 1
+    SVC->>DB: INSERT review_outcome (quality=5, ease_before=2.5, ease_after=2.5)
+    SVC->>DB: INSERT review_plan_outbox (event_type=completed, payload=...)
+    opt mastered 条件：连续 3 次 ease≥2.8
+      SVC->>DB: UPDATE review_plan SET status=mastered, deleted_at=now WHERE wrong_item_id=? 全 7 行
+      SVC->>DB: INSERT review_plan_outbox (event_type=mastered, payload=...)
+    end
+    Note over DB,MQ: 异步 Outbox Relay 扫 outbox → MQ
+    MQ-->>S8: review.completed {planId:P1, nextReviewAt}
+    SVC-->>CTL: {planId, nextReviewAt}
+    CTL-->>S8: 200 OK
+  else rowsAffected == 0（乐观锁冲突）
+    SVC-->>CTL: ConflictException
+    CTL-->>S8: 409 Conflict
+  end
+```
+
+### 2.3 主路径 C · XXL-Job 扫 due → review.due 事件（support SC-07 节点驱动）
+
+```mermaid
+sequenceDiagram
+  participant XA as XXL-Job Admin
+  participant JOB as ReviewDueJob
+  participant DB as PostgreSQL
+  participant SCH as ReviewScheduler
+  participant MQ as RocketMQ
+  participant NS as S6 · notification-service
+  loop every 5min
+    XA->>JOB: trigger @XxlJob("review-due-scan")
+    JOB->>DB: SELECT ... WHERE next_review_at ≤ now() AND status=active AND deleted_at IS NULL LIMIT 500
+    DB-->>JOB: dueBatch[500]
+    loop forEach plan in batch
+      JOB->>DB: UPDATE review_plan SET dispatch_version+=1 WHERE id=? AND dispatch_version=? (CAS)
+      alt rowsAffected == 1
+        JOB->>SCH: dispatch(plan)
+        SCH->>MQ: publish review.due {planId, userId, wrongItemId, dueAt}
+        MQ->>NS: consume
+      else
+        Note over JOB: 被其他 executor 抢占 · skip
+      end
+    end
+  end
+```
+
+### 2.4 旁路 · Feign 调 calendar core-service + Sentinel 熔断（SC-10.AC-1）
+
+```mermaid
+sequenceDiagram
+  participant CTL as ReviewPlanController
+  participant CAL as CalendarFeignClient
+  participant S as Sentinel
+  participant C as Caffeine cache
+  participant CS as calendar-platform core-service
+  CTL->>CAL: getNodes(date)
+  CAL->>S: enter sentinel resource "calendar-nodes"
+  alt circuit closed && QPS < 500
+    S->>CAL: pass
+    CAL->>CS: GET /calendar/nodes?date=
+    alt CS 200 < 3s
+      CS-->>CAL: nodes[]
+      CAL->>C: put(date, nodes, TTL=10min)
+      CAL-->>CTL: nodes[]
+    else timeout > 3s || 5xx
+      CS--xCAL: timeout/error
+      CAL->>C: get(date)
+      alt cache hit && staleness ≤ 10min
+        C-->>CAL: nodes[] (staleness=Nm)
+        CAL-->>CTL: nodes[] source=cache:Nm
+      else miss/expired
+        CAL-->>CTL: throw DependencyException
+        CTL-->>CTL: 503 CALENDAR_DEPENDENCY_DOWN
+      end
+      S->>S: mark failure · maybe open circuit
+    end
+  else circuit open || QPS ≥ 500
+    S-->>CAL: block (BlockException)
+    CAL->>C: get(date) fallback
+    C-->>CAL: cached nodes[] or null
+    CAL-->>CTL: nodes[] or 429/503
+  end
+```
+
+## 3. 事件与契约（Events & Contracts）
+
+### 3.1 HTTP API · 5 端点 OpenAPI 3.0 片段
+
+```yaml
+openapi: 3.0.3
+info:
+  title: review-plan-service
+  version: 1.0.0
+paths:
+  /review-plans:
+    get:
+      summary: GET /review-plans · 日视图（SC-07 支撑）
+      parameters:
+        - { name: date, in: query, required: true, schema: { type: string, format: date } }
+        - { name: subject, in: query, required: false, schema: { type: string } }
+        - { name: X-User-Timezone, in: header, required: false, schema: { type: string, default: Asia/Shanghai } }
+      responses:
+        '200':
+          description: 当日 due 节点 + calendar_node（来自 SC-10 Feign）
+          content: { application/json: { schema: { $ref: '#/components/schemas/DayViewResp' } } }
+        '503': { description: calendar-platform core-service 不可用且 cache 过期 · error_code=CALENDAR_DEPENDENCY_DOWN }
+  /review-plans/{id}:
+    get:
+      summary: GET /review-plans/{id} · 单节点详情
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/ReviewPlanDto' } } } }
+        '404': { description: 不存在或已 mastered }
+  /review-plans/{id}/complete:
+    post:
+      summary: POST complete · 复习主循环（SC-08.AC-1）
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { quality: { type: integer, minimum: 0, maximum: 5 } }, required: [quality] } } }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/CompleteResp' } } } }
+        '400': { description: INVALID_QUALITY }
+        '404': { description: PLAN_NOT_FOUND }
+        '409': { description: 乐观锁冲突 · 另一请求先成功 · 前端 retry 1 次 }
+        '410': { description: PLAN_MASTERED · 已 mastered 软删 }
+  /review-plans/batch-reset:
+    post:
+      summary: POST batch-reset · admin · 学期初清空（需 ROLE_ADMIN）
+      security: [{ jwt: [] }]
+  /review-stats:
+    get:
+      summary: GET /review-stats · 学情聚合（SC-09.AC-1）
+      parameters:
+        - { name: range, in: query, required: true, schema: { type: string, enum: [week, month, quarter] } }
+        - { name: subject, in: query, required: false, schema: { type: string } }
+        - { name: X-User-Timezone, in: header, required: false }
+      responses:
+        '200': { content: { application/json: { schema: { $ref: '#/components/schemas/StatsResp' } } } }
+        '400': { description: INVALID_RANGE or INVALID_TIMEZONE }
+components:
+  schemas:
+    ReviewPlanDto:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        wrongItemId: { type: integer, format: int64 }
+        nodeIndex: { type: integer, minimum: 0, maximum: 6 }
+        easeFactor: { type: number }
+        intervalDays: { type: integer }
+        nextReviewAt: { type: string, format: date-time }
+        status: { type: string, enum: [active, mastered] }
+    CompleteResp:
+      type: object
+      properties:
+        planId: { type: integer, format: int64 }
+        nextReviewAt: { type: string, format: date-time }
+        easeFactorAfter: { type: number }
+        mastered: { type: boolean, description: 是否本次触发 mastered }
+    StatsResp:
+      type: object
+      properties:
+        range: { type: string }
+        subject: { type: string }
+        data: { type: array, items: { type: object, properties: { date: {type: string, format: date}, correctRate: {type: number, nullable: true}, masteredCount: {type: integer}, reviewCount: {type: integer} } } }
+        warnings: { type: array, items: { type: object, properties: { code: {type: string}, detail: {type: string} } } }
+```
+
+### 3.2 RocketMQ Topics · JSON Schema
+
+| Topic | 方向 | Payload | 消费方 | Outbox |
+|---|---|---|---|---|
+| `wrongbook.item.analyzed` | 入 | `{itemId: long, userId: long, subject: string, analyzedAt: ISO8601}` | S5 Consumer | N/A（S4 自带） |
+| `review.due` | 出 | `{planId: long, userId: long, wrongItemId: long, nodeIndex: int, dueAt: ISO8601}` | S6 notification-service | ADR 0005 兜底 |
+| `review.completed` | 出 | `{planId: long, wrongItemId: long, userId: long, quality: int, nodeIndex: int, nextReviewAt: ISO8601, easeFactorAfter: number, mastered: bool}` | S8 前端 polling + S10 监控 | ADR 0005 兜底 |
+| `review.mastered` | 出 | `{wrongItemId: long, userId: long, masteredAt: ISO8601}` | S8 前端 + S10 | ADR 0005 兜底 |
+
+**JSON Schema 示例（review.completed）**：
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "review.completed",
+  "type": "object",
+  "required": ["planId", "wrongItemId", "userId", "quality", "nodeIndex", "nextReviewAt", "easeFactorAfter", "mastered"],
+  "properties": {
+    "planId": { "type": "integer" },
+    "wrongItemId": { "type": "integer" },
+    "userId": { "type": "integer" },
+    "quality": { "type": "integer", "minimum": 0, "maximum": 5 },
+    "nodeIndex": { "type": "integer", "minimum": 0, "maximum": 6 },
+    "nextReviewAt": { "type": "string", "format": "date-time" },
+    "easeFactorAfter": { "type": "number", "minimum": 1.3, "maximum": 2.5 },
+    "mastered": { "type": "boolean" }
+  }
+}
+```
+
+### 3.3 Feign 契约
+
+- `WrongbookFeignClient@GET /wrongbook/items/{id}` · 查错题详情 · Sentinel 熔断 · 降级 `{subject:"unknown", stemText:"[降级]"}`
+- `NotificationFeignClient@POST /notifications/review-due` · 由 `ReviewScheduler` 在 XXL-Job 内调用 · req `ReviewDueNotifyReq(planId, userId, subject, nextReviewAt)`
+- `CalendarFeignClient@GET /calendar/nodes` · 属 common 模块 · `@FeignClient(name="core-service")` · Sentinel + Caffeine 10min cache（SC-10.AC-1）
+
+### 3.4 DB Schema（基于 S1 DDL · 不改表）
+
+- `review_plan`（已 S1 创建 · 字段见 §1.1 · 唯一索引 `(wrong_item_id, node_index) WHERE deleted_at IS NULL` 需 S5 确认 · 若 S1 未建 · 走 §6 ADR 补）
+- `review_event`（已 S1 创建 · V1.0.018）
+- `review_outcome`（**S5 新增 migration 需求** · 现 S1 未建 · 见 §6 ADR）
+- `review_plan_outbox`（**S5 新增 migration 需求** · Outbox 兜底 · ADR 0005）
+
+> ⚠️ **DB 漂移风险**：S1 DDL 仅含 `review_plan` + `review_event` · 未含 `review_outcome` + `review_plan_outbox` · S5 Planner 切卡时必须先落 V1.0.05X 迁移脚本（见 §6 ADR · G-Arch 阶段决策）
+
+## 4. 非功能指标（Non-Functional Requirements）
+
+### 4.1 SLO
+
+| 指标 | 阈值 | 监控路径 |
+|---|---|---|
+| `SM2Algorithm.compute` P99 | ≤ 10ms（纯函数） | 单测性能断言 |
+| `POST /review-plans/{id}/complete` P95 | ≤ 200ms | `review_complete_p95_ms` metric |
+| `GET /review-plans?date=` P95 | ≤ 300ms（含 Feign 调 calendar） | `review_plans_get_p95_ms` |
+| `GET /review-stats` P95 | ≤ 500ms（10 万 event 聚合） | `review_stats_p95_ms` |
+| XXL-Job `review-due-scan` 单次执行 | ≤ 30s（批 500 × 12 批/min） | XXL-Job Dashboard |
+| 复习通知时效（due → notification 收到） | ≤ 1min（5min 扫 + 30s 处理 + MQ 延迟） | 端到端 trace |
+| Feign 调 calendar core-service P95 | ≤ 50ms（含 cache 命中 ≥80%） | `calendar_feign_p95_ms` |
+| 乐观锁冲突率（complete 并发） | < 1% | `review_complete_conflict_total / review_complete_total` |
+
+### 4.2 容量
+
+- **DAU**：1 万 · 平均错题数 100/人 · 每错题 7 行 plan = 700 万行 `review_plan`
+- **review_event**：每人每天 5 次 complete × 1 万 DAU × 180 天 = 900 万行（保留期 180d · A10）
+- **review_outcome**：同 review_event 规模
+- **review_plan_outbox**：每次 complete 1-2 条（completed + 可选 mastered）· 天 5 万条 · 保留 7d = 35 万行
+
+### 4.3 可用性 & 降级
+
+- **可用性**：99.9%（complete 路径依赖 DB + MQ Outbox 双通道 · 任一可用即不丢事件）
+- **降级 1**：core-service 断 → Caffeine 10min cache → 过期返 503（`/review-plans?date=`）· 不硬崩（SC-10.AC-1）
+- **降级 2**：wrongbook-service 断 → Feign 降级 `{subject:"unknown", stemText:"[降级]"}` · 日视图仍显示
+- **降级 3**：RocketMQ 断 → Outbox 写入 · Relay 异步重发 · User complete 操作不受影响
+- **降级 4**：XXL-Job Admin 断 → scan 停摆但不影响 complete 主循环（用户手动打开 app 也能看到 due · 前端可 poll）
+
+### 4.4 成本
+
+| 项 | 估算 |
+|---|---|
+| DB 存储（year 1） | `review_plan` 700 万 × 200B = 1.4GB · event+outcome 900 万 × 150B × 2 = 2.7GB · outbox 35 万 × 300B = 100MB · 合计 ≈ 4.2GB/年 |
+| MQ 流量 | 每天 review.due 5 万 + completed 5 万 + mastered 1 万 = 11 万 msg/day · 每条 500B · 15MB/day · 5.5GB/年 |
+| Nacos 配置 | AlgorithmConfig 动态下发 · 近 0 成本 |
+| XXL-Job | 单 executor 2 实例 HA · 额外 2 台 1C2G VM（复用 K8s 资源池）|
+
+## 5. 外部依赖（External Dependencies）
+
+| 依赖 | 版本 | 用途 | 降级策略 |
+|---|---|---|---|
+| PostgreSQL | 16（S1 已搭） | review_plan / review_event / review_outcome / outbox | HA 主备 · S10 配 |
+| pgvector | 0.6（S1 已搭） | N/A（S5 不用向量） | — |
+| RocketMQ | 5.1 | 4 topic · 事务消息兜底（ADR 0005） | Outbox 持久化 · Relay 重发 |
+| XXL-Job | 2.4.1（admin 独立部署） | `review-due-scan` 调度 · DB 锁 HA | 双 executor · 单 admin SPOF 影响 scan 不影响 complete |
+| Spring Cloud OpenFeign | 4.1.x | 调 wrongbook / notification / calendar 3 个服务 | Sentinel 熔断 · fallback bean |
+| Sentinel | 2023.0.1.0 | Feign 熔断 + 流控 | `@SentinelResource` 注解式 |
+| Caffeine | 3.x（common 模块） | L1 cache · calendar-nodes 10min TTL | — |
+| Nacos | 2.3 | AlgorithmConfig 动态下发 + 服务发现 | 静态兜底 `application.yml` 默认值 |
+| calendar-platform core-service | 外部 | GET /calendar/nodes · 日历节点 | Sentinel + Caffeine · 断则降级 |
+
+## 6. ADR 候选
+
+### 6.1 本 Phase 新立 ADR
+
+- **ADR 0013 · 采用 SM-2 而非纯 Ebbinghaus 固定间隔**
+  - 动机：动态反馈闭环 · ease_factor 自适应 · 用户记忆强度个性化
+  - 决策：7 行骨架（艾宾浩斯偏移 [2h,1d,2d,4d,7d,14d,30d]）+ 每行独立 SM-2 微调（Q-B/F 决策）
+  - 替代方案：纯 Ebbinghaus（简单但不自适应）/ 纯 SM-2 单行（动态但 T0-T6 语义丢失）
+  - 文献：SuperMemo SM-2 原论文 · Wozniak 1990
+  - 引用：Q-C（quality<3 reset 到 2.5）
+
+- **ADR 0014 · review_outcome + review_plan_outbox 表新增（S5 补 S1 漂移）**
+  - 动机：S1 DDL 仅含 review_plan + review_event · S5 事务正确性需 outcome（审计）+ outbox（MQ 兜底）
+  - 决策：S5 开 V1.0.053__review_outcome.sql + V1.0.054__review_plan_outbox.sql + V1.0.055__review_plan_mastered_index.sql（索引 `(wrong_item_id, node_index) WHERE deleted_at IS NULL` 若 S1 未建）
+  - 替代方案：复用 review_event 存 outcome 数据（语义混乱）· 不用 Outbox 裸发 MQ（丢消息风险）
+  - 风险：S1 DDL 漂移 · 走 Hotfix 模式（§26.2 条款 4 类推 · fix 独立 commit `[HOTFIX-S5-DB]`）
+
+- **ADR 0015 · XXL-Job 2.4 vs Quartz/ElasticJob**
+  - 动机：分布式调度 · HA · 可视化 Admin
+  - 决策：XXL-Job 2.4 · admin 独立部署 · DB 锁保单实例执行
+  - 替代方案：Quartz（重 · 需自己做 HA）/ ElasticJob（Dang 依赖 Zookeeper）
+
+### 6.2 引用的现有 ADR
+
+- **ADR 0005**（RocketMQ 事务消息兜底）：review.due/completed/mastered 走 Outbox Relay · 2PC 弱一致 · 最终一致
+- **ADR 0006**（JPA over MyBatis · S1 已立）：实体继承 BaseEntity · @Version 字段 `dispatch_version`
+- **ADR 0011**（查询走 JPA 不 CQRS · S5 引用）：GET /review-stats 直接 JPA 聚合 · 不引入 CQRS/Elasticsearch
+
+### 6.3 ADR 文件落地要求
+
+G-Arch 阶段 User `/arch-ok` 前 · 以下文件必须落档：
+- `docs/adr/0013-sm2-over-ebbinghaus.md`
+- `docs/adr/0014-review-outcome-outbox-tables.md`
+- `docs/adr/0015-xxljob-over-quartz.md`
