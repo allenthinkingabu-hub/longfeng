@@ -28,3 +28,10 @@ special_requirements:
   - question: "A1 A3 A4 A5 A6 A7 A8"
     answer: "按 §5.1 原文 approve · A1 Flyway-only (3 U-scripts) · A3 timestamptz UTC + biz-time nullable · A4 blanket GIN · A5 deleted_at 软删 · A6 FK RESTRICT 业务表 / 事件表无 FK · A7 subject CHECK 约束 · A8 audit_log append-only"
     raised_at: "2026-04-22T06:28:00Z"
+---
+
+本 Phase 豁免 Design Gate · 0.2 架构设计因 B 级适用性（DDL 即数据架构文档）自动 approved。
+
+- 业务理解：✅ 已完成（§5.1 · A1-A8 假设 User 批准 · Q1 Q2 答复归档 · 见 front matter special_requirements）
+- 架构设计：N/A · DDL 即契约 · 权威符号来源为 `backend/common/src/main/resources/db/migration/` 全部 V 脚本 + 方案 §3 + 落地计划 §5.6
+- 符号一致性：check-arch-consistency.sh s1 识别 B 级 `exempt: true` 后直接放行（exit 0）
