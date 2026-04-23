@@ -1,0 +1,115 @@
+# 落地计划 §1.5 通用约束 #11 · SC↔Phase 双向映射单一真源
+# S0 一次性落 SC 级映射（15 条 · 每条含 owner_phases + source 锚点 + 本章节题头）
+# AC 级由各 Phase 进入前增量补全（0.0.5 业务分析 · business-analysis.yml 落 ac_coverage）
+#
+# 机械约束：
+#   - 本 Phase business-analysis.yml 的 sc_covered 必须 = owner_phases 含本 phase 的 SC 集合
+#   - S9 汇总断言 15 SC × 所有 AC 的 owner_phases 并集 = 全集
+#
+# 初值来源：业务与技术解决方案_AI错题本_基于日历系统.md §2B SC-01..SC-15
+# 签字（附录 A 全采纳）：@allen · 2026-04-23T14:52:49+08:00 · 见 reports/retrofit/s0-plan.md
+#
+# owner_phases 次序约定：第一个是主产出 Phase · 后续是协作 Phase
+
+schema_version: 1.0
+
+SC-01:
+  title: "拍照录入错题"
+  owner_phases: [s7, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-01"
+  note: "前端录入 UI (s7) · 后端错题主域保存 (s3)"
+
+SC-02:
+  title: "错题列表分组筛选"
+  owner_phases: [s7, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-02"
+  note: "前端筛选交互 · 后端分页+标签聚合"
+
+SC-03:
+  title: "错题详情查看与标签管理"
+  owner_phases: [s7, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-03"
+  note: "标签层级见 SC-15 · tag_taxonomy 两级"
+
+SC-04:
+  title: "错题软删除与恢复"
+  owner_phases: [s7, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-04"
+  note: "deleted_at 列 + audit_log · 删除/恢复均产审计事件"
+
+SC-05:
+  title: "AI 错题解析（文字+图像）"
+  owner_phases: [s4, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-05"
+  note: "ai-analysis-service (s4) 消费 · 错题主域关联 wrong_item_analysis (s3)"
+
+SC-06:
+  title: "AI 解析失败降级与重试"
+  owner_phases: [s4]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-06"
+  note: "LLM 超时 → 占位卡片 · dashscope/openai dual-provider fallback"
+
+SC-07:
+  title: "艾宾浩斯复习计划生成"
+  owner_phases: [s5]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-07"
+  note: "review-plan-service · ease_factor + interval_index 状态机"
+
+SC-08:
+  title: "复习任务执行与打分"
+  owner_phases: [s8, s5]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-08"
+  note: "前端复习界面 (s8) · 后端评分+调度 (s5)"
+
+SC-09:
+  title: "学情分析卡片（TopN 薄弱项）"
+  owner_phases: [s8, s5]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-09"
+  note: "跨域只读聚合 · Top3 弱项可视化"
+
+SC-10:
+  title: "通用日历节点绑定（复习/自定义）"
+  owner_phases: [s5, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-10"
+  note: "calendar_node 表 · 复习任务/自定义日程双绑定"
+
+SC-11:
+  title: "错题图片 OSS 上传与压缩"
+  owner_phases: [s6, s7]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-11"
+  note: "file-service (s6) · 前端上传交互 (s7)"
+
+SC-12:
+  title: "匿名试用体验（device_fp 无账号）"
+  owner_phases: [s11]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-12"
+  note: "anonymous-service + 匿名前端 · quota 3/日 · device_fp_hash 识别"
+
+SC-13:
+  title: "匿名试用升级到正式账号数据迁移"
+  owner_phases: [s11, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-13"
+  note: "guest_wrong_item → wrong_item 迁移 · 审计"
+
+SC-14:
+  title: "家长监督视图（家庭组）"
+  owner_phases: [s8, s5, s3]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-14"
+  note: "跨域只读聚合 · 前端家长视图 (s8) · 复习进度 (s5) · 错题数据 (s3)"
+
+SC-15:
+  title: "学科标签层级（subject.tag 两级）"
+  owner_phases: [s3, s7]
+  source: "业务与技术解决方案_AI错题本_基于日历系统.md §2B.SC-15"
+  note: "tag_taxonomy 两级 subject.tag · S3 DDL + S7 选择 UI"
+
+cross_cutting:
+  CC-01:
+    title: "任意 API P95 < 500ms"
+    applies_to: all_phases
+    source: "业务与技术解决方案_AI错题本_基于日历系统.md §2A.11 非功能需求"
+
+  CC-02:
+    title: "PII 字段日志脱敏"
+    applies_to: all_phases
+    source: "落地实施计划 §19 合规基线"
