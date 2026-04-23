@@ -1,0 +1,23 @@
+# refs 落地计划 §7.4 工具白名单 · §1.6 规则 B
+# S3 = 错题主域（wrongbook-service）· JPA + QueryDSL + RocketMQ Outbox
+extends: global
+additional_tools:
+  - { name: spring-data-jpa,               version: "3.2.x" }
+  - { name: querydsl-jpa,                  version: "5.0.x" }
+  - { name: querydsl-apt,                  version: "5.0.x" }
+  - { name: rocketmq-spring-boot-starter,  version: "2.3.x" }
+  - { name: jackson,                       version: "2.17.x" }
+  - { name: mapstruct,                     version: "1.5.x" }
+  - { name: mapstruct-processor,           version: "1.5.x" }
+  - { name: jsr310,                        version: "built-in" }
+  - { name: springdoc-openapi-starter-webmvc-ui, version: "2.5.x" }
+  - { name: testcontainers,                version: "1.19.x" }
+  - { name: testcontainers-postgresql,     version: "1.19.x" }
+  - { name: testcontainers-rocketmq,       version: "1.19.x" }
+  - { name: awaitility,                    version: "4.2.x" }
+additional_deny:
+  - { pattern: "mybatis",                      reason: "方案 §2A.4 决策 · 禁用 MyBatis/MyBatis-Plus" }
+  - { pattern: "BaseMapper<",                  reason: "MyBatis-Plus 锚点禁用" }
+  - { pattern: "@MapperScan",                  reason: "MyBatis-Plus 锚点禁用" }
+  - { pattern: "nativeQuery\\s*=\\s*true",     reason: "native SQL 超过 3 行必须改 QueryDSL/JPQL（例外：DDL 初始化/纯度量查询）" }
+  - { pattern: "JdbcTemplate\\.queryFor(Object|List)", reason: "跨表查询必须走 JPA/QueryDSL" }

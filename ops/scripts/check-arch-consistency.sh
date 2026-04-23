@@ -94,10 +94,11 @@ CHANGED_FILES=$(git -C "$REPO_ROOT" diff "$DIFF_RANGE" --name-only 2>/dev/null |
 
 SYMBOLS=""
 if [[ -n "$CHANGED_FILES" ]]; then
+  # Run the per-file extraction inside a subshell that swallows empty-match greps, then
+  # funnel into sort -u. `|| true` on the grep keeps set -o pipefail happy when no lines hit.
   while IFS= read -r f; do
     [[ -f "$REPO_ROOT/$f" ]] || continue
-    # Extract: Java class/interface names, API mappings, topics, SQL tables
-    grep -hE '(class |interface |@RequestMapping|@PostMapping|@GetMapping|@PutMapping|@DeleteMapping|topic:|CREATE TABLE)' "$REPO_ROOT/$f" 2>/dev/null | \
+    (grep -hE '(class |interface |@RequestMapping|@PostMapping|@GetMapping|@PutMapping|@DeleteMapping|topic:|CREATE TABLE)' "$REPO_ROOT/$f" 2>/dev/null || true) | \
       sed -E '
         s/.*(class|interface) ([A-Z][A-Za-z0-9]+).*/\2/
         s/.*"(\/[a-z0-9\-\/_{}]+)".*/\1/
