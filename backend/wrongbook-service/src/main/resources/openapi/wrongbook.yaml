@@ -1,0 +1,657 @@
+openapi: 3.0.1
+info:
+  title: wrongbook-service
+  version: 1.0.0
+servers:
+- url: http://localhost:8081
+  description: Generated server url
+paths:
+  /wrongbook/items:
+    get:
+      tags:
+      - wrong-item-controller
+      operationId: page
+      parameters:
+      - name: subject
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: studentId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemPageVO'
+    post:
+      tags:
+      - wrong-item-controller
+      operationId: create
+      parameters:
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWrongItemReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemVO'
+  /wrongbook/items/{id}/tags:
+    post:
+      tags:
+      - wrong-item-controller
+      operationId: addTag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTagReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultVoid'
+  /wrongbook/items/{id}/images:
+    post:
+      tags:
+      - wrong-item-controller
+      operationId: confirmImage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmImageReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemImageVO'
+  /wrongbook/items/{id}/difficulty:
+    post:
+      tags:
+      - wrong-item-controller
+      operationId: setDifficulty
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDifficultyReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemVO'
+  /wrongbook/items/{id}/attempts:
+    get:
+      tags:
+      - wrong-attempt-controller
+      operationId: list
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultListWrongAttemptVO'
+    post:
+      tags:
+      - wrong-attempt-controller
+      operationId: create_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAttemptReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongAttemptVO'
+  /wrongbook/items/{id}:
+    get:
+      tags:
+      - wrong-item-controller
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemVO'
+    delete:
+      tags:
+      - wrong-item-controller
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+    patch:
+      tags:
+      - wrong-item-controller
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWrongItemReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultWrongItemVO'
+  /ready:
+    get:
+      tags:
+      - health-controller
+      operationId: ready
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultString'
+  /live:
+    get:
+      tags:
+      - health-controller
+      operationId: live
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultString'
+  /wrongbook/items/{id}/tags/{tagCode}:
+    delete:
+      tags:
+      - wrong-item-controller
+      operationId: removeTag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: tagCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    CreateWrongItemReq:
+      required:
+      - sourceType
+      - studentId
+      - subject
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        subject:
+          maxLength: 16
+          minLength: 0
+          type: string
+        gradeCode:
+          maxLength: 16
+          minLength: 0
+          type: string
+        sourceType:
+          maximum: 5
+          minimum: 1
+          type: integer
+          format: int32
+        originImageKey:
+          maxLength: 512
+          minLength: 0
+          type: string
+        processedImageKey:
+          maxLength: 512
+          minLength: 0
+          type: string
+        ocrText:
+          type: string
+        stemText:
+          type: string
+        difficulty:
+          maximum: 5
+          minimum: 1
+          type: integer
+          format: int32
+    ApiResultWrongItemVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/WrongItemVO'
+        traceId:
+          type: string
+    WrongItemImageVO:
+      type: object
+      properties:
+        objectKey:
+          type: string
+        role:
+          type: string
+        widthPx:
+          type: integer
+          format: int32
+        heightPx:
+          type: integer
+          format: int32
+        byteSize:
+          type: integer
+          format: int64
+    WrongItemTagVO:
+      type: object
+      properties:
+        tagCode:
+          type: string
+        weight:
+          type: number
+    WrongItemVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        studentId:
+          type: integer
+          format: int64
+        subject:
+          type: string
+        gradeCode:
+          type: string
+        sourceType:
+          type: integer
+          format: int32
+        originImageKey:
+          type: string
+        processedImageKey:
+          type: string
+        ocrText:
+          type: string
+        stemText:
+          type: string
+        status:
+          type: integer
+          format: int32
+        mastery:
+          type: integer
+          format: int32
+        difficulty:
+          type: integer
+          format: int32
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/WrongItemTagVO'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/WrongItemImageVO'
+    AddTagReq:
+      required:
+      - tagCode
+      type: object
+      properties:
+        tagCode:
+          maxLength: 64
+          minLength: 0
+          type: string
+        weight:
+          maximum: 1.000
+          exclusiveMaximum: false
+          minimum: 0.000
+          exclusiveMinimum: false
+          type: number
+    ApiResultVoid:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: object
+        traceId:
+          type: string
+    ConfirmImageReq:
+      required:
+      - objectKey
+      - role
+      type: object
+      properties:
+        objectKey:
+          maxLength: 512
+          minLength: 0
+          type: string
+        role:
+          pattern: ORIGIN|PROCESSED|CROP|WATERMARK
+          type: string
+        widthPx:
+          type: integer
+          format: int32
+        heightPx:
+          type: integer
+          format: int32
+        byteSize:
+          type: integer
+          format: int64
+        contentType:
+          maxLength: 64
+          minLength: 0
+          type: string
+    ApiResultWrongItemImageVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/WrongItemImageVO'
+        traceId:
+          type: string
+    SetDifficultyReq:
+      required:
+      - level
+      type: object
+      properties:
+        level:
+          maximum: 5
+          minimum: 1
+          type: integer
+          format: int32
+    CreateAttemptReq:
+      required:
+      - isCorrect
+      - studentId
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        answerText:
+          type: string
+        isCorrect:
+          type: boolean
+        durationSec:
+          minimum: 0
+          type: integer
+          format: int32
+        clientSource:
+          pattern: app|web|mp|admin
+          type: string
+    ApiResultWrongAttemptVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/WrongAttemptVO'
+        traceId:
+          type: string
+    WrongAttemptVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        wrongItemId:
+          type: integer
+          format: int64
+        studentId:
+          type: integer
+          format: int64
+        answerText:
+          type: string
+        isCorrect:
+          type: boolean
+        durationSec:
+          type: integer
+          format: int32
+        clientSource:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+    UpdateWrongItemReq:
+      required:
+      - version
+      type: object
+      properties:
+        version:
+          type: integer
+          format: int64
+        stemText:
+          type: string
+        ocrText:
+          type: string
+        status:
+          maximum: 9
+          minimum: 0
+          type: integer
+          format: int32
+        mastery:
+          maximum: 2
+          minimum: 0
+          type: integer
+          format: int32
+    ApiResultWrongItemPageVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/WrongItemPageVO'
+        traceId:
+          type: string
+    WrongItemPageVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/WrongItemVO'
+        nextCursor:
+          type: string
+    ApiResultListWrongAttemptVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WrongAttemptVO'
+        traceId:
+          type: string
+    ApiResultString:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: string
+        traceId:
+          type: string

@@ -1,0 +1,99 @@
+phase_id: s3
+run_id: 20260423-s3-complete
+updated_at: 2026-04-23T05:35:00Z
+upstream_tags_verified:
+  - s0-done
+  - s1-done
+  - s2-done
+design_gate:
+  biz_gate: approved
+  arch_gate: approved
+  arch_doc: design/arch/s3-wrongbook.md
+dor_depends_on:
+  - id: V1.0.010__wrong_item.sql
+    role: core-aggregate-root-table
+  - id: V1.0.011__wrong_item_tag.sql
+    role: many-to-many-association
+  - id: V1.0.013__wrong_item_image.sql
+    role: child-entity-image
+  - id: V1.0.014__tag_taxonomy.sql
+    role: static-lookup
+  - id: V1.0.050__audit_log.sql
+    role: cross-cutting-audit
+port_allocation:
+  wrongbook-service: 8081
+new_migrations:
+  - V1.0.019__wrong_item_outbox.sql
+  - V1.0.020__wrong_item_version.sql
+  - V1.0.021__wrong_item_difficulty.sql
+  - V1.0.022__wrong_attempt.sql
+v_assertions:
+  V-S3-01_mvn_verify: PASS   # failsafe 15/15 green (MockMvcSmokeIT 2 + WrongItemIT 12 + ContractIT 1)
+  V-S3-02_openapi_paths: PASS   # 9 paths exported to openapi/wrongbook.yaml
+  V-S3-03_idempotency: PASS   # WrongItemIT#idempotencySingleRequestId
+  V-S3-04_optimistic_lock: PASS   # WrongItemIT#optimisticLockConflict
+  V-S3-05_soft_delete_audit: PASS   # WrongItemIT#softDelete
+  V-S3-06_rocketmq_event: PASS   # WrongItemIT#eventOnCreate (TestMqConfig captures)
+  V-S3-07_coverage_line: PASS   # 0.7757 ≥ 0.70 (IT-only)
+  V-S3-08_spotbugs: DEFERRED   # 明细见 §drift_log 尾部 · S10 硬化期补
+  V-S3-09_pgvector_null: PASS   # WrongItemIT#embeddingIsNull
+  V-S3-10_outbox_table: PASS   # WrongItemIT#outboxTablePresent
+  V-S3-11_allowlist_no_mybatis: PASS
+  V-S3-12_arch_consistency: PASS   # DIFF_BASE=s2-done · 0 missing symbols
+  V-S3-13_tags_remote: PASS      # s3-arch-frozen + s3-done 已推远端（2026-04-23）
+drift_log:
+  - id: D1
+    decision: Add wrong_item.version (V1.0.020) per Q1-R1 · JPA @Version Long
+  - id: D2
+    decision: Add wrong_item.difficulty (V1.0.021) per Q2-R1 · POST /items/{id}/difficulty retained
+  - id: D3
+    decision: status enum 0/1/2/3/8/9 ↔ draft/analyzed/scheduled/reviewed/mastered/archived (Q3-R1)
+  - id: D4
+    decision: soft delete via deleted_at TIMESTAMPTZ (S1 aligned · plan §7.1 A4 superseded)
+  - id: D5
+    decision: subject CHECK covers 9 disciplines (S1 aligned · plan §7.1 A5 superseded)
+  - id: D6
+    decision: Snowflake id via SnowflakeIdGenerator (S1 A2 override)
+  - id: D7
+    decision: wrong_item_tag.tag_code VARCHAR (S1 aligned · references tag_taxonomy.code)
+  - id: D8
+    decision: wrong_item_image.object_key + role (S1 aligned · no confirmedAt column)
+  - id: Q4
+    decision: wrong_attempt aggregate (V1.0.022) + WrongAttemptService + 2 endpoints · paths 9→11
+infra_patches:
+  - ops/scripts/check-arch-consistency.sh · pre-extract front matter via awk (handle markdown body)
+  - ops/scripts/check-arch-consistency.sh · add --dry-run mode (pre-G-Arch structural check)
+  - ops/scripts/check-arch-consistency.sh · pipefail-safe grep in symbol extraction
+  - ops/scripts/it-stack-up.sh · external docker-run PG+Redis fixture (Testcontainers 1.20.x × Docker Desktop 4.64 incompat)
+  - backend/pom.xml · add maven-failsafe-plugin for *IT · enable javac -parameters
+  - Local Maven install common required before wrongbook-service test (docs/adr pending)
+deferred_items:
+  - V-S3-08 spotbugs · no plugin wired yet · add in S10 hardening
+  - V-S3-03..09 live-stack variants · IT covers same semantics; live smoke optional
+tasks:
+  - id: s3-t00-dor-verify
+    status: done
+  - id: s3-t01-branch
+    status: done
+  - id: s3-t02-arch-doc-biz
+    status: done
+  - id: s3-t03-g-biz-inquiry
+    status: done
+  - id: s3-t04-biz-gate-approved
+    status: done
+  - id: s3-t05-arch-doc-design
+    status: done
+  - id: s3-t06-arch-gate-approved
+    status: done
+  - id: s3-t07-allowlist-pom-flyway
+    status: done
+  - id: s3-t08-entity-querydsl
+    status: done
+  - id: s3-t09-service-controller
+    status: done
+  - id: s3-t10-it-contract-openapi
+    status: done
+  - id: s3-t11-ci-verify
+    status: done
+  - id: s3-t12-tag-done
+    status: done

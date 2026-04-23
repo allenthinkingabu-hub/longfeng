@@ -2,26 +2,16 @@ package com.longfeng.wrongbook;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
- * wrongbook-service entry point · 落地计划 §6.
+ * wrongbook-service entry point · 错题主域（S3 · §7 落地计划）.
  *
- * <p>S2 scaffold: DataSource / JPA / Flyway excluded until S3 brings real repositories online.
- * {@code scanBasePackages} covers {@code com.longfeng.common} so {@code GlobalExceptionHandler} /
- * {@code TraceIdFilter} activate.
+ * <p>S3 activates DataSource / JPA / Flyway (previously excluded at S2). scanBasePackages
+ * covers {@code com.longfeng.common} so filters / exception advice pick up.
  */
-@SpringBootApplication(
-    scanBasePackages = {"com.longfeng.wrongbook", "com.longfeng.common"},
-    exclude = {
-        DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class,
-        FlywayAutoConfiguration.class
-    })
+@SpringBootApplication(scanBasePackages = {"com.longfeng.wrongbook", "com.longfeng.common"})
+@EnableJpaAuditing
 public class Application {
 
   public static void main(String[] args) {
