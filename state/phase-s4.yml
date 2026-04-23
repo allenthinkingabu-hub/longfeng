@@ -20,7 +20,7 @@ v_assertions:
   V-S4-10_provider_endpoint: PASS # AnalysisE2EIT#providerEndpoint · Nacos 热切换留 S10
   V-S4-11_allowlist: PASS         # ops/scripts/check-allowlist.sh s4
   V-S4-12_arch_consistency: PASS  # DIFF_BASE=s3-done · 0 missing symbols
-  V-S4-13_tags_remote: PENDING    # s4-arch-frozen ✓ · s4-done 待本 commit 推
+  V-S4-13_tags_remote: PASS        # s4-arch-frozen + s4-done 已推远端 (2026-04-23)
 drift_resolutions:
   - {id: DA, decision: "ai_usage_log migration renumber V1.0.020→V1.0.023 (V1.0.020 已被 S3 占用)"}
   - {id: DB, decision: "version INT (复用 S1 DDL) + PROMPT_VERSION_CODE=1 常量 · Q2-R1"}
@@ -60,7 +60,7 @@ tasks:
   - id: s4-t09-it-wiremock-openapi
     status: done
   - id: s4-t10-ci-verify-tag
-    status: in_progress
+    status: done
 dor_depends_on:
   - id: wrong_item.embedding
     role: embedding-write-back-target
