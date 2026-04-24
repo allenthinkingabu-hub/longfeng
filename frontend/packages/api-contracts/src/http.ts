@@ -4,15 +4,15 @@
 const BASE_URL = '/api/v1';
 
 interface HttpConfig {
-  params?: Record<string, unknown>;
+  params?: Record<string, unknown> | object;
   headers?: Record<string, string>;
 }
 
-function buildUrl(path: string, params?: Record<string, unknown>): string {
+function buildUrl(path: string, params?: Record<string, unknown> | object): string {
   const url = BASE_URL + path;
   if (!params) return url;
   const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
+  for (const [k, v] of Object.entries(params as Record<string, unknown>)) {
     if (v === undefined || v === null) continue;
     if (Array.isArray(v)) v.forEach((x) => q.append(k, String(x)));
     else q.set(k, String(v));

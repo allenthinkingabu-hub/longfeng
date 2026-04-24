@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { wrongbookClient, WrongItemVO } from '@longfeng/api-contracts';
+import { wrongbookClient, WrongItemVO, WrongItemListResponse } from '@longfeng/api-contracts';
 import { NavBar, Card, Tag, Skeleton, Empty, Picker, Button, Badge } from '@longfeng/ui-kit';
 import { TEST_IDS } from '@longfeng/testids';
 
@@ -15,19 +15,19 @@ export const ListPage: React.FC = () => {
   const [status, setStatus] = useState<StatusTab>('active');
   const [subject, setSubject] = useState<string>('');
 
-  const query = useInfiniteQuery({
-    queryKey: ['wrongbook', status, { subject }],
+  const query = useInfiniteQuery<WrongItemListResponse, Error, { pages: WrongItemListResponse[] }, readonly unknown[], string | null>({
+    queryKey: ['wrongbook', status, { subject }] as const,
     queryFn: ({ pageParam }) =>
       wrongbookClient.list({
         status,
         subject: subject || undefined,
-        cursor: pageParam as string | undefined,
+        cursor: pageParam ?? undefined,
         limit: 20,
       }),
-    initialPageParam: undefined,
-    getNextPageParam: (last) => (last.has_more ? last.next_cursor : undefined),
+    initialPageParam: null,
+    getNextPageParam: (last) => (last.has_more ? last.next_cursor ?? null : null),
     refetchInterval: (q) => {
-      const pages = q.state.data?.pages ?? [];
+      const pages = (q.state.data?.pages ?? []) as WrongItemListResponse[];
       const hasAnalyzing = pages.some((p) => p.items.some((i) => i.status === 'analyzing'));
       return hasAnalyzing ? 3000 : false;
     },
