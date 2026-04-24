@@ -1,0 +1,194 @@
+schema_version: 1.0
+phase: s7
+_stage: entry
+biz_gate: draft
+signed_by: ""
+signed_at: ""
+sc_covered: [SC-01, SC-02, SC-03, SC-07, SC-08]   # owner_phases 含 s7 的 SC（sc-phase-mapping.yml v1.7）
+ownership_verification:
+  source: design/sc-phase-mapping.yml
+  rule: "sc_covered 必须 = sc-phase-mapping.yml 中 owner_phases 含 s7 的 SC 集合"
+
+ac_coverage:
+  - ac_id: SC-01.AC-1
+    title: "拍照 / 相册 / 手动三入口 · 2MB 阈值压缩 · OCR 云厂商 + 手动兜底"
+    domain_entities: [CaptureForm, OCRResult, UploadReceipt]
+    user_journey: "P03-CAPTURE → 底部 ActionSheet 选入口 → 相机/相册/手动 → 前端压缩（>2MB）→ 云 OCR → 文本回填 → 提交 POST /wrongbook/items · image_id 引用 S6 presign fileKey"
+    upstream_contract:
+      - { from_phase: s6, api: "POST /files/presign → PUT OSS → POST /files/complete/{fileKey}" }
+    downstream_contract:
+      - { to_phase: s3, api: "POST /wrongbook/items · 含 image_id=fileKey 引用" }
+    four_role_slots:
+      architect_anchor: "design/arch/s7-frontend-wrongbook.md §1 录入三入口 · ADR 0014 Konsta + Vant 双端对称 · ADR 0004 引用"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: "Sd.3 高保真 P03-capture（design/mockups/wrongbook/02_capture.html · baseline/P-03-capture.png · spec P03.md）· testid: capture.form.submit / capture.camera.btn / capture.gallery.btn / capture.manual.btn / capture.form.root"
+    risks:
+      - "iOS Safari camera permission 拒绝无重试入口 · 需 UX 补'去设置开启'引导"
+      - "前端 canvas 压缩 >2MB 图的内存占用（长边 4000+px 大图可能 OOM · 需分片/降采样）"
+
+  - ac_id: SC-02.AC-1
+    title: "错题标签管理 · 预定义学科池（math/physics/chemistry/english）+ 用户自建（≤ 5 个）· 双端选择器 UI"
+    domain_entities: [WrongItemTag, TagTaxonomy]
+    user_journey: "P07-DETAIL → Tag 按钮 → Bottom Sheet 选择器 → 学科池 chip + 自定义输入 → PATCH /wrongbook/items/{id}/tags · 乐观锁 version"
+    upstream_contract:
+      - { from_phase: s3, api: "GET /wrongbook/tags · 学科标签白名单" }
+    downstream_contract:
+      - { to_phase: s3, api: "PATCH /wrongbook/items/{id}/tags · If-Match version header" }
+    four_role_slots:
+      architect_anchor: "design/arch/s7-frontend-wrongbook.md §2 Tag 选择器组件状态机（idle/editing/saving/error）"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: "Sd.3 高保真 P07-wrongbook-detail（design/mockups/wrongbook/06_wrongbook_detail.html · baseline/P-07-wrongbook-detail.png）· testid: wrongbook.detail.tag-sheet / wrongbook.detail.tag-chip / wrongbook.detail.tag-custom-input"
+    risks:
+      - "用户自建 ≤ 5 限制的 UX 提示（> 5 时灰化 + tooltip）"
+
+  - ac_id: SC-03.AC-1
+    title: "AI 讲解流式渲染 · SSE 订阅 · 错因/标签/相似题分区展示"
+    domain_entities: [AIExplainStream, AnalysisView]
+    user_journey: "P07-DETAIL 打开 → SSE 订阅 GET /analysis/{itemId} → 分片渲染讲解文本 → 错因 chip + 标签 chip + 相似题卡片并排"
+    upstream_contract:
+      - { from_phase: s4, api: "SSE GET /analysis/{itemId} · text/event-stream · chunked text deltas" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s7-frontend-wrongbook.md §3 SSE 客户端 · EventSource polyfill for 微信（wx.request chunk mode）· reconnect 3 次退避"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: "Sd.3 高保真 P07-wrongbook-detail + P05-result（design/mockups/wrongbook/06_wrongbook_detail.html + 04_result.html · baseline/P-07 + P-05.png）· testid: wrongbook.detail.explain-stream / wrongbook.detail.cause-chip / wrongbook.detail.similar-card"
+    risks:
+      - "微信小程序原生不支持 EventSource · 用长连接 wx.request + chunk 解析降级"
+      - "SSE 中断后的断点续传语义（是否回头重新请求整段）未标准化"
+
+  - ac_id: SC-07.AC-1
+    title: "手动录入表单 · 学科 + 题目文本 + 图片 + 标签 · 草稿自动保存（localStorage/wx.storage）"
+    domain_entities: [CaptureDraft, WrongItem]
+    user_journey: "P03-CAPTURE 手动 Tab → react-hook-form 填表 → 离开页 useEffect 保存 draft → 回来 init 值从 localStorage 恢复 → 提交清 draft key"
+    upstream_contract: []
+    downstream_contract:
+      - { to_phase: s3, api: "POST /wrongbook/items · multipart/form-data 或 JSON（image_id 引用）" }
+    four_role_slots:
+      architect_anchor: "design/arch/s7-frontend-wrongbook.md §1.3 草稿状态机（new/dirty/saved/restored/submitted）· localStorage 容量上限 + 过期清理策略"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: "Sd.3 高保真 P03-capture 手动 Tab（design/mockups/wrongbook/02_capture.html · baseline/P-03-capture.png）· testid: capture.form.subject / capture.form.stem / capture.form.draft-hint / capture.form.submit"
+    risks:
+      - "小程序 wx.storage 容量 10MB 上限 · 多题草稿 + 图 base64 可能溢出（需转为 fileKey 引用）"
+
+  - ac_id: SC-08.AC-1
+    title: "错题列表 · subject/tag/difficulty 筛选 · 游标分页 · Active/Mastered Tab"
+    domain_entities: [WrongItem, ListFilter]
+    user_journey: "P06-LIST → 顶部 filter-bar → useInfiniteQuery · cursor 分页 → 下拉刷新 / 上拉加载 → Active/Mastered Tab 切 query status"
+    upstream_contract:
+      - { from_phase: s3, api: "GET /wrongbook/items?cursor=&subject=&tags=&status=active|mastered" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s7-frontend-wrongbook.md §4 React Query 缓存策略（subject key isolation · mastered 分 Tab key）· cursor 语义（next_cursor+stale_time）"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: "Sd.3 高保真 P06-wrongbook-list（design/mockups/wrongbook/05_wrongbook_list.html · baseline/P-06-wrongbook-list.png）· testid: wrongbook.list.filter-bar / wrongbook.list.item-card / wrongbook.list.archive-tab / wrongbook.list.load-more"
+    risks:
+      - "Mastered Tab 默认展示最近 30d · 历史更久需 '加载更多' （S3 cursor 是否支持 from_timestamp 筛选？需对齐）"
+
+narrative: |
+  S7 是"用户眼前的错题世界"· 5 个 SC（SC-01 录入 / SC-02 标签 / SC-03 AI 讲解 / SC-07 手动录入草稿 / SC-08 列表筛选 + 归档）
+  全在前端双端（H5 Konsta + miniapp Vant Weapp）· 复习执行闭环在 S8 · 个人中心 + 匿名态在 S11 ·
+  P-REVIEW 入口只是按钮不在本 Phase 实现。所有 ux_anchor 都指向 Sd.3 高保真 HTML（design/mockups/wrongbook/*.html）
+  + baseline PNG（design/system/screenshots/baseline/*.png）+ testid 规约（design/system/testid-convention.md）·
+  与后端的契约通过 @longfeng/api-contracts 类型包绑定 · 任何契约变更回写 S5.5 联调闸 + 本 Phase analysis.yml.
+
+assumptions_draft:
+  # A1-A10 · G-Biz 阻塞前需 User 逐条过目
+  - id: A1
+    text: "H5 用 Konsta UI + React 18 · 小程序用 Vant Weapp · 两端组件 API 以 @longfeng/testids 常量包对齐"
+    source: "Sd.2 v2 ui-kit + Sd 备忘 §6"
+  - id: A2
+    text: "路由双端各自管理（H5 react-router · miniapp app.json pages）· route name 统一（home/calendar/wrongbook/review/profile）"
+    source: "方案 §2A.3"
+  - id: A3
+    text: "登录态 JWT + Refresh Token · H5 HttpOnly Cookie · miniapp wx.storage · access 15min · refresh 7d"
+    source: "方案 §2A.3"
+  - id: A4
+    text: "匿名态由 S11 匿名服务接管 · 本 Phase 只处理已登录态 · 未登录重定向登录页"
+    source: "方案 §2A.3 · S11 未 done 已由 s5.5 α' chain-04 显式 defer"
+  - id: A5
+    text: "录入三方式：手动 / 相机 / 相册 · 底部 Action Sheet 统一"
+    source: "方案 §2B.SC-01"
+  - id: A6
+    text: "OCR 采用前端调云厂商 API（阿里云通用 OCR 试用）· 失败走手动兜底 · 不经后端"
+    source: "方案 §2B.SC-01 · S4 ai-analysis-service 不做 OCR（只做后端语义分析）"
+  - id: A7
+    text: "testid 命名三段式 <screen>.<region>.<element>（如 wrongbook.list.item-card）· @longfeng/testids 常量包 + ESLint testid-required 兜底"
+    source: "Sd 备忘 §4 + Sd.6 · 本 Phase 新产 @longfeng/testids 包"
+  - id: A8
+    text: "国际化 i18next + zh-CN/en-US · 所有文本 t('key') · ESLint i18next 兜底禁中文字面量"
+    source: "方案 §2A.3"
+  - id: A9
+    text: "错题照片走 S6 file-service 预签名 URL · 不经业务服务"
+    source: "方案 §2A.7 · s5.5 α' chain-03 已证通"
+  - id: A10
+    text: "每页面必带 <screen>.root data-testid · Playwright / miniprogram-automator 定位入口"
+    source: "Sd 备忘 §6"
+
+ambiguities_for_user:
+  # Q1-Q3 · G-Biz 需 User 书面回
+  - id: Q1
+    text: "拍照错题压缩策略"
+    option_a: "2MB 阈值 · <2MB 原图 · >2MB 压到 2MB（canvas API · long-edge 2000px）"
+    option_b: "全量原图 · 不压（OCR 精度优先）"
+    option_c: "分档 · <1MB 原 · 1-5MB 压到 2MB · >5MB 降采样到 long-edge 1600px"
+    current_assumption: "option_a（2MB 阈值）· 本 Phase 写到 arch.md §1"
+    impact: "影响 OCR 精度 vs 上传流量 vs 内存占用三方平衡"
+  - id: Q2
+    text: "AI 解析执行模式"
+    option_a: "同步等待 · 录入页 spinner 转到 AI 完成再跳结果页（UX 直观 · 但阻塞）"
+    option_b: "后台异步 + 列表轮询 · 立即回列表 · 条目 analyzing → completed 自动刷新（UX 更敏捷）"
+    option_c: "后台异步 + SSE · 订阅状态流 · 类似 b 但实时推送"
+    current_assumption: "option_b（异步轮询 · refetchInterval=3s · SSE 在 SC-03 的讲解流式单独用）"
+    impact: "影响 SC-01 录入体验 · 与 s5.5 α' chain-01 的 3s SLA 对齐模式"
+  - id: Q3
+    text: "mastered 错题列表展示"
+    option_a: "隐藏 · 默认列表只看 active · 'mastered' 不可见直到用户明确选"
+    option_b: "归档 Tab · Active / Mastered 顶部切换 · 一键查看"
+    option_c: "过滤器 · filter-bar 含 '状态=mastered' 选项 · 与 subject/tag 同级"
+    current_assumption: "option_b（归档 Tab）· 符合错题本场景（mastered 是里程碑 · 可回顾）"
+    impact: "影响 SC-08 UI 层级 + React Query key 结构"
+
+dor_static_check:
+  - check: "远端 s3-done tag 存在"
+    status: PASS
+  - check: "远端 s4-done tag 存在"
+    status: PASS
+  - check: "远端 s5.5-done tag 存在（v1.6 硬前置）"
+    status: PASS
+    note: "α' realistic · 6/9 机器绿 + 3 phase-dep + 2 infra defer · 详见 reports/phase-s5.5-business-match.md"
+  - check: "远端 sd-done tag 存在（硬前置）"
+    status: PASS
+    note: "Sd-v2 8/9 Gate 绿 · G5/G7 partial"
+  - check: "@longfeng/ui-kit workspace 包"
+    status: PASS
+  - check: "@longfeng/api-contracts workspace 包"
+    status: PRESENT_BUT_SKELETON
+    note: "S0 skeleton · noop build · 本 Phase 需落 OpenAPI → TS types 生成 + typed client export"
+  - check: "@longfeng/design-tokens"
+    status: MERGED_INTO_UI_KIT
+    note: "token CSS 变量已在 @longfeng/ui-kit/src/tokens.css · 不作独立包 · 主文档名称遗留"
+  - check: "@longfeng/icons"
+    status: DEFERRED
+    note: "Sd.5 Handoff 资产待 User 提供 · s7 内用占位 emoji/unicode · Sd.5 解冻后替换"
+  - check: "@longfeng/testids 常量包"
+    status: TO_BE_CREATED
+    note: "本 Phase §11.7 Step 8 新产出"
+  - check: "design/system/testid-convention.md"
+    status: PASS
+  - check: "a11y.json 报告 green"
+    status: PASS_VIA_SCRIPT
+    note: "Sd-v2 verify-a11y.sh 80/80 stories 绿 · 等价 a11y.json 报告"
+  - check: "h5 / miniapp S0 骨架 pnpm build 通过"
+    status: PASS
+    note: "目前 build 是 skeleton noop · 本 Phase 会切到真 Vite build"
+  - check: "后端 wrongbook-service / ai-analysis-service / file-service 本地可启动"
+    status: PASS
+    note: "s3-it-pg + s6-it-minio + s5.5-it-rmq 常驻容器"
+  - check: "Oracle SC-01/02/03/07/08 @allen 签"
+    status: PASS
+    note: "design/acceptance-criteria-signed.yml 5/5 条目在 · @allen in-person"

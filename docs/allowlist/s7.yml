@@ -1,0 +1,32 @@
+# S7 前端错题主循环 · 工具白名单 · 落地计划 §11.4 + §11.7 Step 1
+extends: global
+phase: s7
+additional_tools:
+  - { name: react, version: "18.3.x" }
+  - { name: react-router, version: "6.23" }
+  - { name: "@tanstack/react-query", version: "5.x" }
+  - { name: zustand, version: "4.5" }
+  - { name: react-hook-form, version: "7.x" }
+  - { name: zod, version: "3.x" }
+  - { name: konsta, version: "3.x" }
+  - { name: "@vant/weapp", version: "pinned" }
+  - { name: i18next, version: "23.x" }
+  - { name: react-i18next, version: "14.x" }
+  - { name: vitest, version: "1.x" }
+  - { name: jest-axe, version: "8.x" }
+  - { name: playwright, version: "1.42" }
+  - { name: "@axe-core/playwright", version: "4.x" }
+  - { name: miniprogram-automator, version: "0.11.x" }
+  - { name: openapi-typescript, version: "7.x" }
+  - { name: msw, version: "2.x" }
+  - { name: "@seriousme/openapi-schema-validator", version: "2.x" }
+  - { name: "@stryker-mutator/core", version: "8.x" }
+  - { name: "@stryker-mutator/vitest-runner", version: "8.x" }
+additional_deny:
+  - { pattern: 'w-\[[0-9]+px\]',  reason: "Tailwind arbitrary value · Token-First" }
+  - { pattern: 'h-\[[0-9]+px\]',  reason: "Tailwind arbitrary value · Token-First" }
+  - { pattern: 'text-\[#',         reason: "Tailwind arbitrary color · Token-First" }
+  - { pattern: '#[0-9a-fA-F]{6}',  reason: "硬编码色值 · 必须 var(--tkn-*)", scope: "frontend/apps/" }
+  - { pattern: 'rgb\(',            reason: "硬编码色值 · 必须 var(--tkn-*)", scope: "frontend/apps/" }
+  - { pattern: '>([一-龥]{2,})</', reason: "中文字面量 · 必须走 i18next key", scope: "frontend/apps/h5/src" }
+  - { pattern: '\bfetch\(',        reason: "禁止直接 fetch · 必须走 @longfeng/api-contracts SDK", scope: "frontend/apps/" }
