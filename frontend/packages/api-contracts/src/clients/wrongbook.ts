@@ -30,4 +30,9 @@ export const wrongbookClient = {
   getTags(): Promise<{ tags: string[] }> {
     return httpClient.get('/wrongbook/tags');
   },
+
+  /** SC-04.AC-1 · 软删除 · 后端 deleted_at=now + audit_log · 204 No Content. */
+  softDelete(id: string): Promise<void> {
+    return httpClient.delete(`/wrongbook/items/${id}`);
+  },
 };

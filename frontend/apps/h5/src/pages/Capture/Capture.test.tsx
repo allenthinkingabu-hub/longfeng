@@ -9,7 +9,7 @@ import { CapturePage } from './index';
 import { i18n } from '../../i18n';
 import { TEST_IDS } from '@longfeng/testids';
 
-expect.extend(toHaveNoViolations);
+expect.extend(toHaveNoViolations as never);
 
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

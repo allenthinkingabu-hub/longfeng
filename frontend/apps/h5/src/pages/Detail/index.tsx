@@ -1,10 +1,10 @@
-// S7 · SC-02.AC-1 + SC-03.AC-1 · 错题详情 · AI 讲解 SSE + Tag 编辑 + 相似题
+// S7 · SC-02.AC-1 + SC-03.AC-1 + SC-04.AC-1 · 错题详情 · AI 讲解 SSE + Tag 编辑 + 相似题 + 软删除
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { wrongbookClient, analysisClient, WrongItemVO, ExplainChunk } from '@longfeng/api-contracts';
-import { NavBar, Card, Tag, Sheet, Input, Button, Divider, Skeleton, Banner } from '@longfeng/ui-kit';
+import { NavBar, Card, Tag, Sheet, Modal, Input, Button, Divider, Skeleton, Banner } from '@longfeng/ui-kit';
 import { TEST_IDS } from '@longfeng/testids';
 
 const SUBJECT_POOL = ['math', 'physics', 'chemistry', 'english'];
@@ -47,6 +47,17 @@ export const DetailPage: React.FC = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [localTags, setLocalTags] = useState<string[]>([]);
   const [custom, setCustom] = useState('');
+
+  // 软删除（SC-04.AC-1）
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const softDelete = useMutation({
+    mutationFn: () => wrongbookClient.softDelete(id),
+    onSuccess: () => {
+      setConfirmDelete(false);
+      qc.invalidateQueries({ queryKey: ['wrongbook'] });
+      nav('/wrongbook', { replace: true });
+    },
+  });
   useEffect(() => {
     if (item) setLocalTags(item.tags);
   }, [item]);
@@ -85,7 +96,30 @@ export const DetailPage: React.FC = () => {
 
   return (
     <div data-testid={TEST_IDS.wrongbookDetail.root}>
-      <NavBar title={t('wrongbook_detail.title')} onBack={() => nav(-1)} testIdPrefix="wrongbook.detail" />
+      <NavBar
+        title={t('wrongbook_detail.title')}
+        onBack={() => nav(-1)}
+        testIdPrefix="wrongbook.detail"
+        right={
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            aria-label="删除"
+            data-testid={TEST_IDS.wrongbookDetail.delete.btn}
+            style={{
+              minHeight: 32,
+              minWidth: 44,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--tkn-color-danger-default, #c0392b)',
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            删除
+          </button>
+        }
+      />
 
       {/* 题干 · 图 · 标签 */}
       <main style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -214,6 +248,35 @@ export const DetailPage: React.FC = () => {
           </Button>
         </div>
       </Sheet>
+
+      {/* SC-04.AC-1 · 删除确认 */}
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="确认删除"
+        testIdPrefix="wrongbook.detail.delete.confirm-modal"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmDelete(false)}
+              testIdPrefix={TEST_IDS.wrongbookDetail.delete.cancel}
+            >
+              取消
+            </Button>
+            <Button
+              variant="danger"
+              loading={softDelete.isPending}
+              onClick={() => softDelete.mutate()}
+              testIdPrefix={TEST_IDS.wrongbookDetail.delete.confirm}
+            >
+              删除
+            </Button>
+          </>
+        }
+      >
+        删除后此错题 7 天内可在「设置 → 回收站」恢复，之后永久清除。
+      </Modal>
     </div>
   );
 };

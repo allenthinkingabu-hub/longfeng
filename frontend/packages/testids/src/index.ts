@@ -34,7 +34,7 @@ export const TEST_IDS = {
     empty: 'wrongbook.list.empty',
     skeleton: 'wrongbook.list.skeleton',
   },
-  // P07 Detail · SC-02 + SC-03
+  // P07 Detail · SC-02 + SC-03 + SC-04
   wrongbookDetail: {
     root: 'wrongbook.detail.root',
     'stem-text': 'wrongbook.detail.stem-text',
@@ -47,6 +47,11 @@ export const TEST_IDS = {
     'cause-chip': 'wrongbook.detail.cause-chip',
     'similar-card': 'wrongbook.detail.similar-card',
     'review-entry': 'wrongbook.detail.review-entry',
+    delete: {
+      btn: 'wrongbook.detail.delete.btn',
+      confirm: 'wrongbook.detail.delete.confirm',
+      cancel: 'wrongbook.detail.delete.cancel',
+    },
   },
   // 通用
   common: {

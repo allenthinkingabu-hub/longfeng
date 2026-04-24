@@ -1,6 +1,6 @@
-// S7 · V-S7-10 · Detail page · jest-axe + testid · SC-02 + SC-03
+// S7 · V-S7-10 · Detail page · jest-axe + testid · SC-02 + SC-03 + SC-04
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
@@ -9,7 +9,7 @@ import { DetailPage } from './index';
 import { i18n } from '../../i18n';
 import { TEST_IDS } from '@longfeng/testids';
 
-expect.extend(toHaveNoViolations);
+expect.extend(toHaveNoViolations as never);
 
 vi.mock('@longfeng/api-contracts', async () => {
   const actual = await vi.importActual<typeof import('@longfeng/api-contracts')>('@longfeng/api-contracts');
@@ -27,6 +27,7 @@ vi.mock('@longfeng/api-contracts', async () => {
         version: 0,
       }),
       updateTags: vi.fn().mockResolvedValue(undefined),
+      softDelete: vi.fn().mockResolvedValue(undefined),
     },
     analysisClient: {
       similar: vi.fn().mockResolvedValue({ items: [] }),
@@ -63,5 +64,15 @@ describe('DetailPage · SC-02 + SC-03', () => {
     await findByTestId(TEST_IDS.wrongbookDetail.root);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('SC-04 · delete button opens confirm modal + confirm triggers softDelete', async () => {
+    const { findByTestId, getByTestId } = renderDetail();
+    const deleteBtn = await findByTestId(TEST_IDS.wrongbookDetail.delete.btn);
+    fireEvent.click(deleteBtn);
+    await waitFor(() => {
+      // Modal 打开后 confirm 按钮出现（ui-kit Button 生成 {prefix}.btn）
+      expect(getByTestId(`${TEST_IDS.wrongbookDetail.delete.confirm}.btn`)).toBeInTheDocument();
+    });
   });
 });

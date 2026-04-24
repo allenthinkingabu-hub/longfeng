@@ -468,60 +468,59 @@ export const TEST_IDS = {
 
 ---
 
-## 8. AC 分节 · 五行齐全（v1.8 §1.5 #13）
+## 8. AC 分节 · 五行齐全（v1.8 §1.5 #13 · 对齐 sc-phase-mapping.yml 权威）
 
-### §8.1 SC-01.AC-1 · 录入三入口 + 原图 OCR
+> 2026-04-24 α-realistic 修正：原 §8.4/8.5 SC-07/08 移除（属 S5/S8）· 合并入 SC-01 · 新增 SC-04 / SC-11 / SC-15
 
-| 行 | 内容 |
-|---|---|
-| **API** | POST /files/presign → PUT OSS → POST /files/complete/{fileKey} → POST /wrongbook/items |
-| **Domain** | CaptureForm, AttemptVO, WrongItemVO.imageUrl |
-| **Event**（前端状态机） | 10MB校验 → OCR中 → 文本回填 ↔ 手动兜底 → 草稿中 → 提交中 → 录入完成 |
-| **Error** | >10MB → capture.size-exceeded.toast · OCR fail → 手动兜底（降级 · 非阻塞）· presign 4xx → 重试 3 次后提示 |
-| **NFR** | 录入页 LCP ≤ 2s · 图上传 P95 ≤ 5s（10MB WiFi）· a11y 每按钮 testid + aria-label |
+## AC: SC-01.AC-1 · 录入三入口 + 原图 OCR + 草稿
 
-### §8.2 SC-02.AC-1 · 标签管理
+- **API:** POST /files/presign → PUT OSS → POST /files/complete/{fileKey} → POST /wrongbook/items
+- **Domain:** CaptureForm, AttemptVO, CaptureDraft, WrongItemVO.imageUrl
+- **Event:** 10MB 校验 → OCR 中 → 文本回填 ↔ 手动兜底 → 草稿 dirty→saved→restored → 提交中 → 录入完成（前端状态机）
+- **Error:** >10MB → capture.size-exceeded.toast · OCR fail → 手动兜底（降级 · 非阻塞）· presign 4xx → 重试 3 次 · storage 配额超 → 只存 form 不存 image base64
+- **NFR:** 录入页 LCP ≤ 2s · 图上传 P95 ≤ 5s（10MB WiFi）· 草稿 save < 50ms · a11y 每按钮 testid + aria-label
 
-| 行 | 内容 |
-|---|---|
-| **API** | GET /wrongbook/tags · PATCH /wrongbook/items/{id}/tags (If-Match version) |
-| **Domain** | WrongItemTag, TagTaxonomy |
-| **Event** | Tag Sheet open → chip select → custom input → PATCH → 反馈 204 |
-| **Error** | 412 version mismatch → refetch + merge · 用户自建 > 5 → 灰化 + tooltip |
-| **NFR** | Sheet 打开动画 300ms · a11y role=dialog · 支持 Esc 关 |
+## AC: SC-02.AC-1 · 标签管理
 
-### §8.3 SC-03.AC-1 · AI 讲解流式
+- **API:** GET /wrongbook/tags · PATCH /wrongbook/items/{id}/tags (If-Match version)
+- **Domain:** WrongItemTag, TagTaxonomy
+- **Event:** Tag Sheet open → chip select → custom input → PATCH → 反馈 204
+- **Error:** 412 version mismatch → refetch + merge · 用户自建 > 5 → 灰化 + tooltip
+- **NFR:** Sheet 打开动画 300ms · a11y role=dialog · 支持 Esc 关
 
-| 行 | 内容 |
-|---|---|
-| **API** | SSE GET /analysis/{itemId} · GET /analysis/{itemId}/similar?k=3 |
-| **Domain** | AIExplainStream, AnalysisView |
-| **Event** | SSE 订阅 → chunk 流 → [DONE] · 中断 → 重连 ≤ 3 次 → 降级"静态讲解" |
-| **Error** | network fail → 重连退避 1/3/7s · server error → 降级 fetch 静态版 |
-| **NFR** | 首字 ≤ 500ms · 流完 ≤ 8s · reconnect ≤ 3 · a11y aria-live=polite |
+## AC: SC-03.AC-1 · AI 讲解流式
 
-### §8.4 SC-07.AC-1 · 手动录入 + 草稿
+- **API:** SSE GET /analysis/{itemId} · GET /analysis/{itemId}/similar?k=3
+- **Domain:** AIExplainStream, AnalysisView
+- **Event:** SSE 订阅 → chunk 流 → [DONE] · 中断 → 重连 ≤ 3 次 → 降级"静态讲解"
+- **Error:** network fail → 重连退避 1/3/7s · server error → 降级 fetch 静态版 · 微信 wx.request enableChunked onChunkReceived 降级路径
+- **NFR:** 首字 ≤ 500ms · 流完 ≤ 8s · reconnect ≤ 3 · a11y aria-live=polite
 
-| 行 | 内容 |
-|---|---|
-| **API** | POST /wrongbook/items |
-| **Domain** | CaptureDraft (localStorage / wx.storage) · WrongItem |
-| **Event** | new → dirty → saved（cleanup 触发）→ restored → submitted / expired |
-| **Error** | storage 配额超 → 提示 + 只存 form · 不存 image base64（只存 fileKey 引用）· 7d 过期自动清 |
-| **NFR** | 草稿 save < 50ms · init restore < 100ms · a11y form 错误 aria-describedby |
+## AC: SC-04.AC-1 · 错题软删除 + 7d 可恢复
 
-### §8.5 SC-08.AC-1 · 列表分页 + 归档 Tab
+- **API:** DELETE /wrongbook/items/{id}（设 deleted_at=now + audit_log）· POST /wrongbook/items/{id}/restore（Settings 页落 S11 或 s7.5）
+- **Domain:** WrongItem.deleted_at, AuditLog
+- **Event:** Detail 删除按钮 → Confirm Modal → DELETE → 跳回列表 · List 自动过滤 deleted_at 非 NULL
+- **Error:** 5xx → 保留在 Detail · Toast 提示 · 网络超时不重试（避免重复 audit 事件）
+- **NFR:** 删除完成 ≤ 500ms · a11y Modal role=dialog aria-modal=true · 危险操作用 danger variant 强视觉反馈
 
-| 行 | 内容 |
-|---|---|
-| **API** | GET /wrongbook/items?status=active|mastered&cursor=&subject=&tags= |
-| **Domain** | WrongItem[], ListFilter |
-| **Event** | tab 切 active ↔ mastered · filter 应用 · cursor fetchNextPage · 轮询 hasAnalyzingItems 3s |
-| **Error** | 5xx → 顶部 Banner + 下拉重试 · cursor 过期 → 自动重置到首页 |
-| **NFR** | 首屏 10 条 · cursor stale-time 60s · a11y tablist + aria-selected |
+## AC: SC-11.AC-1 · 错题图片 OSS 前端上传
+
+- **API:** POST /files/presign（MIME 白名单 · size ≤ 10MB · TTL 900s）· PUT {upload_url} binary · POST /files/complete/{fileKey}
+- **Domain:** UploadReceipt, FileAsset.status(READY/QUARANTINED)
+- **Event:** 选图 → MIME/size 守门 → presign → 直传 OSS（不过网关）→ complete → status=READY
+- **Error:** MIME 非白名单 → 前端拒 · size > 10MB → capture.size-exceeded.toast · presign 429 → 退避重试 3 次 · PUT 5xx → 提示重试
+- **NFR:** presign ≤ 300ms · 直传 ≤ 5s（10MB WiFi）· complete ≤ 1s · s5.5 α' chain-03 端到端已证
+
+## AC: SC-15.AC-1 · 学科标签层级（subject.tag 两级）
+
+- **API:** GET /wrongbook/tags · 未来扩 tag_taxonomy（subject → tag[]）
+- **Domain:** Subject(math/physics/chemistry/english), WrongItemTag
+- **Event:** Capture subject Picker · List filter Picker · Detail Tag Sheet subject chip 三处联动同一常量表
+- **Error:** 自定义 tag > 5 → 灰化 · 学科池更新（后端 push）→ 前端 refetch 合并
+- **NFR:** Picker 打开 ≤ 200ms · a11y select aria-label · 两级扩展点预留（subject 必选 · tag[] 可选）
 
 ---
-
 ## 9. G-Arch 签字记录
 
 - [x] 6 节齐（§1..§6 + §7 Symbol + §8 AC 分节）

@@ -9,7 +9,8 @@ import { ListPage } from './index';
 import { i18n } from '../../i18n';
 import { TEST_IDS } from '@longfeng/testids';
 
-expect.extend(toHaveNoViolations);
+// jest-axe matcher · expect.extend expects specific shape · cast to avoid fighting Vitest types
+expect.extend(toHaveNoViolations as never);
 
 // Mock wrongbookClient · avoid real fetch
 vi.mock('@longfeng/api-contracts', async () => {
@@ -43,7 +44,9 @@ function renderList() {
 }
 
 describe('ListPage · SC-08.AC-1', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders root + active tab + archive tab testid', async () => {
     const { findByTestId } = renderList();
