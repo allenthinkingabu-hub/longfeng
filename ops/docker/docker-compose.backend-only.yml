@@ -1,0 +1,113 @@
+# 落地计划 §10.5.3 后端联调栈 · 降级版（5 基础设施 · 微服务走 mvn 直跑）
+#
+# S5.5 本会话 (2026-04-24) 产降级版：
+#   - 包含：pg / redis / rmq / nacos / minio （5 基础设施）
+#   - 豁免：gateway / wrongbook / ai-analysis / review-plan / file / anonymous 微服务容器化
+#     理由：5 微服务容器化需 Dockerfile 各自 + build image pipeline · 工作量大
+#            本会话复用 s3-it-pg + s6-it-minio 常驻容器跑 chain-03 Java IT · 同等语义
+#     全量（10 容器）版 S7/S8 开工后补 · 走 docker-compose.backend-only.yml 重写
+#
+# 注：主文档 §10.5.3 要求 "digest 锁死" · 本降级版暂用 tag 锁版本 · 全量版需换 @sha256:
+version: "3.9"
+
+services:
+  pg:
+    image: pgvector/pgvector:pg16
+    container_name: s5.5-pg
+    environment:
+      POSTGRES_PASSWORD: wb
+      POSTGRES_DB: wrongbook
+    ports: ["15432:5432"]
+    volumes: ["s5.5-pg-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "wrongbook"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [s5.5-net]
+
+  redis:
+    image: redis:7.2
+    container_name: s5.5-redis
+    ports: ["16379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [s5.5-net]
+
+  rmq:
+    image: apache/rocketmq:5.1.4
+    container_name: s5.5-rmq
+    command: sh -c "./mqnamesrv"
+    ports: ["9876:9876"]
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9876"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [s5.5-net]
+
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: s5.5-nacos
+    environment:
+      MODE: standalone
+    ports: ["8848:8848"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8848/nacos/v1/console/health/readiness || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [s5.5-net]
+
+  minio:
+    image: minio/minio:RELEASE.2024-05-01T01-11-10Z
+    container_name: s5.5-minio
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["s5.5-minio-data:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [s5.5-net]
+
+volumes:
+  s5.5-pg-data:
+  s5.5-minio-data:
+
+networks:
+  s5.5-net:
+    driver: bridge
+# ==============================================================================
+# TODO · 全量版（S7/S8 done 后添加 5 业务服务容器 · 接管 s5.5 完整流量）：
+#
+# services:
+#   gateway:
+#     build:
+#       context: ../../backend/gateway
+#       dockerfile: Dockerfile
+#     ports: ["8080:8080"]
+#     environment:
+#       NACOS_HOST: nacos
+#       DB_URL: jdbc:postgresql://pg:5432/wrongbook
+#       SPRING_REDIS_HOST: redis
+#     depends_on:
+#       pg: {condition: service_healthy}
+#       nacos: {condition: service_healthy}
+#     networks: [s5.5-net]
+#
+#   wrongbook: ... (同样模式 8081)
+#   ai-analysis: ... (8082 · OCR 用 mock · LLM 用 WireMock)
+#   review-plan: ... (8083)
+#   file: ... (8084)
+#   anonymous: ... (8085)
+#
+# 全量版完成条件：S7 + S8 各自 Dockerfile 落地 · backend-integration-gate.sh --full 正式跑
+# ==============================================================================

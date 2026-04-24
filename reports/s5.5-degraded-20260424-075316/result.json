@@ -1,0 +1,10 @@
+{
+  "mode": "degraded",
+  "chains_run": ["chain-03"],
+  "chains_deferred": ["chain-01", "chain-02", "chain-04", "chain-05", "chain-06"],
+  "degrades_deferred": ["degrade-01", "degrade-02", "degrade-03"],
+  "stats": {"expected": 1, "unexpected": 0},
+  "build_success": true,
+  "run_id": "s5.5-degraded-20260424-075316",
+  "completed_at": "2026-04-24T03:53:16Z"
+}
