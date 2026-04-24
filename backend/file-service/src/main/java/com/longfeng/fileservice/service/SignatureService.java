@@ -56,7 +56,9 @@ public class SignatureService {
     }
 
     String ext = extractExt(filename);
-    String objectKey = "raw/" + UUID.randomUUID() + ext;
+    // fileKey 用扁平 UUID · 避免 @PathVariable 中 "/" 路径段解析冲突
+    String fileKey = UUID.randomUUID() + ext;
+    String objectKey = "raw/" + fileKey;
     PresignResult pr =
         storage.presignUpload(
             props.bucket(), objectKey, mime, Duration.ofSeconds(props.presignTtlSeconds()));
@@ -66,7 +68,7 @@ public class SignatureService {
     asset.setId(idGen.nextId());
     asset.setOwnerId(ownerId);
     asset.setBucket(props.bucket());
-    asset.setObjectKey(objectKey);
+    asset.setObjectKey(fileKey); // 存扁平 key · Service 内部 resolve 到 raw/<key>
     asset.setMime(mime);
     asset.setSizeBytes(size);
     asset.setStatus(FileAsset.STATUS_PENDING);
@@ -74,7 +76,7 @@ public class SignatureService {
 
     return new PresignResponse(
         pr.uploadUrl(),
-        objectKey,
+        fileKey,
         Instant.now().plusSeconds(pr.expiresInSeconds()).toString(),
         pr.expiresInSeconds());
   }
@@ -82,11 +84,13 @@ public class SignatureService {
   /** SC-11.AC-3 · GET /files/download/{fileKey}?variant=. */
   public String presignDownload(String fileKey, String variant) {
     FileAsset asset = repo.findByObjectKey(fileKey).orElseThrow(() -> new FileNotFoundException(fileKey));
+    // raw variant = 内部 "raw/<fileKey>" · thumb/medium = variant_*_key（已是完整路径）
+    String rawObjectKey = "raw/" + fileKey;
     String actualKey =
         switch (variant == null ? "medium" : variant) {
-          case "thumb" -> asset.getVariantThumbKey() != null ? asset.getVariantThumbKey() : fileKey;
-          case "original" -> fileKey;
-          case "medium" -> asset.getVariantMediumKey() != null ? asset.getVariantMediumKey() : fileKey;
+          case "thumb" -> asset.getVariantThumbKey() != null ? asset.getVariantThumbKey() : rawObjectKey;
+          case "original" -> rawObjectKey;
+          case "medium" -> asset.getVariantMediumKey() != null ? asset.getVariantMediumKey() : rawObjectKey;
           default -> throw new IllegalArgumentException("invalid variant: " + variant);
         };
     return storage.presignDownload(

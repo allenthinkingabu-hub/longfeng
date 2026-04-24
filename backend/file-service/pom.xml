@@ -77,11 +77,11 @@
       <artifactId>thumbnailator</artifactId>
       <version>${thumbnailator.version}</version>
     </dependency>
-    <!-- WebP codec for javax.imageio -->
+    <!-- WebP codec for javax.imageio · usefulness fork 支持 arm64/x86_64/linux 多架构 native（sejda 只 x86_64 mac） -->
     <dependency>
-      <groupId>org.sejda.imageio</groupId>
+      <groupId>com.github.usefulness</groupId>
       <artifactId>webp-imageio</artifactId>
-      <version>${webp-imageio.version}</version>
+      <version>0.10.0</version>
     </dependency>
     <!-- EXIF read / strip -->
     <dependency>

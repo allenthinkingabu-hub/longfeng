@@ -62,9 +62,10 @@ public class UploadService {
       return asset;
     }
 
-    // 读原图
+    // 读原图 · objectKey 存扁平 · 实际 MinIO object name 含 raw/ 前缀
+    String rawObjectKey = "raw/" + asset.getObjectKey();
     byte[] originalBytes;
-    try (var is = storage.readObject(asset.getBucket(), asset.getObjectKey())) {
+    try (var is = storage.readObject(asset.getBucket(), rawObjectKey)) {
       originalBytes = is.readAllBytes();
     } catch (Exception e) {
       throw new IllegalStateException("read object failed: " + fileKey, e);
@@ -83,7 +84,7 @@ public class UploadService {
         imageProcessor.process(new ByteArrayInputStream(originalBytes), asset.getMime());
 
     // 回写 thumb + medium
-    String thumbKey = derivedKey(asset.getObjectKey(), "thumb");
+    String thumbKey = derivedKey(asset.getObjectKey(), "thumb");   // objectKey 扁平 · 这里派生
     String mediumKey = derivedKey(asset.getObjectKey(), "medium");
     storage.putObject(
         asset.getBucket(),
@@ -111,14 +112,10 @@ public class UploadService {
     return saved;
   }
 
-  /** 从 raw/{uuid}.jpg → variants/thumb/{uuid}.webp · raw → variants/medium/{uuid}.webp. */
-  private String derivedKey(String rawKey, String variant) {
-    String base =
-        rawKey.startsWith("raw/")
-            ? rawKey.substring(4)
-            : rawKey;
-    int dot = base.lastIndexOf('.');
-    String stem = dot < 0 ? base : base.substring(0, dot);
+  /** fileKey (扁平 {uuid}.jpg) → variants/thumb/{uuid}.webp. */
+  private String derivedKey(String fileKey, String variant) {
+    int dot = fileKey.lastIndexOf('.');
+    String stem = dot < 0 ? fileKey : fileKey.substring(0, dot);
     return "variants/" + variant + "/" + stem + ".webp";
   }
 }
