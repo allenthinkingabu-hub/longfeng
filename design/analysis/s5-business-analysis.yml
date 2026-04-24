@@ -56,6 +56,7 @@ sc_covered:
   - SC-08                                # 复习任务执行与打分 · phase_owner=s8 (s5 提供后端)
   - SC-09                                # 学情分析卡片 · phase_owner=s8 (s5 提供聚合 API)
   - SC-10                                # 通用日历节点绑定 · phase_owner=s5
+  - SC-14                                # 家长监督视图 · phase_owner=[s8,s5,s3] · s5 贡献：复习进度数据源（复用 SC-09.AC-1 聚合 API）
 
 narrative: |
   S5 是 AI 错题本项目的"复习节奏节拍器" —— review-plan-service 后端服务。按 G-Biz 8 决策收口：

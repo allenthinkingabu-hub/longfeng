@@ -631,6 +631,52 @@ G-Arch 阶段 User `/arch-ok` 前 · 以下文件必须落档：
 - `docs/adr/0014-review-outcome-outbox-tables.md`
 - `docs/adr/0015-xxljob-over-quartz.md`
 
+## 7. 符号清单（Symbol Registry · G-Arch 硬门禁兜底）
+
+check-arch-consistency.sh 扫 main...HEAD diff 中的 class / @RequestMapping / topic / CREATE TABLE · 必须在本 doc grep 命中。以下为 S5 落地产出的符号（与代码 commit 同步）：
+
+**Application & Config**：
+- Application（@SpringBootApplication 入口 · `com.longfeng.reviewplan.Application`）
+- AlgorithmConfigRegistration（@EnableConfigurationProperties(AlgorithmConfig)）
+- FeignAndJpaConfig（@EnableFeignClients + @EnableJpaRepositories + @EntityScan + @EnableJpaAuditing + 内嵌 FeignEnabled）
+- FeignEnabled（内部 static Configuration · @ConditionalOnProperty review.feign.enabled）
+- CalendarCacheConfig（Caffeine 10min TTL · `calendarCache` bean）
+
+**Domain (algo)**：
+- AlgorithmConfig（@ConfigurationProperties("review.sm2") · record · guard-rail easeMin/easeMax/easeInit/intervalMaxDays/qualityPenaltyStep）
+- SM2Algorithm（纯函数 compute）· SM2Result（record）
+
+**Entity + Repo**：
+- ReviewPlan · ReviewOutcome · ReviewPlanOutbox（3 entity）
+- ReviewPlanRepository · ReviewOutcomeRepository · ReviewPlanOutboxRepository（3 repo）
+
+**Service**：
+- ReviewPlanService（createSevenNodes + complete + mastered trigger · CompleteResult record）
+
+**Consumer · Job · Feign**：
+- WrongItemAnalyzedConsumer（@RocketMQMessageListener topic=wrongbook.item.analyzed）· WrongItemAnalyzedEvent（record payload）
+- ReviewDueJob（@XxlJob("review-due-scan") · @ConditionalOnProperty review.job.enabled）
+- CalendarFeignClient（@FeignClient name=core-service · fallback=CalendarFeignClientFallback）· CalendarFeignClientFallback
+- NotificationFeignClient（@FeignClient name=notification-service）· ReviewDueNotifyReq（record payload）
+
+**Controller · Exception**：
+- ReviewPlanController（POST /review-plans/{id}/complete）
+- ReviewPlanExceptionHandler（@RestControllerAdvice · 映射 PlanNotFoundException/PlanMasteredException/OptimisticLockingFailureException 到 404/410/409）
+- PlanNotFoundException · PlanMasteredException · CompleteReviewReq（record）· CompleteReviewResp（record）
+
+**Support**：
+- SnowflakeIdGenerator（S5 worker-id=3 · 与 S3/S4 layout 对齐）
+
+**Tests**（不是业务符号但 arch-consistency 脚本会扫 diff 中 class 名 · 列在这里让 grep 命中）：
+- SM2AlgorithmUT · CalendarFeignClientFallbackUT（UT）
+- ReviewPlanServiceIT · ReviewDueJobIT · S5VerifierIT · MockMvcSmokeIT · IntegrationTestBase（IT backbone）
+
+**Common（新增）**：
+- CoversAC（@CoversAC 测试注解 · `com.longfeng.common.test`）· CoversACGroup（@Repeatable 支持）
+
+**Migrations**：
+- V1.0.053__review_outcome.sql（`review_outcome` CREATE TABLE）· V1.0.054__review_plan_outbox.sql（`review_plan_outbox` CREATE TABLE）· V1.0.055__review_plan_node_index.sql（ALTER review_plan · DROP CONSTRAINT IF EXISTS · ADD COLUMN IF EXISTS node_index/dispatch_version/consecutive_good_count）
+
 ---
 
 ## AC: SC-07.AC-1 · Consumer 幂等 INSERT 7 行
