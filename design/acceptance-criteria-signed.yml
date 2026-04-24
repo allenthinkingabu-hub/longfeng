@@ -19,9 +19,9 @@
 
 schema_version: 1.0
 
-signed_by: ""                        # 硬约束：S0 禁止预签 · 由 Phase DoR 前 User 独立填
-signed_at: null
-signature_method: ""                 # github-pr-approve | gpg-sign | in-person
+signed_by: "@allen"                  # 2026-04-24 · S5 Phase AC 审签
+signed_at: "2026-04-24T05:45:00+08:00"
+signature_method: "in-person"        # User 直接回复"2" · 对 SC-07/08/09/10 AI 代拟 acceptance[] 全量核准
 
 criteria:
   - sc_id: SC-01
