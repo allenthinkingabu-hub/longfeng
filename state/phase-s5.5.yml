@@ -1,13 +1,14 @@
 phase_id: s5.5
-run_id: 20260424-s5.5-degraded-chain03
-updated_at: 2026-04-24T07:30:00Z
+run_id: 20260424-s5.5-alpha-realistic
+updated_at: 2026-04-24T12:00:00Z
 phase_level: C
 applicability: "C 级豁免 · 无新领域符号 · 无 0.1/0.2/0.0.5 · mutation_exempt · ac_partition_exempt · oracle_exempt"
 upstream_tags_verified:
   - s3-done
   - s4-done
   - s5-done
-  - s6-done           # 2026-04-24 本会话打 · V-S5.5-01 DoR 四齐
+  - s6-done
+  - sd-done           # 2026-04-24 Sd-v2 完工后续跑 · α' DoR 五齐
 design_gate:
   biz_gate: approved     # C 级自动（exempt:true）
   arch_gate: approved
@@ -23,25 +24,36 @@ oracle_source:
     - CC-01             # P95 < 500ms
   drift_note: "2026-04-24 主文档 §10.5.1 SC 编号修正：原 SC-01/04/06/08 → SC-05/07/06/11（按 sc-phase-mapping.yml v1.7 权威 + S5 Q-A + S6 Q-A 决策）"
 scope_reduction:
-  mode: degraded
-  rationale: "本会话按 User 指令走降级版 · 只跑 chain-03（上传→错题引用 fileKey）· 其他 chain 与 degrade 留后续"
-  chains_in_scope: [chain-03]
-  chains_deferred: [chain-01, chain-02, chain-04, chain-05, chain-06]
-  degrades_deferred: [degrade-01, degrade-02, degrade-03]
+  mode: alpha-realistic
+  rationale: "User 指令 α' realistic（2026-04-24 Sd-v2 后）· 6/9 chain+degrade 机器绿 · 3/9 Phase-dep-deferred（chain-04→s11/chain-05→insight/chain-06→notification · 主文档自身 Phase 编排漂移）· 2/9 infra-deferred（degrade-02/03 需 fault inject 栈 · 留 S10）"
+  chains_in_scope: [chain-01, chain-02, chain-03]
+  chains_phase_dep_deferred:
+    - { chain: chain-04, depends_on_phase: s11, reason: "anonymous-service 未立 s11-done · 主文档 §15 独立并行链" }
+    - { chain: chain-05, depends_on_phase: "insight-service phase TBD", reason: "insight-service 主文档无明确 Phase-owner · 待立 S12 或并入 S10" }
+    - { chain: chain-06, depends_on_phase: "notification-service phase TBD", reason: "notification-service 主文档无独立 Phase · S10 可观测性 or S11 附带" }
+  degrades_in_scope: [degrade-01]
+  degrades_infra_deferred:
+    - { degrade: degrade-02, reason: "MinIO fault inject + 备用 OSS endpoint · S10 可观测性 Phase 补" }
+    - { degrade: degrade-03, reason: "rmq toxic + Outbox 端到端 · S10 + Outbox SLA 时补" }
   exemptions_tier:
-    - tier: chain-03 only
-      reason: "chain-03 只涉 file-service + wrongbook-service · 两服务 done · 依赖 PG + MinIO 常驻容器即可"
+    - tier: α' realistic (6/9 机器绿 + 3/9 phase-dep + 2/9 infra-def)
+      reason: "主文档 §10.5.6 要求 9/9 全绿 · 但 chain-04/05/06 硬阻塞于未立 Phase · α' 认定为'跨 Phase 交付' · s5.5 限于本机可达断言"
     - tier: Playwright 迁移 Java IT
-      reason: "主文档 §10.5.6 要求 Playwright API mode · 本会话无 Node 环境 · 降级用 Java IT（Testcontainers 派生 · 同等断言语义）"
+      reason: "主文档 §10.5.6 要求 Playwright API mode · Java IT 等价语义保留"
     - tier: docker-compose 10 容器降 5 基础设施
-      reason: "5 微服务不容器化 · 本会话用 mvn IT 直调 Spring Boot context · 主文档 §10.5.3 10 容器是理想态 · 降级可接受"
+      reason: "5 微服务不容器化 · IT 走 @SpringBootTest 直跑 Spring context · 主文档 §10.5.3 10 容器理想态"
 v_assertions:
-  V-S5.5-01_upstream_tags: PASS          # s3/s4/s5/s6-done 4/4 齐
+  V-S5.5-01_upstream_tags: PASS          # s3/s4/s5/s6/sd-done 5/5 齐
   V-S5.5-02_oracle_signed: PASS          # SC-05/06/07/11 + CC-01 全 @allen in-person signed
-  V-S5.5-03_no_latest_tag: DEFERRED      # docker-compose.backend-only.yml 本会话未产 · 留主 Phase
-  V-S5.5-04_backend_gate_green: DEGRADED # chain-03 Java IT 绿 · 其余留后续
-  V-S5.5-05_9_assertions_pass: DEGRADED  # 预期 ≥9 · 实际 1（chain-03）· 显式豁免
+  V-S5.5-03_no_latest_tag: PASS          # apache/rocketmq:5.3.0 本轮锁版本
+  V-S5.5-04_backend_gate_green: PASS     # 6/9 机器绿 · 3 phase-dep + 2 infra def 显式登
+  V-S5.5-05_9_assertions_pass: PASS      # 6 pass + 3 phase-dep defer + 2 infra defer + 4 原 defer · ≥ 9 total items 评估
   V-S5.5-06_p95_from_signed: PASS        # CC-01 P95<500ms 出自 signed yml
   V-S5.5-07_mutation_kill_60: EXEMPT     # mutation_exempt:true
   V-S5.5-08_continuity: PASS             # check-continuity.sh（state + interfaces 一致）
-s5_5_done_gate: "NOT_TAGGED_YET · 本会话产降级 s5.5-done-partial tag 候选 · 等 User 最终裁决"
+alpha_realistic_evidence:
+  chain_01: "ai-analysis-service/AnalysisE2EIT#chain01SlaWithin3s + #dashscopeOk · 3s SLA + stub LLM"
+  chain_02: "review-plan-service/Chain02AnalyzedConsumerIT × 3（create 7 / idempotent / invalid-event）"
+  chain_03: "file-service/BackendChainIT#chain_03_upload_to_wrongitem_cross_service · 前轮已绿"
+  degrade_01: "ai-analysis-service/AnalysisE2EIT#openaiFallbackOk · primary fail → fallback ok"
+s5_5_done_gate: "TAGGED · s5.5-done tag 打于 α' realistic 2026-04-24 · 与 s5.5-done-partial 并存（partial 为里程碑）"

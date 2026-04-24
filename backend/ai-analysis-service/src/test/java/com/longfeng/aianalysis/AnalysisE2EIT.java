@@ -12,6 +12,8 @@ import com.longfeng.aianalysis.entity.WrongItemAnalysis;
 import com.longfeng.aianalysis.event.ItemChangedEvent;
 import com.longfeng.aianalysis.llm.LlmProvider;
 import com.longfeng.aianalysis.llm.StubProvider;
+import com.longfeng.common.test.CoversAC;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,7 @@ class AnalysisE2EIT extends AiAnalysisIntegrationTestBase {
 
   @Test
   @DisplayName("dashscope_ok · primary stub returns · status=0 · sanitized prompt reached LLM")
+  @CoversAC("SC-05.AC-1#chain_01.0")
   void dashscopeOk() throws Exception {
     stubs.dashscope.reset();
     stubs.openai.reset();
@@ -92,6 +95,7 @@ class AnalysisE2EIT extends AiAnalysisIntegrationTestBase {
 
   @Test
   @DisplayName("openai_ok · primary fails · fallback returns · status=0 · provider=openai")
+  @CoversAC("SC-06.AC-1#degrade_01.0")
   void openaiFallbackOk() throws Exception {
     stubs.makeDashscopeFailChat();
     consumer.onMessage(
@@ -102,6 +106,22 @@ class AnalysisE2EIT extends AiAnalysisIntegrationTestBase {
     assertThat(row.get("model_provider")).isEqualTo("dashscope"); // router reports preferred name
     assertThat(stubs.dashscope.chatCallCount()).isEqualTo(1);
     assertThat(stubs.openai.chatCallCount()).isEqualTo(1);
+  }
+
+  /** s5.5 chain-01 SLA · POST → analysis completed within 3s (measured at event → DB row). */
+  @Test
+  @DisplayName("s5.5 chain-01 · event → analysis completed 内 3s（stub LLM baseline）")
+  @CoversAC("SC-05.AC-1#chain_01.sla_3s")
+  void chain01SlaWithin3s() throws Exception {
+    Instant start = Instant.now();
+    consumer.onMessage(
+        om.writeValueAsString(new ItemChangedEvent(ITEM_ID, "created", 0L, Instant.now())));
+    Map<String, Object> row =
+        jdbc.queryForMap(
+            "SELECT status FROM wrong_item_analysis WHERE wrong_item_id = ?", ITEM_ID);
+    Duration elapsed = Duration.between(start, Instant.now());
+    assertThat(((Number) row.get("status")).shortValue()).isEqualTo(WrongItemAnalysis.STATUS_SUCCESS);
+    assertThat(elapsed.toMillis()).as("chain-01 · event → DB row 内 3s").isLessThan(3000L);
   }
 
   @Test
