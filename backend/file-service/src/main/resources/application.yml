@@ -1,4 +1,4 @@
-# file-service · 落地计划 §6.7 Step 11
+# file-service · 落地计划 §10.7
 server:
   port: 8084
 
@@ -6,9 +6,35 @@ spring:
   application:
     name: file-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/file_service}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wrongbook}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:wb}
+    hikari:
+      minimum-idle: 3
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+# 存储 Feature Flag · A1/A5/Q-B/Q-D 决策
+file-service:
+  storage:
+    provider: ${FEATURE_STORAGE_PROVIDER:minio}          # A1 · minio 默认 | oss
+    bucket: ${STORAGE_BUCKET:wrongbook-staging}          # Q-D · 分 bucket
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${STORAGE_AK:minio}                      # 本地 MinIO 默认 · S10 走 vault
+    secret-key: ${STORAGE_SK:minio12345}
+    presign-ttl-seconds: ${PRESIGN_TTL:900}              # A5 · ≤ 900s
+    max-upload-size: ${MAX_UPLOAD_SIZE:10485760}         # A4 · 10MB
 
 springdoc:
   api-docs:
@@ -25,3 +51,9 @@ management:
     health:
       probes:
         enabled: true
+  metrics:
+    tags:
+      application: file-service
+
+snowflake:
+  worker-id: 6
