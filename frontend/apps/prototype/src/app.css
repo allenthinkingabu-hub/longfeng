@@ -1,0 +1,76 @@
+/* Sd.9 prototype · 全局样式 · 仅补最小 reset */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, 'Nunito Sans', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--tkn-color-bg-primary, #fff);
+  color: var(--tkn-color-text-primary, #222);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+select {
+  font-family: inherit;
+}
+a {
+  color: var(--tkn-color-accent-primary, #2d8cf0);
+  text-decoration: none;
+}
+
+/* Sd.2 Skeleton 动画 · tkn-skel keyframes */
+@keyframes tkn-skel {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Sd.9 state switcher dev panel */
+.state-switcher {
+  position: fixed;
+  right: 8px;
+  top: 52px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 50;
+  max-width: 180px;
+}
+.state-switcher button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: inherit;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 11px;
+  min-height: 28px;
+}
+.state-switcher button[data-active='true'] {
+  background: var(--tkn-color-accent-primary, #2d8cf0);
+  border-color: transparent;
+}
+
+/* H5 375 viewport frame on desktop */
+@media (min-width: 768px) {
+  #root {
+    max-width: 414px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    min-height: 100vh;
+  }
+}
