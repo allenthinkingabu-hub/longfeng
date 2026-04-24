@@ -1,7 +1,14 @@
 // S7 · 统一 HTTP 适配层 · H5 用 axios · miniapp 用 wx.request 封装（本 Phase H5 优先）
 // 拦截器：JWT → Authorization · 401 → refresh → retry 1 次 · 5xx → 指数退避 retry 2 次
 
-const BASE_URL = '/api/v1';
+function getBaseUrl(): string {
+  if (typeof globalThis !== 'undefined') {
+    const override = (globalThis as unknown as { __LF_API_BASE__?: string }).__LF_API_BASE__;
+    if (override) return override;
+  }
+  if (typeof process !== 'undefined' && process.env?.LF_API_BASE) return process.env.LF_API_BASE;
+  return '/api/v1';
+}
 
 interface HttpConfig {
   params?: Record<string, unknown> | object;
@@ -9,7 +16,7 @@ interface HttpConfig {
 }
 
 function buildUrl(path: string, params?: Record<string, unknown> | object): string {
-  const url = BASE_URL + path;
+  const url = getBaseUrl() + path;
   if (!params) return url;
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params as Record<string, unknown>)) {
@@ -27,7 +34,14 @@ async function request<T>(method: string, path: string, body?: unknown, config?:
     'Content-Type': 'application/json',
     ...(config?.headers ?? {}),
   };
-  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('access_token') : null;
+  let token: string | null = null;
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+      token = localStorage.getItem('access_token');
+    }
+  } catch {
+    token = null;
+  }
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(url, {
