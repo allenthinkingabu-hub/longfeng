@@ -1,0 +1,17 @@
+# refs 落地计划 §10.4 工具白名单 · §1.6 规则 B
+# S6 = file-service · MinIO/OSS + thumbnailator + metadata-extractor + Testcontainers
+extends: global
+additional_tools:
+  - { name: aliyun-sdk-oss,        version: "~3.17" }
+  - { name: minio,                 version: "~8.5"  }
+  - { name: thumbnailator,         version: "~0.4"  }
+  - { name: metadata-extractor,    version: "~2.19" }
+  - { name: webp-imageio,          version: "~0.1.6" }
+  - { name: testcontainers-minio,  version: ">=1.20" }
+additional_deny:
+  - { pattern: "accessKeyId\\s*[:=]\\s*[\"']?(LTAI|AKIA)",                       reason: "OSS AK 禁止明文 · 走 External Secrets" }
+  - { pattern: "accessKeySecret\\s*[:=]\\s*[\"']?[A-Za-z0-9+/]{20,}",             reason: "OSS SK 禁止明文" }
+  - { pattern: "ALIYUN[_A-Z]*=AK",                                                reason: "AK 禁止 env 明文" }
+  - { pattern: "Expires=[1-9][0-9]{3,}",                                          reason: "预签名 URL TTL > 900s 禁止（A5 决策）" }
+  - { pattern: "X-Amz-Expires=(9[0-9]{2,}|[1-9][0-9]{3,})",                       reason: "X-Amz-Expires TTL > 900s 禁止" }
+  - { pattern: "image/(gif|tiff|bmp|svg\\+xml)",                                  reason: "MIME 白名单仅 image/jpeg|png|heic（A4 决策）" }

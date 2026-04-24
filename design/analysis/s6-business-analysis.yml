@@ -19,21 +19,27 @@ schema_version: 1.1
 phase_id: s6
 phase_level: B                         # AC 分行硬约束=选（见 v1.8_v1.9 升级计划 §三改动 3）
 _stage: entry
-biz_gate: draft
-signed_by: ""
-conflicts_pending:
+biz_gate: approved
+signed_by: "@allen"
+approved_at: "2026-04-24T06:00:00+08:00"
+approval_method: "ask-user-question-1-batch"
+conflicts_resolved:
   - code: Q-A
     kind: sc_scope_conflict
-    description: "主执行档 §10.1 文案 vs sc-phase-mapping.yml 的 SC 编号漂移 · 本 entry 按 mapping 填 SC-11 · 待 User 最终裁决"
+    decision: "按 mapping 权威"
+    detail: "sc_covered=[SC-11]。主执行档 §10.1 文案 SC-03/SC-14 归属留 TODO · 下次主文档迭代修。"
   - code: Q-B
     kind: oss_provider_scope
-    description: "OssProvider 本会话是否完整落地 · 还是只落 MinioProvider + OssProvider stub（AK/SK vault 接入留 S10）"
+    decision: "只落 MinioProvider + OssProvider stub"
+    detail: "MinioProvider 完整实现 · OssProvider 抛 UnsupportedOperationException（TODO S10 接 AK/SK vault）。IT 用 Testcontainers MinIO。"
   - code: Q-C
     kind: original_retention
-    description: "§10.1 Q1 · 原图 90 天保留 vs 永久保留（便于后续 OCR 复查）· 默认 90 天"
+    decision: "90 天后归档 · 保留 thumb+medium"
+    detail: "original 90d 后由 S10 归档 job 移冷存 · thumb (≤320px) + medium (≤1920px) 永久保留。"
   - code: Q-D
     kind: bucket_strategy
-    description: "§10.1 Q2 · prod/staging 分 bucket vs 统一 bucket + 前缀 · 默认分 bucket（权限/计费清晰）"
+    decision: "分 prod/staging 两个 bucket"
+    detail: "wrongbook-prod + wrongbook-staging · StorageProperties.bucket 按 profile 切。本会话 Q-B 选 MinIO stub · OSS bucket 实际配置留 S10。"
 
 sc_covered:
   - SC-11                              # 错题图片 OSS 上传与压缩 · phase_owner=s6 (s7 次)
