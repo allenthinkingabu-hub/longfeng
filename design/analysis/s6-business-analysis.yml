@@ -1,0 +1,193 @@
+# 落地计划 §10.0.5 · S6 Phase file-service · Business Analysis YAML
+# schema_version 1.1（v1.8 AC 分行硬约束 · B 级 Phase · 精简版 · 无 four_role_slots）
+#
+# B 级特化（类 S1 Retrofit 精简路径）：
+#   - 只做 0.1 业务理解 · 0.2 架构豁免（StorageProvider SPI 接口即契约）
+#   - 无 four_role_slots（保留 architect_anchor + observable_behavior_anchor）
+#   - AC 分行硬约束"选"（arch 不按 AC 分节 · 可不加 @CoversAC 注解）
+#
+# ⚠️ 已识别 SC 编号冲突（待 User G-Biz 裁决）：
+#   Q-A [SC 归属]：
+#     - 主执行档 §10.1 文案写 "覆盖方案 §2A.7 / SC-03 拍照上传 / SC-14 分享卡片"
+#     - design/sc-phase-mapping.yml（S0 v1.7 权威）实际 owner_phases ∋ s6 的 SC = [SC-11]
+#       · SC-11 title="错题图片 OSS 上传与压缩" · owner=[s6, s7]（s6 主）
+#       · SC-03 owner=[s7, s3]（非 s6）· SC-14 owner=[s8, s5, s3]（非 s6）
+#     本 entry 暂按 mapping 权威填 sc_covered=[SC-11] · 待 Q-A 裁决
+
+schema_version: 1.1
+
+phase_id: s6
+phase_level: B                         # AC 分行硬约束=选（见 v1.8_v1.9 升级计划 §三改动 3）
+_stage: entry
+biz_gate: draft
+signed_by: ""
+conflicts_pending:
+  - code: Q-A
+    kind: sc_scope_conflict
+    description: "主执行档 §10.1 文案 vs sc-phase-mapping.yml 的 SC 编号漂移 · 本 entry 按 mapping 填 SC-11 · 待 User 最终裁决"
+  - code: Q-B
+    kind: oss_provider_scope
+    description: "OssProvider 本会话是否完整落地 · 还是只落 MinioProvider + OssProvider stub（AK/SK vault 接入留 S10）"
+  - code: Q-C
+    kind: original_retention
+    description: "§10.1 Q1 · 原图 90 天保留 vs 永久保留（便于后续 OCR 复查）· 默认 90 天"
+  - code: Q-D
+    kind: bucket_strategy
+    description: "§10.1 Q2 · prod/staging 分 bucket vs 统一 bucket + 前缀 · 默认分 bucket（权限/计费清晰）"
+
+sc_covered:
+  - SC-11                              # 错题图片 OSS 上传与压缩 · phase_owner=s6 (s7 次)
+
+narrative: |
+  S6 是 AI 错题本的图片基础设施：file-service 单体 Spring Boot · 提供两种存储封装
+  （本地 MinIO 开发/Staging · 阿里云 OSS 生产）· 通过 SPI 接口 StorageProvider 切换
+  （Feature Flag FEATURE_STORAGE_PROVIDER ∈ {minio, oss}）。
+
+  上传路径：前端 → POST /files/presign 拿 STS 预签名 URL（TTL ≤ 15min · MIME 白名单 ·
+  分片 > 5MB）→ 前端直 PUT OSS/MinIO → POST /files/complete/{fileKey} 触发 thumbnailator
+  缩放 ≤ 1920px + webp q=85 + metadata-extractor 去 EXIF → GET /files/download/{fileKey}
+  下发预签名下载 URL（TTL ≤ 15min）。
+
+  大小限制：原图 ≤ 10MB · 单次批量 ≤ 9 张（微信小程序 chooseImage 上限）。
+  GDPR：user 注销 → 软删 file_asset.deleted_at → 延迟 30d 硬删 OSS object（S10 归档 job）。
+  病毒扫描：AntivirusClient 接口 + ClamStub 返 clean（S10 对接 ClamAV）。
+
+  本 Phase 同时补齐运维骨架 ops/compose/docker-compose.dev.yaml（5 service · 全 healthcheck）+
+  dev-up.sh/dev-down.sh（幂等 · 90s timeout）+ 订阅消息模板注册骨架（S8 才发送）。
+
+  本 Phase 不负责：业务服务改造（S3-S5）· 病毒扫描生产化（S10）· 分享卡片短码跳转（S11）。
+
+  Q-A 映射：按 design/sc-phase-mapping.yml 权威 · sc_covered=[SC-11]。主执行档 §10.1
+  文案提及的 SC-03/SC-14 与 mapping 漂移 · 记录到 Q-A 待 User 裁决 · 主文档留 TODO 后续迭代修。
+
+ac_coverage:
+  # ============ SC-11.AC-1 · presign 预签名上传 ============
+  - ac_id: "SC-11.AC-1"
+    title: "POST /files/presign · MIME 白名单 + TTL≤900s + 大小上限 + 分片阈值"
+    statement: "POST /files/presign body {filename, size, mime} → 返回 {uploadUrl, fileKey, expiresAt}。MIME ∈ {image/jpeg, image/png, image/heic}（白名单）· 非法 → 400 · size > 10MB → 400 · uploadUrl TTL ≤ 900s · size > 5MB 走分片上传协议。FEATURE_STORAGE_PROVIDER 切换 MinioProvider/OssProvider。"
+    source: "落地计划 §10.1 A4 A5 · 方案 §2A.5 · §2B.SC-11"
+    critical: true
+    critical_reason: "权限 + 合规 · 预签名 URL 过长 TTL 被盗用风险 · MIME 校验防恶意文件"
+    domain_entities: [FileAsset, StorageProvider, SignatureService]
+    upstream_contract: []
+    downstream_contract:
+      - "to_phase: s7 · 前端直 PUT uploadUrl · PUT 成功后调 complete"
+      - "to_phase: s3 · wrongbook 业务引用 fileKey 存 wrong_item.origin_image_key"
+    four_role_slots:
+      architect_anchor: "design/arch/s6-file-service.md front matter + §10.6 产出物清单"
+      observable_behavior_anchor: "OpenAPI POST /files/presign · metric file_presign_total · uploadUrl 正则 Expires=\\d+ ≤ 900"
+    risks:
+      - "若 FEATURE_STORAGE_PROVIDER 误切到 oss 但 AK/SK 未配置 · 启动时 fail-fast"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "FEATURE_STORAGE_PROVIDER=minio · 本地 MinIO 可达"
+          when: "POST /files/presign {filename:a.jpg, size:1024, mime:image/jpeg}"
+          then: "200 · uploadUrl 含 X-Amz-Expires ≤ 900 · fileKey 非空"
+      error_paths:
+        - id: "error_paths.0"
+          given: "mime=application/exe（非白名单）"
+          when: "POST /files/presign"
+          then: "400 · error_code=MIME_NOT_ALLOWED"
+        - id: "error_paths.1"
+          given: "size=20MB（超 10MB 上限）"
+          when: "POST /files/presign"
+          then: "400 · error_code=FILE_TOO_LARGE"
+      boundary:
+        - id: "boundary.0"
+          given: "size=5242880（5MB 边界）"
+          when: "POST /files/presign"
+          then: "200 · 不触发分片（size ≤ 5MB 走简单 PUT）"
+      observable:
+        - id: "observable.0"
+          given: "100 次 presign"
+          when: "查 metric file_presign_total{outcome=success}"
+          then: "计数 100 · P95 < 50ms（无 IO · 只算签名）"
+      visual: []
+
+  # ============ SC-11.AC-2 · complete 后处理链路（webp + EXIF strip） ============
+  - ac_id: "SC-11.AC-2"
+    title: "POST /files/complete/{fileKey} · thumbnailator 缩放 + webp + EXIF strip · AntivirusClient stub"
+    statement: "complete 触发：(1) 下载原图；(2) thumbnailator 缩放 ≤ 1920px；(3) 转 webp q=85；(4) metadata-extractor 去 EXIF；(5) 写回 MinIO/OSS（thumb+medium+original 三档）；(6) AntivirusClient.scan() 返 clean；(7) UPDATE file_asset.status=READY。整个链路同步返回（≤ 3s）· 超 10MB 原图 → 400。"
+    source: "落地计划 §10.1 A3 A4 · §10.3 目标"
+    critical: true
+    critical_reason: "合规 + 未成年人数据 · EXIF 可能含地理位置 · 必须 strip · 病毒扫描防恶意图片"
+    domain_entities: [FileAsset, ImageProcessor, AntivirusClient]
+    upstream_contract:
+      - "from_phase: s7 · 前端 PUT 成功后回调 complete"
+    downstream_contract:
+      - "to_phase: s3 · fileKey 持久化到 wrong_item.origin_image_key / processed_image_key"
+    four_role_slots:
+      architect_anchor: "§10.6 · ImageProcessor + AntivirusClient 接口定义"
+      observable_behavior_anchor: "metric file_complete_p95_ms · webp 产物 magic bytes · exiftool 扫描 0 GPS/Make/Model"
+    risks:
+      - "thumbnailator webp codec 依赖 webp-imageio · Dockerfile 基础镜像需 libwebp"
+      - "原图 > 10MB 在 presign 阶段已 400 · complete 不重复校验"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "fileKey 存在（presign + PUT 成功）· 原图 jpg 3MB 含 GPS EXIF"
+          when: "POST /files/complete/{fileKey}"
+          then: "200 · file_asset.status=READY · 产物 webp ≤ 1920px · exiftool 读 GPS/Make/Model=0"
+      error_paths:
+        - id: "error_paths.0"
+          given: "fileKey 不存在（未经 presign）"
+          when: "POST /files/complete/xyz"
+          then: "404 · FILE_NOT_FOUND"
+        - id: "error_paths.1"
+          given: "AntivirusClient 返 infected"
+          when: "POST /files/complete/{fileKey}"
+          then: "422 · VIRUS_DETECTED · file_asset.status=QUARANTINED"
+      boundary:
+        - id: "boundary.0"
+          given: "原图已是 1920px webp（不需再转）"
+          when: "POST /files/complete/{fileKey}"
+          then: "200 · 跳过缩放（idempotent）· 仍产 thumb"
+      observable:
+        - id: "observable.0"
+          given: "complete 10 次"
+          when: "查 metric file_complete_p95_ms"
+          then: "< 3000ms（含 webp 转换 · 同步）"
+      visual: []
+
+  # ============ SC-11.AC-3 · download 预签名下载 + 防盗链 ============
+  - ac_id: "SC-11.AC-3"
+    title: "GET /files/download/{fileKey}?variant=thumb|medium|original · 预签名下载 URL · TTL≤900s"
+    statement: "GET /files/download/{fileKey}?variant=thumb|medium|original → 返回 {downloadUrl, expiresAt}。downloadUrl TTL ≤ 900s · 未指定 variant 默认 medium · fileKey 软删（deleted_at 非空）→ 410 Gone。"
+    source: "落地计划 §10.1 A5 A7 · §10.3 目标"
+    critical: false
+    critical_reason: ""
+    domain_entities: [FileAsset, SignatureService]
+    upstream_contract: []
+    downstream_contract:
+      - "to_phase: s7/s8 · 前端用 downloadUrl 直取 OSS/MinIO"
+    four_role_slots:
+      architect_anchor: "§10.6 SignatureService.presignDownload"
+      observable_behavior_anchor: "OpenAPI GET /files/download · metric file_download_total"
+    risks: []
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "fileKey status=READY · variant=medium"
+          when: "GET /files/download/{fileKey}?variant=medium"
+          then: "200 · downloadUrl 含 Expires ≤ 900 · 可直 GET 到 webp 图片"
+      error_paths:
+        - id: "error_paths.0"
+          given: "fileKey 软删"
+          when: "GET /files/download/{fileKey}"
+          then: "410 · FILE_GONE"
+        - id: "error_paths.1"
+          given: "variant=original 但 > 90d 已归档"
+          when: "GET"
+          then: "410 · FILE_ARCHIVED"
+      boundary:
+        - id: "boundary.0"
+          given: "未指定 variant"
+          when: "GET /files/download/{fileKey}"
+          then: "200 · 默认 variant=medium"
+      observable:
+        - id: "observable.0"
+          given: "100 次 download"
+          when: "P95"
+          then: "< 50ms（纯签名 · 无 IO）"
+      visual: []
