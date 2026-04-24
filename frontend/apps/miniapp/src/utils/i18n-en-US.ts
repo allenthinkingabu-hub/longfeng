@@ -1,0 +1,43 @@
+// S7 miniapp · en-US · 与 H5 frontend/apps/h5/src/i18n/en-US.json 同步
+export default {
+  common: {
+    back: 'Back',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    save: 'Save',
+    retry: 'Retry',
+    loading: 'Loading',
+    empty: 'No data',
+  },
+  capture: {
+    title: 'Add Wrong Item',
+    tab_camera: 'Camera',
+    tab_gallery: 'Gallery',
+    tab_manual: 'Manual',
+    field_subject: 'Subject',
+    field_stem: 'Question',
+    field_tags: 'Tags',
+    submit: 'Submit',
+    draft_hint: 'Draft saved',
+    size_exceeded: 'Image > 10MB, please select smaller',
+    ocr_fallback: 'OCR failed, please type manually',
+  },
+  wrongbook_list: {
+    title: 'Wrongbook',
+    tab_active: 'Active',
+    tab_mastered: 'Mastered',
+    empty_active: 'No wrong items yet',
+    load_more: 'Load more',
+    item_analyzing: 'Analyzing…',
+    item_completed: 'Analyzed',
+    item_error: 'Failed',
+  },
+  wrongbook_detail: {
+    title: 'Detail',
+    tag_edit: 'Edit Tags',
+    tag_save: 'Save',
+    explain_title: 'AI Explanation',
+    explain_loading: 'Generating…',
+    similar_title: 'Similar',
+  },
+};

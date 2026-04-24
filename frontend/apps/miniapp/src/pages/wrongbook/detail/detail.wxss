@@ -1,0 +1,77 @@
+.detail-root {
+  min-height: 100vh;
+  background: var(--tkn-color-bg-light);
+  padding: var(--tkn-spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tkn-spacing-4);
+}
+.card {
+  background: var(--tkn-color-white);
+  border-radius: var(--tkn-radius-lg);
+  padding: var(--tkn-spacing-6);
+}
+.tag-row {
+  display: flex;
+  gap: var(--tkn-spacing-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--tkn-spacing-4);
+  align-items: center;
+}
+.tag-edit-btn {
+  padding: 4px 10px;
+  background: var(--tkn-color-button-default-light);
+  border-radius: var(--tkn-radius-sm);
+  font-size: 12px;
+  color: var(--tkn-color-text-primary);
+  min-height: 32rpx;
+}
+.stem {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--tkn-color-text-primary);
+  white-space: pre-wrap;
+}
+.image {
+  width: 100%;
+  margin-top: var(--tkn-spacing-4);
+  border-radius: var(--tkn-radius-sm);
+}
+.explain {
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  color: var(--tkn-color-text-primary);
+}
+.muted {
+  color: var(--tkn-color-text-secondary);
+  font-size: 12px;
+}
+.similar-card .stem {
+  font-size: 13px;
+}
+.sheet-title {
+  font-size: 16px;
+  font-weight: 600;
+  padding: var(--tkn-spacing-4) 0;
+  color: var(--tkn-color-text-primary);
+}
+.chips {
+  display: flex;
+  gap: var(--tkn-spacing-4);
+  flex-wrap: wrap;
+  padding: var(--tkn-spacing-4) 0;
+}
+.chip {
+  padding: 4px 12px;
+  border: 1rpx solid var(--tkn-color-button-default-light);
+  border-radius: var(--tkn-radius-pill);
+  font-size: 13px;
+  color: var(--tkn-color-text-primary);
+  min-height: 32px;
+}
+.chip-active {
+  background: var(--tkn-color-primary-default);
+  color: var(--tkn-color-white);
+  border-color: var(--tkn-color-primary-default);
+}

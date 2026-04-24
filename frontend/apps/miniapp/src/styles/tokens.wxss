@@ -1,0 +1,24 @@
+/* S7 miniapp · tokens.wxss · 从 @longfeng/ui-kit/src/tokens.css 同步关键 11 色 · ADR 0014 双端对称 */
+/* 不自定义色 · 不 hex 直写 · 走 var(--tkn-*) */
+page {
+  --tkn-color-white: #ffffff;
+  --tkn-color-text-primary: #1d1d1f;
+  --tkn-color-text-secondary: rgba(0, 0, 0, 0.8);
+  --tkn-color-text-tertiary: rgba(0, 0, 0, 0.48);
+  --tkn-color-bg-light: #f5f5f7;
+  --tkn-color-button-default-light: #fafafc;
+  --tkn-color-primary-default: #0071e3;
+  --tkn-color-primary-link: #0066cc;
+  --tkn-color-success-default: #1a7d34;
+  --tkn-color-warning-default: #b45309;
+  --tkn-color-danger-default: #c0392b;
+
+  --tkn-radius-sm: 8px;
+  --tkn-radius-md: 11px;
+  --tkn-radius-lg: 12px;
+  --tkn-radius-pill: 980px;
+
+  --tkn-spacing-4: 8px;
+  --tkn-spacing-6: 12px;
+  --tkn-spacing-8: 16px;
+}

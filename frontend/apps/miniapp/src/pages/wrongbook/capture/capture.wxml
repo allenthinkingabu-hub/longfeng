@@ -1,0 +1,51 @@
+<!-- S7 miniapp · SC-01.AC-1 + SC-07.AC-1 · 录入三入口 · 10MB 上限 · 草稿 wx.storage -->
+<view data-test-id="capture.root" class="capture-root">
+  <van-tabs active="{{ tabIdx }}" bind:change="onTabChange" color="var(--tkn-color-primary-default)">
+    <van-tab title="{{ i18n.tab_camera }}" data-test-id="capture.camera.btn" />
+    <van-tab title="{{ i18n.tab_gallery }}" data-test-id="capture.gallery.btn" />
+    <van-tab title="{{ i18n.tab_manual }}" data-test-id="capture.manual.btn" />
+  </van-tabs>
+
+  <view wx:if="{{ fileKey }}" class="file-ok" data-test-id="capture.file-ok">
+    ✓ {{ fileKey }}
+  </view>
+  <view wx:if="{{ uploadPct !== null }}" class="upload-progress" data-test-id="capture.upload-progress">
+    上传中 {{ uploadPct }}%
+  </view>
+
+  <view class="form">
+    <van-field
+      label="{{ i18n.field_subject }}"
+      value="{{ subject }}"
+      bind:change="onSubjectInput"
+      data-test-id="capture.form.subject"
+    />
+    <van-field
+      label="{{ i18n.field_stem }}"
+      type="textarea"
+      autosize
+      placeholder="请输入或识别后粘贴"
+      value="{{ stem }}"
+      bind:change="onStemInput"
+      data-test-id="capture.form.stem"
+    />
+
+    <van-button
+      type="primary"
+      block
+      loading="{{ submitting }}"
+      disabled="{{ !stem || stem.length < 2 }}"
+      bindtap="submit"
+      data-test-id="capture.form.submit"
+    >
+      {{ i18n.submit }}
+    </van-button>
+
+    <view class="draft-hint muted" data-test-id="capture.form.draft-hint">
+      {{ i18n.draft_hint }}
+    </view>
+  </view>
+
+  <van-toast id="van-toast" />
+  <van-notify id="van-notify" />
+</view>

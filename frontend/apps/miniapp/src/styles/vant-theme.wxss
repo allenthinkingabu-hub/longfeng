@@ -1,0 +1,30 @@
+/* S7 miniapp · Vant Weapp 主题变量绑定 Sd tokens · 禁硬编码色值 · 见 design/arch/s7-frontend-wrongbook.md §5.3 */
+page {
+  --button-primary-background-color: var(--tkn-color-primary-default);
+  --button-primary-color: var(--tkn-color-white);
+  --button-default-color: var(--tkn-color-text-primary);
+  --button-default-background-color: var(--tkn-color-button-default-light);
+  --button-danger-background-color: var(--tkn-color-danger-default);
+
+  --cell-background-color: var(--tkn-color-white);
+  --cell-border-color: var(--tkn-color-button-default-light);
+  --cell-text-color: var(--tkn-color-text-primary);
+  --cell-label-color: var(--tkn-color-text-secondary);
+  --cell-horizontal-padding: var(--tkn-spacing-6);
+  --cell-font-size: 14px;
+
+  --tag-default-color: var(--tkn-color-text-secondary);
+  --tag-primary-color: var(--tkn-color-primary-link);
+  --tag-success-color: var(--tkn-color-success-default);
+  --tag-warning-color: var(--tkn-color-warning-default);
+  --tag-danger-color: var(--tkn-color-danger-default);
+
+  --tabs-nav-background-color: var(--tkn-color-white);
+  --tabs-active-color: var(--tkn-color-primary-default);
+
+  --empty-description-color: var(--tkn-color-text-secondary);
+
+  --field-label-color: var(--tkn-color-text-secondary);
+  --field-input-text-color: var(--tkn-color-text-primary);
+  --field-placeholder-text-color: var(--tkn-color-text-tertiary);
+}

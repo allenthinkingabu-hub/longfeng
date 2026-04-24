@@ -1,0 +1,32 @@
+{
+  "description": "S7 · 龙凤错题本小程序 · 原生 + Vant Weapp",
+  "packOptions": {
+    "ignore": [{ "type": "folder", "value": "node_modules" }]
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "preloadBackgroundData": false,
+    "minified": true,
+    "newFeature": false,
+    "coverView": true,
+    "nodeModules": true,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "useCompilerModule": true,
+    "userConfirmedUseCompilerModuleSwitch": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "2.25.4",
+  "appid": "wxREPLACEME_LOCAL_DEV",
+  "projectname": "longfeng-wrongbook",
+  "srcMiniprogramRoot": "src/"
+}

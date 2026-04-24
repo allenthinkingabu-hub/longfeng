@@ -1,0 +1,54 @@
+<!-- S7 miniapp · SC-08.AC-1 · 错题列表 · Active/Mastered Tab · subject 筛选 · cursor 分页 -->
+<view data-test-id="wrongbook.list.root" class="list-root">
+  <!-- Tab active/mastered -->
+  <van-tabs active="{{ status === 'active' ? 0 : 1 }}" bind:change="onTabChange" color="var(--tkn-color-primary-default)">
+    <van-tab title="{{ i18n.tab_active }}" data-test-id="wrongbook.list.active-tab" />
+    <van-tab title="{{ i18n.tab_mastered }}" data-test-id="wrongbook.list.archive-tab" />
+  </van-tabs>
+
+  <!-- 学科筛选 · 走 picker -->
+  <view class="filter-bar" data-test-id="wrongbook.list.filter-bar">
+    <view bindtap="openSubjectPicker" class="filter-chip">
+      学科：{{ subject || '全部' }}
+    </view>
+  </view>
+  <van-picker wx:if="{{ subjectPickerVisible }}"
+              columns="{{ subjectOptions }}"
+              show-toolbar
+              bind:confirm="onSubjectPick"
+              bind:cancel="closeSubjectPicker" />
+
+  <!-- 列表 -->
+  <view wx:if="{{ loading }}" class="skeleton-wrap">
+    <van-skeleton title row="3" />
+  </view>
+
+  <van-empty wx:elif="{{ !items.length }}"
+             description="{{ status === 'active' ? i18n.empty_active : i18n.empty_mastered }}"
+             data-test-id="wrongbook.list.empty" />
+
+  <view wx:else class="item-list">
+    <view wx:for="{{ items }}" wx:key="id"
+          data-test-id="wrongbook.list.item-card"
+          data-id="{{ item.id }}"
+          bindtap="openDetail"
+          class="item-card">
+      <view class="item-tags">
+        <van-tag type="primary">{{ item.subject }}</van-tag>
+        <van-tag type="{{ item.status === 'completed' ? 'success' : item.status === 'error' ? 'danger' : 'warning' }}">
+          {{ item.status === 'completed' ? i18n.item_completed : item.status === 'error' ? i18n.item_error : i18n.item_analyzing }}
+        </van-tag>
+        <van-tag wx:for="{{ item.tags }}" wx:for-item="tg" wx:key="*this" plain>{{ tg }}</van-tag>
+      </view>
+      <view class="item-stem">{{ item.stem_text }}</view>
+    </view>
+
+    <van-button wx:if="{{ hasMore }}"
+                plain type="default" size="large" block
+                data-test-id="wrongbook.list.load-more"
+                bindtap="loadMore"
+                loading="{{ loadingMore }}">
+      {{ i18n.load_more }}
+    </van-button>
+  </view>
+</view>

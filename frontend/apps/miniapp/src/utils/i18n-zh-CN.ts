@@ -1,0 +1,43 @@
+// S7 miniapp · zh-CN · 与 H5 frontend/apps/h5/src/i18n/zh-CN.json 同步
+export default {
+  common: {
+    back: '返回',
+    confirm: '确定',
+    cancel: '取消',
+    save: '保存',
+    retry: '重试',
+    loading: '加载中',
+    empty: '暂无数据',
+  },
+  capture: {
+    title: '录入错题',
+    tab_camera: '拍照',
+    tab_gallery: '相册',
+    tab_manual: '手动输入',
+    field_subject: '学科',
+    field_stem: '题干',
+    field_tags: '标签',
+    submit: '提交',
+    draft_hint: '草稿已自动保存',
+    size_exceeded: '图片超过 10MB，请选小一点的',
+    ocr_fallback: '识别失败，请手动输入题干',
+  },
+  wrongbook_list: {
+    title: '错题本',
+    tab_active: '进行中',
+    tab_mastered: '已掌握',
+    empty_active: '还没有错题',
+    load_more: '加载更多',
+    item_analyzing: 'AI 解析中…',
+    item_completed: '已解析',
+    item_error: '解析失败',
+  },
+  wrongbook_detail: {
+    title: '错题详情',
+    tag_edit: '编辑标签',
+    tag_save: '保存',
+    explain_title: 'AI 讲解',
+    explain_loading: '正在生成讲解…',
+    similar_title: '相似题',
+  },
+};

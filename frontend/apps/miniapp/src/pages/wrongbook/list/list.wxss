@@ -1,0 +1,48 @@
+/* S7 miniapp · list page · 走 var(--tkn-*) · 无硬编码色 */
+.list-root {
+  min-height: 100vh;
+  background: var(--tkn-color-bg-light);
+}
+.filter-bar {
+  padding: var(--tkn-spacing-6);
+  background: var(--tkn-color-white);
+}
+.filter-chip {
+  padding: var(--tkn-spacing-4) var(--tkn-spacing-6);
+  background: var(--tkn-color-button-default-light);
+  border-radius: var(--tkn-radius-md);
+  font-size: 13px;
+  color: var(--tkn-color-text-primary);
+  display: inline-block;
+  min-height: 44rpx;
+}
+.skeleton-wrap {
+  padding: var(--tkn-spacing-6);
+}
+.item-list {
+  padding: var(--tkn-spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tkn-spacing-4);
+}
+.item-card {
+  background: var(--tkn-color-white);
+  padding: var(--tkn-spacing-6);
+  border-radius: var(--tkn-radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.item-tags {
+  display: flex;
+  gap: var(--tkn-spacing-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--tkn-spacing-4);
+}
+.item-stem {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tkn-color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

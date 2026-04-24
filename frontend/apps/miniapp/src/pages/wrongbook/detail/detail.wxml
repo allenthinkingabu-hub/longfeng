@@ -1,0 +1,67 @@
+<!-- S7 miniapp · SC-02.AC-1 + SC-03.AC-1 · 详情 · Tag 编辑 + AI 讲解（wx.request chunk 降级）+ 相似题 -->
+<view wx:if="{{ item }}" data-test-id="wrongbook.detail.root" class="detail-root">
+  <!-- 题干卡 -->
+  <view class="card">
+    <view class="tag-row">
+      <van-tag type="primary">{{ item.subject }}</van-tag>
+      <van-tag wx:for="{{ item.tags }}" wx:for-item="tg" wx:key="*this" plain>{{ tg }}</van-tag>
+      <view bindtap="openTagSheet"
+            data-test-id="wrongbook.detail.tag-sheet"
+            class="tag-edit-btn">
+        {{ i18n.tag_edit }}
+      </view>
+    </view>
+    <view data-test-id="wrongbook.detail.stem-text" class="stem">{{ item.stem_text }}</view>
+    <image wx:if="{{ item.image_url }}"
+           data-test-id="wrongbook.detail.image-view"
+           src="{{ item.image_url }}"
+           mode="widthFix"
+           class="image" />
+  </view>
+
+  <!-- AI 讲解 -->
+  <van-divider content-position="left">{{ i18n.explain_title }}</van-divider>
+  <view class="card">
+    <view data-test-id="wrongbook.detail.explain-stream"
+          class="explain"
+          aria-live="polite">{{ explain || i18n.explain_loading }}</view>
+  </view>
+
+  <!-- 相似题 -->
+  <van-divider wx:if="{{ similar.length }}" content-position="left">{{ i18n.similar_title }}</van-divider>
+  <view wx:for="{{ similar }}" wx:key="id"
+        data-test-id="wrongbook.detail.similar-card"
+        class="card similar-card">
+    <view class="tag-row">
+      <van-tag type="primary">{{ item.subject }}</van-tag>
+      <text class="muted">d={{ item.distance }}</text>
+    </view>
+    <view class="stem">{{ item.stem_text }}</view>
+  </view>
+
+  <!-- Tag 编辑 Popup -->
+  <van-popup show="{{ sheetOpen }}"
+             position="bottom"
+             round
+             bind:close="closeTagSheet"
+             custom-style="padding: 20rpx;">
+    <view class="sheet-title">选择学科标签</view>
+    <view class="chips">
+      <view wx:for="{{ subjectPool }}" wx:key="*this"
+            data-test-id="wrongbook.detail.tag-chip"
+            data-tag="{{ item }}"
+            class="chip {{ localTags.includes(item) ? 'chip-active' : '' }}"
+            bindtap="toggleTag">
+        {{ item }}
+      </view>
+    </view>
+    <van-field placeholder="自定义标签" value="{{ customTag }}" bind:change="onCustomInput" />
+    <van-button plain bindtap="addCustom" size="small">+ 添加</van-button>
+    <van-button type="primary" block
+                data-test-id="wrongbook.detail.tag-save"
+                bindtap="saveTags"
+                loading="{{ savingTags }}">
+      {{ i18n.tag_save }}
+    </van-button>
+  </van-popup>
+</view>

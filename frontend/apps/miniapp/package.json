@@ -1,12 +1,22 @@
 {
   "name": "@longfeng/miniapp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "S0 skeleton · 原生 WeChat 小程序 + Vant Weapp · real app in Phase S7",
+  "description": "S7 · 小程序错题本 · 微信原生 + Vant Weapp · 消费 @longfeng/api-contracts + testids · 双端对称 ADR 0014",
   "scripts": {
-    "build": "echo \"[miniapp] skeleton build noop\"",
-    "test": "echo \"[miniapp] skeleton test noop\"",
-    "lint": "echo \"[miniapp] skeleton lint noop\"",
-    "typecheck": "echo \"[miniapp] skeleton typecheck noop\""
+    "build": "echo '[miniapp] 微信开发者工具 CLI 构建 · 见 scripts/build-miniapp.sh'",
+    "build:ci": "bash ../../../scripts/build-miniapp.sh",
+    "test": "echo '[miniapp] test via miniprogram-automator smoke'",
+    "test:automator": "node ../../../e2e/miniprogram/wrongbook-smoke.ts",
+    "lint": "echo '[miniapp] lint via miniprogram-ci check'",
+    "typecheck": "echo '[miniapp] TS 检查 via 微信开发者工具内置'"
+  },
+  "dependencies": {
+    "@longfeng/testids": "workspace:*",
+    "@longfeng/api-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "miniprogram-automator": "^0.11.0",
+    "typescript": "^5.5.4"
   }
 }

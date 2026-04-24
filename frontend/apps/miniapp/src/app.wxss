@@ -1,0 +1,31 @@
+/* S7 miniapp · 全局样式 · @import tokens · @import vant-theme */
+@import "./styles/tokens.wxss";
+@import "./styles/vant-theme.wxss";
+
+page {
+  background: var(--tkn-color-white, #ffffff);
+  color: var(--tkn-color-text-primary, #1d1d1f);
+  font-size: 14px;
+  font-family: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
+}
+
+.screen-pad {
+  padding: 12px;
+}
+
+.row-gap-sm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.col-gap-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.muted {
+  color: var(--tkn-color-text-secondary, rgba(0, 0, 0, 0.8));
+  font-size: 12px;
+}

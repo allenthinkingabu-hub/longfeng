@@ -1,0 +1,27 @@
+.capture-root {
+  min-height: 100vh;
+  background: var(--tkn-color-white);
+}
+.file-ok {
+  margin: var(--tkn-spacing-4) var(--tkn-spacing-6);
+  color: var(--tkn-color-success-default);
+  font-size: 12px;
+}
+.upload-progress {
+  padding: var(--tkn-spacing-4) var(--tkn-spacing-6);
+  color: var(--tkn-color-text-secondary);
+  font-size: 12px;
+}
+.form {
+  padding: var(--tkn-spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tkn-spacing-4);
+}
+.draft-hint {
+  margin-top: var(--tkn-spacing-4);
+}
+.muted {
+  color: var(--tkn-color-text-secondary);
+  font-size: 12px;
+}
