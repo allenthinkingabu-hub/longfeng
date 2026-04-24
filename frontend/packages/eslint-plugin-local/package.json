@@ -1,0 +1,7 @@
+{
+  "name": "eslint-plugin-local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "S7 · local ESLint rules · testid-required · V-S7-03",
+  "main": "index.js"
+}
