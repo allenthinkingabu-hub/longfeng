@@ -1,9 +1,10 @@
 schema_version: 1.0
 phase: s7
-_stage: entry
-biz_gate: draft
-signed_by: ""
-signed_at: ""
+_stage: biz_approved
+biz_gate: approved
+signed_by: "@allen"
+signed_at: "2026-04-24T12:30:00+08:00"
+signature_method: "in-person"           # User 直接回复选项 + biz-ok
 sc_covered: [SC-01, SC-02, SC-03, SC-07, SC-08]   # owner_phases 含 s7 的 SC（sc-phase-mapping.yml v1.7）
 ownership_verification:
   source: design/sc-phase-mapping.yml
@@ -11,9 +12,9 @@ ownership_verification:
 
 ac_coverage:
   - ac_id: SC-01.AC-1
-    title: "拍照 / 相册 / 手动三入口 · 2MB 阈值压缩 · OCR 云厂商 + 手动兜底"
+    title: "拍照 / 相册 / 手动三入口 · 原图上传（OCR 精度）· 10MB 上限拦截 · OCR 云厂商 + 手动兜底"
     domain_entities: [CaptureForm, OCRResult, UploadReceipt]
-    user_journey: "P03-CAPTURE → 底部 ActionSheet 选入口 → 相机/相册/手动 → 前端压缩（>2MB）→ 云 OCR → 文本回填 → 提交 POST /wrongbook/items · image_id 引用 S6 presign fileKey"
+    user_journey: "P03-CAPTURE → 底部 ActionSheet 选入口 → 相机/相册/手动 → 前端只校验 ≤ 10MB（不压）→ 云 OCR → 文本回填 → 提交 POST /wrongbook/items · image_id 引用 S6 presign fileKey"
     upstream_contract:
       - { from_phase: s6, api: "POST /files/presign → PUT OSS → POST /files/complete/{fileKey}" }
     downstream_contract:
@@ -129,29 +130,22 @@ assumptions_draft:
     text: "每页面必带 <screen>.root data-testid · Playwright / miniprogram-automator 定位入口"
     source: "Sd 备忘 §6"
 
-ambiguities_for_user:
-  # Q1-Q3 · G-Biz 需 User 书面回
+ambiguities_resolved:
   - id: Q1
     text: "拍照错题压缩策略"
-    option_a: "2MB 阈值 · <2MB 原图 · >2MB 压到 2MB（canvas API · long-edge 2000px）"
-    option_b: "全量原图 · 不压（OCR 精度优先）"
-    option_c: "分档 · <1MB 原 · 1-5MB 压到 2MB · >5MB 降采样到 long-edge 1600px"
-    current_assumption: "option_a（2MB 阈值）· 本 Phase 写到 arch.md §1"
-    impact: "影响 OCR 精度 vs 上传流量 vs 内存占用三方平衡"
+    user_decision: "option_b（全量原图 · OCR 精度优先）+ 硬上限 10MB（前端 UI 校验 · > 10MB 直接拒）"
+    decision_source: "User 2026-04-24 12:25 · 直接回复'我要求 OCR 精度'"
+    arch_impact: "arch.md §1 录入流 · 无 canvas 压缩步骤 · 新增 10MB safety cap + UI toast · 上传流量目标：典型手机拍照 3-5MB · 极限 10MB"
   - id: Q2
     text: "AI 解析执行模式"
-    option_a: "同步等待 · 录入页 spinner 转到 AI 完成再跳结果页（UX 直观 · 但阻塞）"
-    option_b: "后台异步 + 列表轮询 · 立即回列表 · 条目 analyzing → completed 自动刷新（UX 更敏捷）"
-    option_c: "后台异步 + SSE · 订阅状态流 · 类似 b 但实时推送"
-    current_assumption: "option_b（异步轮询 · refetchInterval=3s · SSE 在 SC-03 的讲解流式单独用）"
-    impact: "影响 SC-01 录入体验 · 与 s5.5 α' chain-01 的 3s SLA 对齐模式"
+    user_decision: "option_b（后台异步 + 列表轮询 3s · 与 s5.5 chain-01 3s SLA 对齐）"
+    decision_source: "User 2026-04-24 12:25 · '其他按你建议来'"
+    arch_impact: "arch.md §2 数据流 · 录入提交后立即回列表 · React Query refetchInterval=3s · enabled: hasAnalyzingItems · SSE 只用于 SC-03 讲解流式"
   - id: Q3
     text: "mastered 错题列表展示"
-    option_a: "隐藏 · 默认列表只看 active · 'mastered' 不可见直到用户明确选"
-    option_b: "归档 Tab · Active / Mastered 顶部切换 · 一键查看"
-    option_c: "过滤器 · filter-bar 含 '状态=mastered' 选项 · 与 subject/tag 同级"
-    current_assumption: "option_b（归档 Tab）· 符合错题本场景（mastered 是里程碑 · 可回顾）"
-    impact: "影响 SC-08 UI 层级 + React Query key 结构"
+    user_decision: "option_b（归档 Tab · 顶部 Active/Mastered 切换）"
+    decision_source: "User 2026-04-24 12:25 · '其他按你建议来'"
+    arch_impact: "arch.md §4 React Query key 结构 · ['wrongbook', status, filters] · status in ['active', 'mastered']"
 
 dor_static_check:
   - check: "远端 s3-done tag 存在"
