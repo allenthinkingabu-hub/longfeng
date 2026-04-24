@@ -231,54 +231,56 @@ ac_coverage:
           then: "review_complete_p95_ms < 200ms · 409 率 < 1%"
       visual: []
 
-  # ============ SC-09 · 学情分析卡片（s8 主 · s5 提供聚合 API）============
+  # ============ SC-09 · 学情分析卡片（s8 主 · s5 提供聚合 API + Top N 薄弱项）============
   - ac_id: "SC-09.AC-1"
-    title: "GET /review-stats · 按 range (week/month/quarter) 聚合 · 按 user_profile.timezone 切日"
-    statement: "AI 拟：GET /review-stats?range=week&subject=math · 按 header X-User-Timezone（默认 Asia/Shanghai · Q-E）从 review_event 聚合 {correctRate, masteredCount, reviewCount} × day。range 支持 week/month/quarter · 超出返 400 · 180d 之外由归档 job 处理（响应体 warning 字段标注）。"
-    source: "落地计划 §9.0.5 SC-09.AC-1 · 方案 §2B.SC-09 · Q-E 决策"
+    title: "GET /review-stats · 日视图 + Top N 薄弱项 · 按 timezone 切日"
+    statement: "GET /review-stats?range=week|month|quarter&subject=<opt> · 按 header X-User-Timezone（默认 Asia/Shanghai · Q-E）聚合 review_outcome JOIN review_plan + wrong_item · 返回 (data[]: {date, correctRate, masteredCount, reviewCount}, topWeak[]: {subject, totalReview, forgetCount, forgetRate}, warnings[])。range∉{week,month,quarter} → 400 INVALID_RANGE · 非法 ZoneId 降级默认 + warning TIMEZONE_FALLBACK · range 跨 180d retention → warnings PARTIAL_HISTORY。Top N = 3 · min_sample = 3 · Caffeine @Cacheable TTL 5min (IT 关)。"
+    source: "落地计划 §9.0.5 SC-09.AC-1 · 方案 §2B.SC-09（TopN 薄弱项）· Q-E 决策"
     critical: false
     critical_reason: ""
-    domain_entities: [ReviewEvent, ReviewOutcome]
+    domain_entities: [ReviewOutcome, ReviewPlan, WrongItem]
     upstream_contract: []
     downstream_contract:
-      - "to_phase: s8 · api: GET /review-stats · 前端学情页"
-    user_journey: "S8 调 GET /review-stats?range=week · S5 按 user_profile.timezone 切日聚合 review_event/outcome → 返回日维度 array"
+      - "to_phase: s8 · api: GET /review-stats · 前端学情卡片 · 趋势图 + Top3 薄弱项"
+      - "to_phase: s8 · 支撑 SC-14 家长监督视图（s5 仅提供数据源 · 视图在 s8）"
+    user_journey: "S8/家长调 GET /review-stats?range=week · S5 按用户 tz 切日聚合 + 计算 subject forget_rate TopN → 返回 data[] + topWeak[]"
     four_role_slots:
-      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-09.AC-1 · §5 聚合 API · ADR 0011"
-      dev_anchor: ""
-      qa_anchor: ""
-      observable_behavior_anchor: "OpenAPI GET /review-stats · metric review_stats_p95_ms · response_header X-Data-Freshness"
+      architect_anchor: "design/arch/s5-review-plan.md ## AC: SC-09.AC-1 + §3.1 OpenAPI + ADR 0011"
+      dev_anchor: "ReviewStatsService.aggregate + ReviewPlanController.reviewStats + ReviewOutcomeRepository.aggregateDailyStats/topWeakSubjects · commit <SC-09-AC1>"
+      qa_anchor: "ReviewStatsControllerIT 6 @Test · matrix happy_path.0 + error_paths.0/1 + boundary.0/1 + observable.0 · @CoversAC 齐全"
+      observable_behavior_anchor: "OpenAPI GET /review-stats · metric review_stats_p95_ms · response warnings[].code ∈ {PARTIAL_HISTORY, TIMEZONE_FALLBACK}"
     risks:
-      - "review_event 180d 之外历史归档后聚合口径不全 · 响应体 warning 标注"
+      - "review_outcome 180d 之外历史归档后聚合口径不全 · response warnings 标 PARTIAL_HISTORY"
+      - "min_sample=3 过滤低样本 subject · 可能让新用户 Top N 为空（预期行为 · 不 bug）"
     verification_matrix:
       happy_path:
         - id: "happy_path.0"
-          given: "用户 42 (tz=Asia/Shanghai) 本周有 20 次 complete · 10 次 mastered"
-          when: "GET /review-stats?range=week header X-User-Timezone=Asia/Shanghai"
-          then: "返回 {correctRate, masteredCount, reviewCount} × 7 day · 按 +08:00 切日聚合"
+          given: "user 9000300 tz=Asia/Shanghai · math 10 forget / physics 4 correct / chinese 5 correct"
+          when: "GET /review-stats?range=week X-User-Timezone=Asia/Shanghai"
+          then: "返回 7 day 数组 + topWeak[0].subject=math + topWeak[0].forgetRate=1.0 · +08:00 切日聚合"
       error_paths:
         - id: "error_paths.0"
           given: "range=year（不支持）"
           when: "GET /review-stats?range=year"
-          then: "返回 400 · 错误码 INVALID_RANGE · 支持清单 [week, month, quarter]"
+          then: "返回 400 · body.code=40003 · message 含 INVALID_RANGE"
         - id: "error_paths.1"
-          given: "X-User-Timezone 非法（如 'Invalid/Zone'）"
-          when: "GET /review-stats"
-          then: "返回 400 · 错误码 INVALID_TIMEZONE · 降级为默认 Asia/Shanghai"
+          given: "X-User-Timezone=Invalid/ZoneXYZ（非法 ZoneId · Q-E 决策降级）"
+          when: "GET /review-stats?range=week"
+          then: "返回 200 · body.data.timezone=Asia/Shanghai（降级）· warnings[] 含 TIMEZONE_FALLBACK"
       boundary:
         - id: "boundary.0"
-          given: "用户本周 0 次 complete"
+          given: "本周 0 次 complete"
           when: "GET /review-stats?range=week"
-          then: "返回 7 day 数组 · 每 day correctRate=null/reviewCount=0 · 无异常"
+          then: "返回 7 day · 每 day correctRate=null/reviewCount=0/masteredCount=0 · topWeak=[] · 无异常"
         - id: "boundary.1"
-          given: "查询范围跨 180d 边界"
+          given: "range=quarter（90d 未跨 180d retention）"
           when: "GET /review-stats?range=quarter"
-          then: "response.warnings = [{code: 'PARTIAL_HISTORY', detail: '归档 job 清理超 180d 数据 · 本次结果可能不完整'}]"
+          then: "返回 90 day · warnings 不含 PARTIAL_HISTORY（quarter < 180d retention）"
       observable:
         - id: "observable.0"
-          given: "DB 内 10 万 review_event 行"
+          given: "20 次 complete · 10 次 HTTP 查询"
           when: "GET /review-stats P95"
-          then: "review_stats_p95_ms < 500ms · 命中聚合索引（subject + completed_at）"
+          then: "平均 < 500ms（本 IT 无 10 万行 · staging 跑大数据再测 review_stats_p95_ms）"
       visual: []
 
   # ============ SC-10 · 通用日历节点绑定（s5 主产出）============

@@ -46,4 +46,10 @@ public class ReviewPlanExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(ApiResult.fail(40002, "INVALID_ARG: " + e.getMessage()));
   }
+
+  @ExceptionHandler(InvalidRangeException.class)
+  public ResponseEntity<ApiResult<Void>> handleInvalidRange(InvalidRangeException e) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ApiResult.fail(40003, "INVALID_RANGE: " + e.range()));
+  }
 }

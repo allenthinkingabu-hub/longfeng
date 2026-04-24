@@ -26,6 +26,7 @@ public abstract class IntegrationTestBase {
     r.add("review.mq.enabled", () -> "false");
     r.add("review.feign.enabled", () -> "false");
     r.add("feign.sentinel.enabled", () -> "false");
+    r.add("spring.cache.type", () -> "none"); // IT 关 @Cacheable · 避免跨 test 污染
     r.add("spring.cloud.nacos.discovery.enabled", () -> "false");
     r.add("spring.cloud.nacos.config.enabled", () -> "false");
     r.add("spring.cloud.discovery.enabled", () -> "false");

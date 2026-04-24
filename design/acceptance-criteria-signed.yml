@@ -91,12 +91,12 @@ criteria:
     phase_owner: s8
     acceptance:
       - id: SC-09.AC-1
-        statement: "GET /review-stats?range=week|month|quarter&subject=<opt> · 按 header X-User-Timezone（默认 Asia/Shanghai · Q-E）从 review_event 聚合返回 {correctRate, masteredCount, reviewCount} × day · 180d 外历史 warning"
+        statement: "GET /review-stats?range=week|month|quarter&subject=<opt> · 按 X-User-Timezone header 聚合 review_outcome JOIN review_plan + wrong_item · 返回 (data[]:{date,correctRate,masteredCount,reviewCount}, topWeak[]:{subject,totalReview,forgetCount,forgetRate}, warnings[]) · Q-E timezone 降级 + PARTIAL_HISTORY warning"
         oracle_type: functional+performance
-        threshold: "happy_path: 用户 42 (tz=Asia/Shanghai) 本周 20 次 complete / 10 次 mastered → GET /review-stats?range=week 返 7 day 数组 · 聚合按 +08:00 切日。error: range=year 返 400 (INVALID_RANGE · 支持 [week,month,quarter])；X-User-Timezone=Invalid/Zone 降级默认 Asia/Shanghai。boundary: 本周 0 次 complete · 返 7 day 数组 · 每 day correctRate=null, reviewCount=0；跨 180d range=quarter · response.warnings=[{code:PARTIAL_HISTORY}]。性能: DB 内 10 万 review_event · review_stats_p95_ms < 500ms · 命中 (subject, completed_at) 聚合索引。"
+        threshold: "happy_path: user tz=Asia/Shanghai 本周 math 10 forget · physics 4 correct · chinese 5 correct → GET ?range=week 返 7 day 数组 + topWeak[0].subject=math + forgetRate=1.0000。error: range=year 返 400 code=40003 INVALID_RANGE；X-User-Timezone=Invalid/ZoneXYZ → 200 · data.timezone=Asia/Shanghai + warnings 含 TIMEZONE_FALLBACK。boundary: 0 次 complete → 7 day 每 day correctRate=null/reviewCount=0/topWeak=[]；range=quarter (90d) 不触发 PARTIAL_HISTORY（仅 > 180d retention 才触发）。性能: 10 次调用平均 < 500ms（staging 10万行再测 P95）。TopN=3 · min_sample=3 过滤小样本。"
         source: "落地计划 §9.0.5 SC-09.AC-1 · 方案 §2B.SC-09 · Q-E 决策 · business-analysis.yml SC-09.AC-1"
         draft_by: ai-planner-s5
-        draft_at: "2026-04-23T18:10:00+08:00"
+        draft_at: "2026-04-24T05:30:00+08:00"
 
   - sc_id: SC-10
     title: "通用日历节点绑定（复习/自定义）"

@@ -652,6 +652,7 @@ check-arch-consistency.sh 扫 main...HEAD diff 中的 class / @RequestMapping / 
 
 **Service**：
 - ReviewPlanService（createSevenNodes + complete + mastered trigger · CompleteResult record）
+- ReviewStatsService（SC-09.AC-1 · aggregate 日视图 + Top N 薄弱项 · TopN=3 · min_sample=3 · tz 降级 + PARTIAL_HISTORY warning）
 
 **Consumer · Job · Feign**：
 - WrongItemAnalyzedConsumer（@RocketMQMessageListener topic=wrongbook.item.analyzed）· WrongItemAnalyzedEvent（record payload）
@@ -660,16 +661,17 @@ check-arch-consistency.sh 扫 main...HEAD diff 中的 class / @RequestMapping / 
 - NotificationFeignClient（@FeignClient name=notification-service）· ReviewDueNotifyReq（record payload）
 
 **Controller · Exception**：
-- ReviewPlanController（POST /review-plans/{id}/complete）
-- ReviewPlanExceptionHandler（@RestControllerAdvice · 映射 PlanNotFoundException/PlanMasteredException/OptimisticLockingFailureException 到 404/410/409）
-- PlanNotFoundException · PlanMasteredException · CompleteReviewReq（record）· CompleteReviewResp（record）
+- ReviewPlanController（POST /review-plans/{id}/complete + GET /review-stats）
+- ReviewPlanExceptionHandler（@RestControllerAdvice · 映射 PlanNotFoundException/PlanMasteredException/OptimisticLockingFailureException/InvalidRangeException 到 404/410/409/400）
+- PlanNotFoundException · PlanMasteredException · InvalidRangeException
+- CompleteReviewReq · CompleteReviewResp · ReviewStatsResp（含 DailyStats/TopWeakEntry/Warning 三个嵌套 record）
 
 **Support**：
 - SnowflakeIdGenerator（S5 worker-id=3 · 与 S3/S4 layout 对齐）
 
 **Tests**（不是业务符号但 arch-consistency 脚本会扫 diff 中 class 名 · 列在这里让 grep 命中）：
 - SM2AlgorithmUT · CalendarFeignClientFallbackUT（UT）
-- ReviewPlanServiceIT · ReviewDueJobIT · S5VerifierIT · MockMvcSmokeIT · IntegrationTestBase（IT backbone）
+- ReviewPlanServiceIT · ReviewDueJobIT · S5VerifierIT · ReviewStatsControllerIT · MockMvcSmokeIT · IntegrationTestBase（IT backbone）
 
 **Common（新增）**：
 - CoversAC（@CoversAC 测试注解 · `com.longfeng.common.test`）· CoversACGroup（@Repeatable 支持）
@@ -705,13 +707,13 @@ check-arch-consistency.sh 扫 main...HEAD diff 中的 class / @RequestMapping / 
 - Error: `404 PLAN_NOT_FOUND` / `400 INVALID_QUALITY` / `409 Conflict` / `410 PLAN_MASTERED`
 - NFR: P95 ≤ 200ms · 409 率 ≤ 1% · QPS ≤ 200
 
-## AC: SC-09.AC-1 · GET /review-stats 聚合
+## AC: SC-09.AC-1 · GET /review-stats 聚合 · 日视图 + Top N 薄弱项
 
-- API: `GET /review-stats?range=&subject=` header `X-User-Timezone` → 200 / 400（INVALID_RANGE / INVALID_TIMEZONE）
-- Domain: `ReviewStatsService.aggregate` · JPA `SELECT date(completed_at AT TIME ZONE ?) ... GROUP BY d`（ADR 0011）
-- Event: 无（查询）
-- Error: `400 INVALID_RANGE`（非 week/month/quarter）· `400 INVALID_TIMEZONE`（非法 ZoneId 降默认）· `warnings=[{code:PARTIAL_HISTORY}]` 跨 180d
-- NFR: P95 ≤ 500ms · 10 万 event 规模 · Caffeine L2 5min TTL
+- API: `GET /review-stats?range=week|month|quarter&subject=<opt>` · header `X-User-Id` + `X-User-Timezone` → 200 JSON `{range, subject, timezone, data[], topWeak[], warnings[]}` / 400 INVALID_RANGE
+- Domain: `ReviewStatsService.aggregate(userId, range, subject, tz)` · 调 `ReviewOutcomeRepository.aggregateDailyStats`（native `date(AT TIME ZONE ?)` GROUP BY）+ `topWeakSubjects`（TopN=3 · min_sample=3）· 填充缺失日 `DailyStats(date,null,0,0)`（ADR 0011 · JPA 不走 CQRS）
+- Event: 无（纯查询）· `@Cacheable("review-stats")` TTL 5min · IT 关
+- Error: `400 INVALID_RANGE code=40003`（range ∉ {week,month,quarter}）· `200 + warnings TIMEZONE_FALLBACK`（非法 ZoneId 降级 Asia/Shanghai · Q-E）· `warnings PARTIAL_HISTORY` 跨 180d retention
+- NFR: 平均 < 500ms（本 IT 轻量数据 · staging 10 万行再测 P95）· `review_stats_p95_ms` metric · Caffeine L2 5min
 
 ## AC: SC-10.AC-1 · Feign + Sentinel + Caffeine
 
