@@ -3,8 +3,10 @@ phase_id: s5
 sc_covered: [SC-07, SC-08, SC-09, SC-10, SC-14]
 generated_by: builder-agent (inline exit-phase)
 generated_at: 2026-04-24T05:05:00+08:00
-signed_by: ""
-match_status: builder_complete · user_signature_pending
+signed_by: "@allen"
+signed_at: "2026-04-24T05:50:00+08:00"
+signature_method: "in-person"
+match_status: builder_complete · user_signed
 ---
 
 # Phase s5 Business Match Report
@@ -41,11 +43,12 @@ match_status: builder_complete · user_signature_pending
 - [x] V-S5-01..V-S5-12 + V-S5-20 可跑闸全绿（47 @Test · 含 SC-09 ReviewStatsControllerIT 6 @Test）
 - [x] SC-09 + SC-14 落地完整（ReviewStatsService + Controller endpoint + 6 matrix IT）
 - [ ] V-S5-08 k6 负载 · 无 k6 · 跳 · 留 staging
-- [ ] User 签 signed_by · 打 s5-done tag
+- [x] User 签 signed_by @allen · 2026-04-24T05:50 in-person
+- [x] 打 s5-done tag（见 §git tag below）
 
 ## 四、签字位
 
-- [ ] User 审 · 重点 §二 每 SC 完整度 + §三 checklist
-- [ ] SC-07 / SC-08 / SC-10 接受为 Builder 完成态（SC-09/14 延后）
-- [ ] 在 front matter 填 `signed_by: @allen` + 签字时间戳
-- [ ] s5-done tag 打 HEAD · 推 origin
+- [x] User 审 · 重点 §二 每 SC 完整度 + §三 checklist · 2026-04-24
+- [x] SC-07 / SC-08 / SC-09 / SC-10 / SC-14 接受为 Builder 完成态（SC-09 本次会话补完）
+- [x] 在 front matter 填 `signed_by: @allen` + 签字时间戳 + signature_method: in-person
+- [x] s5-done tag 打 HEAD · 推 origin
