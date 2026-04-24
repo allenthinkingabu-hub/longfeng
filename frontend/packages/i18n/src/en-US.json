@@ -1,0 +1,123 @@
+{
+  "app.name": "Wrongbook",
+  "app.tagline": "AI helps you remember every mistake",
+
+  "login.title": "Sign in",
+  "login.phone.placeholder": "Phone number",
+  "login.code.placeholder": "Verification code",
+  "login.send_code": "Send code",
+  "login.resend_in": "Resend in {n}s",
+  "login.submit": "Sign in",
+  "login.guest_entry": "Try it first",
+  "login.error.invalid_phone": "Invalid phone",
+  "login.error.rate_limited": "Too many requests · try later",
+
+  "home.today.due_count": "{n} reviews today",
+  "home.today.no_due": "No reviews today · come back tomorrow",
+  "home.insight.top3_title": "This week's Top 3 weak spots",
+  "home.fab.capture": "Capture",
+  "home.empty.new_user": "No mistakes yet · tap to capture",
+
+  "capture.source.camera": "Camera",
+  "capture.source.album": "Album",
+  "capture.source.manual": "Manual",
+  "capture.size_over": "Image too large · max 10MB",
+  "capture.mime_invalid": "Only JPG · PNG · HEIC supported",
+  "capture.upload_failed": "Upload failed · tap to retry",
+  "capture.submit": "Submit",
+
+  "analyzing.title": "AI analyzing",
+  "analyzing.subtitle": "~3s expected",
+  "analyzing.timeout": "Taking longer",
+  "analyzing.wait": "Keep waiting",
+  "analyzing.later": "Come back later",
+  "analyzing.degraded": "AI busy · photo saved",
+
+  "result.save": "Add to wrongbook",
+  "result.saved": "Added",
+  "result.retry": "Re-analyze",
+  "result.similar_title": "Similar problems",
+
+  "wronglist.empty": "No mistakes",
+  "wronglist.filter.all": "All",
+  "wronglist.filter.subject": "Subject",
+  "wronglist.swipe.delete": "Delete",
+  "wronglist.toast.deleted": "Deleted",
+  "wronglist.toast.undo": "Undo",
+
+  "wrongdetail.tag.edit": "Edit tags",
+  "wrongdetail.history.title": "Review history",
+  "wrongdetail.action.delete": "Delete",
+  "wrongdetail.gone": "This entry was deleted",
+
+  "reviewtoday.start": "Start review",
+  "reviewtoday.skip": "Skip today",
+  "reviewtoday.all_done": "All done for today!",
+
+  "reviewexec.think_prompt": "Think first",
+  "reviewexec.reveal": "Reveal answer",
+  "reviewexec.rate.forgot": "Forgot",
+  "reviewexec.rate.fuzzy": "Fuzzy",
+  "reviewexec.rate.recall": "Recall",
+  "reviewexec.rate.mastered": "Mastered",
+  "reviewexec.toast.conflict": "Already done on another device",
+
+  "reviewdone.summary": "Review complete",
+  "reviewdone.stat.count": "Count {n}",
+  "reviewdone.stat.correct_rate": "Correct {rate}%",
+  "reviewdone.share": "Share",
+  "reviewdone.home": "Home",
+  "reviewdone.again": "One more set",
+
+  "calendar.title": "Review Calendar",
+  "calendar.empty_month": "Nothing scheduled this month",
+
+  "eventdetail.past_date": "Past events",
+  "eventdetail.action.start_review": "Review now",
+
+  "notifications.empty": "All quiet",
+  "notifications.mark_all_read": "Mark all read",
+  "notifications.type.review_due": "{n} reviews pending",
+  "notifications.type.mastered": "You mastered 1 🎉",
+  "notifications.type.parent_view": "Parent checked your progress",
+  "notifications.subscribe.prompt": "Enable WeChat alerts · never miss a review",
+
+  "settings.account": "Account",
+  "settings.notif_prefs": "Notification prefs",
+  "settings.privacy": "Privacy",
+  "settings.dark_mode": "Dark mode",
+  "settings.about": "About",
+  "settings.logout": "Sign out",
+  "settings.delete_account": "Delete account",
+
+  "landing.hero.title": "AI remembers every mistake",
+  "landing.hero.subtitle": "Capture · AI analysis · Ebbinghaus review",
+  "landing.hero.cta": "Try now (no sign-up)",
+  "landing.sample.title": "See 3 samples",
+  "landing.login": "Already have an account?",
+
+  "guestcapture.quota": "{n} left today",
+  "guestcapture.quota_exceeded": "Quota used · sign up for unlimited",
+  "guestcapture.register": "Sign up to save",
+
+  "shared.title": "Shared from Wrongbook",
+  "shared.expired": "Share expired",
+  "shared.adopt": "Add to my wrongbook",
+  "shared.register": "Sign up to see more",
+
+  "welcomeback.title": "Welcome back",
+  "welcomeback.days_away": "{n} days since last visit",
+  "welcomeback.due_reminder": "{n} reviews waiting",
+
+  "observer.title": "Observer",
+  "observer.invite": "Invite child",
+  "observer.no_child": "No child linked",
+  "observer.privacy_notice": "Child's privacy mode on · showing aggregates only",
+
+  "common.retry": "Retry",
+  "common.cancel": "Cancel",
+  "common.confirm": "OK",
+  "common.loading": "Loading",
+  "common.error": "Something went wrong",
+  "common.network_error": "Network error"
+}

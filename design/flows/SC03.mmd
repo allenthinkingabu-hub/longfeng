@@ -1,0 +1,16 @@
+%% SC-03 · 错题详情查看与标签管理 · owner=[s7, s3] · mockup=P07
+flowchart TD
+  Start([从 P06 列表点 item]) --> Fetch[GET /wrongbook/items/:id]
+  Fetch --> FetchOK{200?}
+  FetchOK -->|是| Render[渲染题干+图片+AI+标签+历史]
+  FetchOK -->|404| Gone[显示"已被删除"]
+  Render --> Action{用户操作}
+  Action -->|编辑标签| EditTag[Sheet 弹出 · 勾选标签]
+  Action -->|删除| ConfirmDel[确认对话]
+  Action -->|分享| Share[生成 share_token · 跳 P17]
+  Action -->|返回| Back[→ P06]
+  EditTag --> PutTag[PUT /wrongbook/items/:id/tags]
+  PutTag --> Render
+  ConfirmDel -->|确认| Del[DELETE /wrongbook/items/:id · 软删]
+  ConfirmDel -->|取消| Render
+  Del --> Back

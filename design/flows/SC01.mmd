@@ -1,0 +1,22 @@
+%% SC-01 · 拍照录入错题 · owner=[s7, s3] · mockup=P03
+flowchart TD
+  Start([用户在首页]) --> FAB[点击拍照 FAB]
+  FAB --> Choose{选择来源}
+  Choose -->|相机| Camera[P03 相机预览]
+  Choose -->|相册| Album[选相册]
+  Choose -->|手动| Manual[P03 手动输入题干]
+  Camera --> Preview[预览+裁剪]
+  Album --> Preview
+  Preview --> Compress{大小检查}
+  Compress -->|≤ 10MB| Upload[PUT OSS presign url]
+  Compress -->|> 10MB| ErrSize[错误 413 · 提示重选]
+  ErrSize --> Choose
+  Upload --> UploadOK{PUT 成功?}
+  UploadOK -->|200-299| Submit[POST /wrongbook/items]
+  UploadOK -->|失败| ErrNet[提示网络错误 · 重试]
+  ErrNet --> Upload
+  Manual --> Submit
+  Submit --> SubmitOK{201 OK?}
+  SubmitOK -->|是| Jump[跳 P04 Analyzing]
+  SubmitOK -->|否| ErrSubmit[显示错误 · 重试]
+  ErrSubmit --> Submit

@@ -1,0 +1,17 @@
+%% SC-05 · AI 错题解析（文字+图像）· owner=[s4, s3] · mockup=P04+P05
+flowchart TD
+  Start([P03 提交 wrong_item]) --> Event[outbox 发 wrongbook.item.created]
+  Event --> AIQueue[S4 ai-analysis consumer 接收]
+  AIQueue --> Provider{主 provider dashscope}
+  Provider -->|200 成功| Done[status=completed + analyze 结果]
+  Provider -->|429 quota| Fallback[切备 provider openai]
+  Provider -->|5xx / 超时| Fallback
+  Fallback -->|成功| Done
+  Fallback -->|失败| Degraded[SC-06.AC-1 降级占位]
+  Done --> PublishAnalyzed[发 wrongbook.item.analyzed]
+  Degraded --> PublishAnalyzed
+  PublishAnalyzed --> PollP04[P04 轮询 GET /ai/analysis/:id]
+  PollP04 --> Jump{status?}
+  Jump -->|completed 3s内| JumpP05[跳 P05 Result 显示]
+  Jump -->|timeout > 3s| ShowWait[显示继续等待/先去别处]
+  Jump -->|degraded| ShowDegraded[P05 显示占位卡 · 可重试]

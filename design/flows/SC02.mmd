@@ -1,0 +1,13 @@
+%% SC-02 · 错题列表分组筛选 · owner=[s7, s3] · mockup=P06
+flowchart TD
+  Start([进入错题本 Tab]) --> Load[GET /wrongbook/items page=1]
+  Load --> Loaded{返回?}
+  Loaded -->|empty| Empty[显示"暂无错题"+拍照引导]
+  Loaded -->|N 条| List[渲染列表]
+  List --> Action{用户操作}
+  Action -->|筛选| Filter[展开筛选 · 科目 / 标签 / 日期]
+  Action -->|点 item| Detail[跳 P07 详情]
+  Action -->|滑动下拉| Refresh[下拉刷新 · 回到 page=1]
+  Action -->|滚底| LoadMore[加载 page+1]
+  Filter --> ApplyFilter[应用 filter · 回 Load]
+  ApplyFilter --> Load

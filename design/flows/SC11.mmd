@@ -1,0 +1,22 @@
+%% SC-11 · 错题图片 OSS 上传与压缩 · owner=[s6, s7] · SC-11.AC-1/2/3 · mockup=P03 capture
+flowchart TD
+  Start([P03 用户选图片]) --> Client[前端读 file]
+  Client --> PresignAPI[POST /files/presign]
+  PresignAPI --> Validate{S6 service}
+  Validate -->|MIME 非白名单| Err400[400 MIME_NOT_ALLOWED]
+  Validate -->|size > 10MB| ErrSize[400 FILE_TOO_LARGE]
+  Validate -->|通过| GenKey[UUID.ext fileKey · INSERT file_asset PENDING]
+  GenKey --> Sign[MinioProvider.presignUpload TTL ≤ 900s]
+  Sign --> Return[返 uploadUrl + fileKey]
+  Return --> PutOSS[前端 PUT OSS/MinIO]
+  PutOSS --> PutOK{2xx?}
+  PutOK -->|否| Retry[提示重试 or re-presign]
+  PutOK -->|是| CompleteAPI[POST /files/complete/:fileKey]
+  CompleteAPI --> ReadBack[S6 UploadService · readObject]
+  ReadBack --> AVScan[AntivirusClient.scan]
+  AVScan -->|INFECTED| Quarantine[422 VIRUS_DETECTED + status=QUARANTINED]
+  AVScan -->|CLEAN| Process[ImageProcessor 缩放 + webp + EXIF strip]
+  Process --> PutVariants[putObject thumb/medium variants]
+  PutVariants --> UpdateDB[UPDATE file_asset status=READY + variant_*_key]
+  UpdateDB --> Done[返 200]
+  Done --> WrongbookLink[P03 POST /wrongbook/items 引用 fileKey]

@@ -1,0 +1,11 @@
+%% SC-07 · 艾宾浩斯复习计划生成 · owner=[s5] · SC-07.AC-1/2
+flowchart TD
+  Start([S5 consumer 接 wrongbook.item.analyzed]) --> Check[check existsByWrongItemId]
+  Check -->|已存在 7 行| Skip[跳过 · 幂等 · metric duplicate+1]
+  Check -->|新| Create[ReviewPlanService.createSevenNodes]
+  Create --> Compute[按偏移 2h/1d/2d/4d/7d/14d/30d 生成]
+  Compute --> Insert[batchInsert 7 行 · node_index 0..6 · ease=2.5]
+  Insert --> UkConflict{UNIQUE 冲突?}
+  UkConflict -->|是| Skip
+  UkConflict -->|否| Done[status=active · metric success+7]
+  Done --> Metric[review_plan_create_total +7]

@@ -1,0 +1,15 @@
+%% SC-06 · AI 解析失败降级与重试 · owner=[s4] · mockup=P04+P05
+flowchart TD
+  Start([S4 consumer 接 wrongbook.item.created]) --> TryMain[调主 provider dashscope]
+  TryMain -->|200| OK[status=completed · 发 analyzed 事件]
+  TryMain -->|429| SwitchOS[Sentinel 切 openai]
+  TryMain -->|5xx/超时| SwitchOS
+  SwitchOS --> TryAlt[调 openai]
+  TryAlt -->|200| OK
+  TryAlt -->|都失败| Placeholder[status=degraded · 占位卡]
+  Placeholder --> PublishAnalyzed[仍发 wrongbook.item.analyzed · payload.degraded=true]
+  PublishAnalyzed --> PromptRetry[P05 显示"点击重试" CTA]
+  PromptRetry --> UserRetry{用户点重试?}
+  UserRetry -->|是| RetryPost[POST /ai/retry/:id]
+  UserRetry -->|否| Accept[接受降级 · 加入错题本]
+  RetryPost --> TryMain

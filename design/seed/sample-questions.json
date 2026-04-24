@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "purpose": "Sd.8 · Landing P15 + Guest Capture P16 · 3 道样题（数学/物理/语文）供匿名用户试用 AI 解析流程",
+    "generated_at": "2026-04-24",
+    "license": "自制 · 面向 K12 · 可自由引用于本产品",
+    "note": "样题字段结构与 POST /wrongbook/items · GET /ai/analysis/:id response 对齐 · 可直接作为 fixture 喂入匿名流"
+  },
+  "samples": [
+    {
+      "id": "sample-math-01",
+      "subject": "math",
+      "grade_code": "G7",
+      "title": "一元一次方程",
+      "stem_text": "解方程：2x + 3 = 7",
+      "image_placeholder": "design/mockups/sample-imgs/math-01.png",
+      "ai_result": {
+        "solution_steps": [
+          "两边减去 3：2x = 7 - 3 = 4",
+          "两边除以 2：x = 4 ÷ 2 = 2",
+          "验证：代入 x=2，左 = 2×2+3 = 7 = 右 ✓"
+        ],
+        "knowledge_points": ["一元一次方程", "移项", "系数化为 1"],
+        "difficulty": 1,
+        "common_mistakes": ["忘记变号", "除法结果错算"]
+      }
+    },
+    {
+      "id": "sample-physics-01",
+      "subject": "physics",
+      "grade_code": "G8",
+      "title": "匀速直线运动",
+      "stem_text": "一辆汽车以 60 km/h 匀速行驶 · 2.5 小时后行驶多少千米？",
+      "image_placeholder": "design/mockups/sample-imgs/physics-01.png",
+      "ai_result": {
+        "solution_steps": [
+          "公式 s = v × t",
+          "代入 s = 60 × 2.5 = 150 (km)",
+          "结论：行驶 150 千米"
+        ],
+        "knowledge_points": ["匀速直线运动", "路程公式 s=vt"],
+        "difficulty": 1,
+        "common_mistakes": ["单位换算错", "时间误用分钟"]
+      }
+    },
+    {
+      "id": "sample-chinese-01",
+      "subject": "chinese",
+      "grade_code": "G5",
+      "title": "病句修改",
+      "stem_text": "下列句子哪个有语病？请修改：\nA. 老师要求同学们认真完成作业\nB. 经过努力 · 我终于克服了困难\nC. 他不仅会唱歌 · 而且会画画和书法\nD. 秋风吹过 · 树叶纷纷飘落",
+      "image_placeholder": "design/mockups/sample-imgs/chinese-01.png",
+      "ai_result": {
+        "solution_steps": [
+          "C 句有语病：'不仅...而且...' 递进关系 · 但 '会画画和书法' 搭配不当",
+          "'书法' 应配 '写' 不配 '会'",
+          "修改：他不仅会唱歌 · 而且会画画、写书法"
+        ],
+        "knowledge_points": ["病句辨析", "关联词搭配", "动宾搭配"],
+        "difficulty": 2,
+        "common_mistakes": ["忽略动宾不搭", "关联词误判"]
+      }
+    }
+  ]
+}

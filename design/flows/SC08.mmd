@@ -1,0 +1,23 @@
+%% SC-08 · 复习任务执行与打分 · owner=[s8, s5] · SC-08.AC-1 · mockup=P09
+flowchart TD
+  Start([P08 点开始复习]) --> Think[P09 think 态 · 想一想]
+  Think --> Reveal[点翻开 · 显示 AI 讲解]
+  Reveal --> Rate{评分 quality 0-5}
+  Rate -->|选 0-2 忘| PostComplete[POST /review-plans/:id/complete]
+  Rate -->|选 3 模糊| PostComplete
+  Rate -->|选 4 记得| PostComplete
+  Rate -->|选 5 掌握| PostComplete
+  PostComplete --> BackendCompute[S5 Service 单事务]
+  BackendCompute --> SelectLock[SELECT FOR UPDATE plan]
+  SelectLock --> Compute[SM2Algorithm.compute]
+  Compute --> UpdatePlan[UPDATE plan SET ease/interval WHERE dispatch_version=? · 乐观锁]
+  UpdatePlan --> UpdateOK{rows=1?}
+  UpdateOK -->|否| Conflict[409 Conflict · 另一设备先做]
+  UpdateOK -->|是| InsertOutcome[INSERT review_outcome]
+  InsertOutcome --> Outbox[Outbox review.completed]
+  Outbox --> MasterCheck{连续 3 次 ease≥2.8?}
+  MasterCheck -->|是| Mastered[UPDATE 全 7 行 status=mastered + deleted_at · Outbox review.mastered]
+  MasterCheck -->|否| Next[自动跳下一题 or P10 Done]
+  Mastered --> Celebrate[Celebration 动画 → P10]
+  Conflict --> Retry{用户重试?}
+  Retry -->|是| PostComplete

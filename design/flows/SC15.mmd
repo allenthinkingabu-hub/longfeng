@@ -1,0 +1,13 @@
+%% SC-15 · 学科标签层级（subject.tag 两级）· owner=[s3, s7] · 影响 P05 P06 P07 P19
+flowchart TD
+  Start([S1 DDL 已建 tag_taxonomy]) --> Seed[初始种子数据 · 各 subject 下 2-3 级 tag]
+  Seed --> Available[前端 tag picker 可用]
+  Available --> Scenario{使用场景}
+  Scenario -->|录入| Capture[P03/P05 · AI 解析产 knowledge_points[] · 自动映射到 subject+tag]
+  Scenario -->|筛选| Filter[P06 按 subject+tag 两级筛选]
+  Scenario -->|详情| Detail[P07 标签 chip 显示 + 编辑]
+  Scenario -->|学情| Insight[SC-09 按 subject+tag 聚合 Top3 薄弱]
+  Capture --> Persist[persist wrong_item.tags_jsonb]
+  Filter --> Query[WHERE subject=? AND tags_jsonb @> '[tag]']
+  Detail --> Edit[PUT tags · 更新 tags_jsonb]
+  Insight --> Agg[GROUP BY subject + tag]

@@ -1,0 +1,156 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --tkn-color-black: #000000; /** Hero dark backgrounds, immersive product sections */
+  --tkn-color-white: #ffffff; /** Text on dark backgrounds, button text on blue/dark CTAs */
+  --tkn-color-bg-light: #f5f5f7; /** Alternate section backgrounds — slight blue-gray tint prevents sterility */
+  --tkn-color-bg-dark: #000000; /** Immersive dark section backgrounds */
+  --tkn-color-surface-dark-1: #272729; /** Card backgrounds in dark sections */
+  --tkn-color-surface-dark-2: #262628; /** Subtle surface variation in dark contexts */
+  --tkn-color-surface-dark-3: #28282a; /** Elevated cards on dark backgrounds */
+  --tkn-color-surface-dark-4: #2a2a2d; /** Highest dark surface elevation */
+  --tkn-color-surface-dark-5: #242426; /** Deepest dark surface tone */
+  --tkn-color-text-primary: #1d1d1f; /** Primary body text on light backgrounds */
+  --tkn-color-text-secondary: rgba(0, 0, 0, 0.8); /** Secondary text, nav items on light. Effective ~#333 on white = 12.6:1 */
+  --tkn-color-text-tertiary: rgba(0, 0, 0, 0.48); /** Disabled states, carousel controls. For decorative/large use only */
+  --tkn-color-text-on-dark: #ffffff; /** Text on dark section backgrounds */
+  --tkn-color-button-active: #ededf2; /** Active/pressed state for light buttons */
+  --tkn-color-button-default-light: #fafafc; /** Search/filter button backgrounds */
+  --tkn-color-overlay-media: rgba(210, 210, 215, 0.64); /** Media control scrims, overlays */
+  --tkn-color-primary-default: #0071e3; /** Apple Blue — ONLY chromatic accent in core palette. Primary CTA backgrounds, focus rings. */
+  --tkn-color-primary-dark: #2997ff; /** Links/interactive on dark section backgrounds. Higher luminance for contrast on black. */
+  --tkn-color-primary-link: #0066cc; /** Inline text links on light backgrounds. Slightly darker than primary for text-level readability. */
+  --tkn-color-success-default: #1a7d34; /** Success states, confirmations */
+  --tkn-color-warning-default: #b45309; /** Warning states, caution banners */
+  --tkn-color-danger-default: #c0392b; /** Error states, destructive actions */
+  --tkn-color-info-default: #005c99; /** Info banners, informational states */
+  --tkn-subject-math: #c41e3a; /** EXCEPTION 1 — Carmine red. High-energy, distinct from physics/chemistry/english. For math subject chips, tags, left-bars. */
+  --tkn-subject-physics: #0057b7; /** EXCEPTION 1 — Cobalt blue. Physical world / science association. */
+  --tkn-subject-chemistry: #1a6b3a; /** EXCEPTION 1 — Forest green. Lab / organic chemistry association. */
+  --tkn-subject-english: #9c4f00; /** EXCEPTION 1 — Amber / copper. Warm language / literary association. */
+  --tkn-motion-ease-apple-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94); /** Apple HIG standard — ease-out feel. Natural deceleration into resting state. */
+  --tkn-motion-ease-enter: cubic-bezier(0.0, 0.0, 0.2, 1.0); /** Elements entering viewport. Fast start, smooth arrival. */
+  --tkn-motion-ease-exit: cubic-bezier(0.4, 0.0, 1.0, 1.0); /** Elements exiting. Immediate start, clean departure. Always faster than enter. */
+  --tkn-motion-ease-linear: cubic-bezier(0.0, 0.0, 1.0, 1.0); /** Linear — use only for opacity fades where easing feels unnatural. Not for transforms. */
+  --tkn-motion-duration-fast: 150ms; /** Micro-interactions: hover state, focus ring appearance, button press feedback. Must be imperceptible. */
+  --tkn-motion-duration-base: 250ms; /** Standard element transitions: cards expanding, content loading, state changes within view. */
+  --tkn-motion-duration-slow: 400ms; /** Complex transitions: modal open, bottom sheet slide-up, page-level element reveals. */
+  --tkn-motion-duration-exit-fast: 90ms; /** Exit paired with fast — 60% of 150ms. Hover-out, focus-blur. */
+  --tkn-motion-duration-exit-base: 150ms; /** Exit paired with base — 60% of 250ms. Standard exit transition. */
+  --tkn-motion-duration-exit-slow: 240ms; /** Exit paired with slow — 60% of 400ms. Modal close, sheet dismiss. */
+  --tkn-motion-stagger-list-item: 30ms; /** Stagger delay between list/grid items entering. 30-50ms range. Avoids 'all at once' or 'too slow' reveal. */
+  --tkn-motion-scale-press: 0.97; /** Scale on card/button tap press. Subtle physical feedback. Restore on release with ease-apple-standard. */
+  --tkn-radius-xs: 5px; /** Small containers, link tags, small badges */
+  --tkn-radius-sm: 8px; /** Buttons, product cards, image containers — the standard Apple button radius */
+  --tkn-radius-md: 11px; /** Search inputs, filter buttons */
+  --tkn-radius-lg: 12px; /** Feature panels, lifestyle image containers. Maximum for rectangular elements. */
+  --tkn-radius-pill: 980px; /** Full pill CTAs — 'Learn more', 'Shop' links. The signature Apple CTA link shape. 980px mirrors Apple's max-content-width. */
+  --tkn-radius-circle: 50%; /** Media controls (play/pause arrows), avatar images, circular icon buttons */
+  --tkn-shadow-card: rgba(0,0,0,0.22) 3px 5px 30px 0px; /** Soft, diffused elevation for product cards. Mimics studio light on a physical object. Applied sparingly — most elements have NO shadow. */
+  --tkn-shadow-nav-glass: backdrop-filter: saturate(180%) blur(20px); /** Not a box-shadow — this is the CSS backdrop-filter applied to rgba(0,0,0,0.80) nav background. Creates the Apple translucent glass navbar. Falls back to solid #1c1c1e in WeChat miniprogram (no backdrop-filter support). */
+  --tkn-shadow-focus: 0 0 0 2px #0071e3; /** Focus ring for keyboard navigation. Applied to ALL interactive elements without exception. */
+  --tkn-shadow-none: none; /** Explicit no-shadow. Apple's default — most elements have no shadow at all. */
+  --tkn-spacing-1: 2px; /** 0.5 unit — icon micro-alignment */
+  --tkn-spacing-2: 4px; /** 0.5 base — dense internal padding, icon-to-text gap */
+  --tkn-spacing-3: 6px; /** 0.75 unit — compact chip padding */
+  --tkn-spacing-4: 8px; /** 1 base unit — component internal gap, button vertical padding */
+  --tkn-spacing-5: 10px; /** 1.25 unit — fine-grained layout adjustment */
+  --tkn-spacing-6: 12px; /** 1.5 unit — card internal padding */
+  --tkn-spacing-7: 14px; /** 1.75 unit — nav link padding */
+  --tkn-spacing-8: 16px; /** 2 base units — standard card padding, content inset */
+  --tkn-spacing-9: 20px; /** 2.5 units — section sub-gap */
+  --tkn-spacing-10: 24px; /** 3 base units — component separation */
+  --tkn-spacing-12: 32px; /** 4 base units — section padding, major spacing */
+  --tkn-spacing-14: 48px; /** 6 units — major section separation */
+  --tkn-spacing-16: 64px; /** 8 units — hero vertical rhythm */
+  --tkn-spacing-20: 80px; /** 10 units — generous hero padding */
+  --tkn-spacing-24: 96px; /** 12 units — between major page sections */
+  --tkn-spacing-2xs: 2px; /** Alias: icon micro-alignment */
+  --tkn-spacing-xs: 4px; /** Alias: dense internal padding */
+  --tkn-spacing-sm: 8px; /** Alias: 1 base unit */
+  --tkn-spacing-md: 16px; /** Alias: standard card padding */
+  --tkn-spacing-lg: 24px; /** Alias: component separation */
+  --tkn-spacing-xl: 32px; /** Alias: section padding */
+  --tkn-spacing-2xl: 48px; /** Alias: major section separation */
+  --tkn-spacing-3xl: 64px; /** Alias: hero vertical rhythm */
+  --tkn-spacing-4xl: 96px; /** Alias: between major page sections */
+  --tkn-font-display: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif; /** Use at 20px and above. Optical sizing: wider letter spacing, thinner strokes for large sizes. */
+  --tkn-font-text: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif; /** Use at 19px and below. Tighter and sturdier for small sizes. */
+  --tkn-type-display-hero-font-size: 56px;
+  --tkn-type-display-hero-font-family: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-display-hero-font-weight: 600;
+  --tkn-type-display-hero-line-height: 1.07;
+  --tkn-type-display-hero-letter-spacing: -0.28px;
+  --tkn-type-section-heading-font-size: 40px;
+  --tkn-type-section-heading-font-family: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-section-heading-font-weight: 600;
+  --tkn-type-section-heading-line-height: 1.1;
+  --tkn-type-section-heading-letter-spacing: 0px;
+  --tkn-type-tile-heading-font-size: 28px;
+  --tkn-type-tile-heading-font-family: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-tile-heading-font-weight: 400;
+  --tkn-type-tile-heading-line-height: 1.14;
+  --tkn-type-tile-heading-letter-spacing: 0.196px;
+  --tkn-type-card-title-font-size: 21px;
+  --tkn-type-card-title-font-family: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-card-title-font-weight: 700;
+  --tkn-type-card-title-line-height: 1.19;
+  --tkn-type-card-title-letter-spacing: 0.231px;
+  --tkn-type-sub-heading-font-size: 21px;
+  --tkn-type-sub-heading-font-family: 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-sub-heading-font-weight: 400;
+  --tkn-type-sub-heading-line-height: 1.19;
+  --tkn-type-sub-heading-letter-spacing: 0.231px;
+  --tkn-type-nav-heading-font-size: 34px;
+  --tkn-type-nav-heading-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-nav-heading-font-weight: 600;
+  --tkn-type-nav-heading-line-height: 1.47;
+  --tkn-type-nav-heading-letter-spacing: -0.374px;
+  --tkn-type-body-font-size: 17px;
+  --tkn-type-body-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-body-font-weight: 400;
+  --tkn-type-body-line-height: 1.47;
+  --tkn-type-body-letter-spacing: -0.374px;
+  --tkn-type-body-emphasis-font-size: 17px;
+  --tkn-type-body-emphasis-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-body-emphasis-font-weight: 600;
+  --tkn-type-body-emphasis-line-height: 1.24;
+  --tkn-type-body-emphasis-letter-spacing: -0.374px;
+  --tkn-type-button-lg-font-size: 18px;
+  --tkn-type-button-lg-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-button-lg-font-weight: 300;
+  --tkn-type-button-lg-line-height: 1;
+  --tkn-type-button-lg-letter-spacing: 0px;
+  --tkn-type-button-font-size: 17px;
+  --tkn-type-button-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-button-font-weight: 400;
+  --tkn-type-button-line-height: 2.41;
+  --tkn-type-button-letter-spacing: 0px;
+  --tkn-type-link-font-size: 14px;
+  --tkn-type-link-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-link-font-weight: 400;
+  --tkn-type-link-line-height: 1.43;
+  --tkn-type-link-letter-spacing: -0.224px;
+  --tkn-type-caption-font-size: 14px;
+  --tkn-type-caption-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-caption-font-weight: 400;
+  --tkn-type-caption-line-height: 1.29;
+  --tkn-type-caption-letter-spacing: -0.224px;
+  --tkn-type-caption-bold-font-size: 14px;
+  --tkn-type-caption-bold-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-caption-bold-font-weight: 600;
+  --tkn-type-caption-bold-line-height: 1.29;
+  --tkn-type-caption-bold-letter-spacing: -0.224px;
+  --tkn-type-micro-font-size: 12px;
+  --tkn-type-micro-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-micro-font-weight: 400;
+  --tkn-type-micro-line-height: 1.33;
+  --tkn-type-micro-letter-spacing: -0.12px;
+  --tkn-type-nano-font-size: 10px;
+  --tkn-type-nano-font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --tkn-type-nano-font-weight: 400;
+  --tkn-type-nano-line-height: 1.47;
+  --tkn-type-nano-letter-spacing: -0.08px;
+}

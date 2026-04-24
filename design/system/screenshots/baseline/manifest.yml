@@ -1,0 +1,120 @@
+# Sd.10 · 视觉 baseline manifest
+# 落地计划 §16.2 Sd.10 + §4.6 v1.8
+# 由 scripts/gen-baseline.mjs 自动生成 · DO NOT HAND EDIT
+schema_version: "1.0"
+generated_at: "2026-04-24T04:59:10.161Z"
+screenshots:
+  - screen_id: "P-01-login"
+    path: "baseline/P-01-login.png"
+    category: list
+    threshold: 0.03
+    sc_ref: ["SC-01"]
+    sha256: "fda680c085262877949317326dffe97ed6c2295941d897a33b48b8a1cc2558ad"
+  - screen_id: "P-02-home"
+    path: "baseline/P-02-home.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-07", "SC-09"]
+    sha256: "5a174bbcf5b9c0c8d85ad85e13a68b77fcf2185f8082fe73ef26ff536a76a62a"
+  - screen_id: "P-03-capture"
+    path: "baseline/P-03-capture.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-01", "SC-11"]
+    sha256: "306e0168f631ecad057d72ba805efd4e11d43c72a5d2c474476214d3e9db417b"
+  - screen_id: "P-04-analyzing"
+    path: "baseline/P-04-analyzing.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-05", "SC-06"]
+    sha256: "42e85e9560bc6fe45d4615ea613c4613d6a57996b05c7da65c6ed0aa2e6aea40"
+  - screen_id: "P-05-result"
+    path: "baseline/P-05-result.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-05"]
+    sha256: "f6b7544ceb9232529a4614ea66929de9dbb358655be8819c0eedf999d69aa295"
+  - screen_id: "P-06-wrongbook-list"
+    path: "baseline/P-06-wrongbook-list.png"
+    category: list
+    threshold: 0.03
+    sc_ref: ["SC-02"]
+    sha256: "4070f752c5b47b278f9c3610c769c7b46955d397e387da97e85c3b7d3d3ecf43"
+  - screen_id: "P-07-wrongbook-detail"
+    path: "baseline/P-07-wrongbook-detail.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-03", "SC-04"]
+    sha256: "c36a2b02f67e1d7d1526ed13baea30c73a03ed8c1e68c11ad7e4db591261e46f"
+  - screen_id: "P-08-review-today"
+    path: "baseline/P-08-review-today.png"
+    category: list
+    threshold: 0.03
+    sc_ref: ["SC-07"]
+    sha256: "b4f2bdee4e5b617e9e3be557dad1c60281be0944194a55a0363e345b30c4d900"
+  - screen_id: "P-09-review-exec"
+    path: "baseline/P-09-review-exec.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-08"]
+    sha256: "af3b108d812b23dbde26d98d4353ee0aec8537377b6a25ebc258409d06ccf68b"
+  - screen_id: "P-10-review-done"
+    path: "baseline/P-10-review-done.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-08"]
+    sha256: "e8f4b03509807ce309f41cb506af8d1d7f7887184704405794d83220de008ca7"
+  - screen_id: "P-11-calendar-month"
+    path: "baseline/P-11-calendar-month.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-10"]
+    sha256: "694de06e2b9471123c704966080d007532cc785a43a3784833b5ea09a1fd5c4b"
+  - screen_id: "P-12-event-detail"
+    path: "baseline/P-12-event-detail.png"
+    category: list
+    threshold: 0.03
+    sc_ref: ["SC-10"]
+    sha256: "eca52aed0e76d24e94ae00e665cc7ec9d79e17cdd9efeb6acdc461fe970ded8b"
+  - screen_id: "P-13-notifications"
+    path: "baseline/P-13-notifications.png"
+    category: list
+    threshold: 0.03
+    sc_ref: []
+    sha256: "3b84a385b44aeadf629c489b521730938c8651b0f8919fdf18790bba801f8a45"
+  - screen_id: "P-14-settings"
+    path: "baseline/P-14-settings.png"
+    category: list
+    threshold: 0.03
+    sc_ref: []
+    sha256: "ca4e249026648f2f0e3ff653d8ebad8fcce6e71525f8373fb3365eb405b9b41d"
+  - screen_id: "P-15-landing"
+    path: "baseline/P-15-landing.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-12"]
+    sha256: "c01d2d90ffa246b63d19d17609bcc7cda9cfe311bfc0e90b09aa3a28f3763428"
+  - screen_id: "P-16-guest-capture"
+    path: "baseline/P-16-guest-capture.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-12"]
+    sha256: "4a71d3d241f06fa8cff666cb72ff0ba6548f97fcd78f76c58023d308c32c992b"
+  - screen_id: "P-17-shared"
+    path: "baseline/P-17-shared.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: []
+    sha256: "75b319584dfdbc1a258e238027a83604b176ae0c2094b8ad0c41d6638531af6f"
+  - screen_id: "P-18-welcomeback"
+    path: "baseline/P-18-welcomeback.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: []
+    sha256: "49b7c2a5c1f98b44398cb52c3192095be3de430f49847e6a45f48cbff9c47a7c"
+  - screen_id: "P-19-observer"
+    path: "baseline/P-19-observer.png"
+    category: rich_interactive
+    threshold: 0.08
+    sc_ref: ["SC-09", "SC-14"]
+    sha256: "618900d60403cae022002887ce8a5d76f4ae4f0613f37843b076cfb2d229dc59"

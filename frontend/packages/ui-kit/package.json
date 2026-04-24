@@ -10,5 +10,8 @@
     "test": "echo \"[ui-kit] skeleton test noop\"",
     "lint": "echo \"[ui-kit] skeleton lint noop\"",
     "typecheck": "echo \"[ui-kit] skeleton typecheck noop\""
+  },
+  "devDependencies": {
+    "style-dictionary": "4"
   }
 }

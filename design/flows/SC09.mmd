@@ -1,0 +1,14 @@
+%% SC-09 · 学情分析卡片（TopN 薄弱项）· owner=[s8, s5] · SC-09.AC-1 · mockup=P02 home + P19 observer
+flowchart TD
+  Start([P02 首页 / P19 家长视图]) --> Call[GET /review-stats?range=week]
+  Call --> S5Service[S5 ReviewStatsService.aggregate]
+  S5Service --> QueryDaily[native SQL · group by date AT TIME ZONE tz]
+  QueryDaily --> QueryTopN[Top N forget_rate DESC · min_sample=3]
+  QueryTopN --> Pack[封装 data[] + topWeak[] + warnings[]]
+  Pack --> CheckRetention{range > 180d?}
+  CheckRetention -->|是| AddWarn[warnings += PARTIAL_HISTORY]
+  CheckRetention -->|否| Skip[不加 warning]
+  AddWarn --> Return
+  Skip --> Return[返 response]
+  Return --> RenderTrend[前端渲染趋势图]
+  RenderTrend --> RenderTop3[渲染 Top3 薄弱 card]

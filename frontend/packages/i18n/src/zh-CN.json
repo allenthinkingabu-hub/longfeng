@@ -1,0 +1,123 @@
+{
+  "app.name": "错题本",
+  "app.tagline": "AI 帮你记住每一道错题",
+
+  "login.title": "登录错题本",
+  "login.phone.placeholder": "手机号",
+  "login.code.placeholder": "验证码",
+  "login.send_code": "发送验证码",
+  "login.resend_in": "{n}s 后重发",
+  "login.submit": "登录",
+  "login.guest_entry": "先试用一下",
+  "login.error.invalid_phone": "手机号格式错误",
+  "login.error.rate_limited": "操作过频 · 请稍后再试",
+
+  "home.today.due_count": "今日待复习 {n}",
+  "home.today.no_due": "今天没有复习任务 · 明天再来",
+  "home.insight.top3_title": "本周 Top3 薄弱",
+  "home.fab.capture": "拍照录入",
+  "home.empty.new_user": "还没有错题 · 拍一张试试",
+
+  "capture.source.camera": "相机",
+  "capture.source.album": "相册",
+  "capture.source.manual": "手动输入",
+  "capture.size_over": "图片过大 · 限 10MB 以内",
+  "capture.mime_invalid": "仅支持 JPG · PNG · HEIC",
+  "capture.upload_failed": "上传失败 · 点击重试",
+  "capture.submit": "提交",
+
+  "analyzing.title": "AI 分析中",
+  "analyzing.subtitle": "预计 3 秒",
+  "analyzing.timeout": "耗时较久",
+  "analyzing.wait": "继续等待",
+  "analyzing.later": "先去别处",
+  "analyzing.degraded": "AI 服务繁忙 · 已保存图片",
+
+  "result.save": "加入错题本",
+  "result.saved": "已加入",
+  "result.retry": "重新分析",
+  "result.similar_title": "相似题目",
+
+  "wronglist.empty": "暂无错题",
+  "wronglist.filter.all": "全部",
+  "wronglist.filter.subject": "科目",
+  "wronglist.swipe.delete": "删除",
+  "wronglist.toast.deleted": "已删除",
+  "wronglist.toast.undo": "撤销",
+
+  "wrongdetail.tag.edit": "编辑标签",
+  "wrongdetail.history.title": "复习历史",
+  "wrongdetail.action.delete": "删除",
+  "wrongdetail.gone": "错题已删除",
+
+  "reviewtoday.start": "开始复习",
+  "reviewtoday.skip": "今天不做",
+  "reviewtoday.all_done": "今日全部完成！",
+
+  "reviewexec.think_prompt": "想一想",
+  "reviewexec.reveal": "翻开答案",
+  "reviewexec.rate.forgot": "忘了",
+  "reviewexec.rate.fuzzy": "模糊",
+  "reviewexec.rate.recall": "记得",
+  "reviewexec.rate.mastered": "掌握",
+  "reviewexec.toast.conflict": "已在另一设备完成",
+
+  "reviewdone.summary": "本次复习完成",
+  "reviewdone.stat.count": "题数 {n}",
+  "reviewdone.stat.correct_rate": "正确率 {rate}%",
+  "reviewdone.share": "分享",
+  "reviewdone.home": "回首页",
+  "reviewdone.again": "再练一组",
+
+  "calendar.title": "复习日历",
+  "calendar.empty_month": "本月暂无复习任务",
+
+  "eventdetail.past_date": "历史事件",
+  "eventdetail.action.start_review": "去复习",
+
+  "notifications.empty": "一切静好",
+  "notifications.mark_all_read": "全部已读",
+  "notifications.type.review_due": "{n} 题待复习",
+  "notifications.type.mastered": "你掌握了 1 题 🎉",
+  "notifications.type.parent_view": "家长查看了你的学情",
+  "notifications.subscribe.prompt": "开启微信订阅 · 复习提醒不错过",
+
+  "settings.account": "账号",
+  "settings.notif_prefs": "通知偏好",
+  "settings.privacy": "隐私",
+  "settings.dark_mode": "暗色模式",
+  "settings.about": "关于",
+  "settings.logout": "退出登录",
+  "settings.delete_account": "注销账号",
+
+  "landing.hero.title": "AI 帮你记住每一道错题",
+  "landing.hero.subtitle": "拍照 · AI 分析 · 艾宾浩斯复习",
+  "landing.hero.cta": "立即体验（免注册）",
+  "landing.sample.title": "看看 3 道示例",
+  "landing.login": "已有账号？登录",
+
+  "guestcapture.quota": "今日剩 {n} 次",
+  "guestcapture.quota_exceeded": "今日已用完 · 注册后无限使用",
+  "guestcapture.register": "注册保存",
+
+  "shared.title": "来自错题本的分享",
+  "shared.expired": "分享已失效",
+  "shared.adopt": "加入我的错题本",
+  "shared.register": "注册查看更多",
+
+  "welcomeback.title": "欢迎回来",
+  "welcomeback.days_away": "{n} 天未见",
+  "welcomeback.due_reminder": "{n} 题等你复习",
+
+  "observer.title": "家长监督",
+  "observer.invite": "邀请孩子加入",
+  "observer.no_child": "暂未绑定孩子",
+  "observer.privacy_notice": "孩子已开启隐私模式 · 仅查看聚合数据",
+
+  "common.retry": "重试",
+  "common.cancel": "取消",
+  "common.confirm": "确认",
+  "common.loading": "加载中",
+  "common.error": "出错了 · 请重试",
+  "common.network_error": "网络连接异常"
+}

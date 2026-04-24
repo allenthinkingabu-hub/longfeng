@@ -1,0 +1,16 @@
+%% SC-10 · 通用日历节点绑定 · owner=[s5, s3] · SC-10.AC-1 · mockup=P11 calendar + P12 event
+flowchart TD
+  Start([P11 打开月视图]) --> Fetch[GET /review-plans?date_range=YYYY-MM · 并行 /calendar/nodes?month=YYYY-MM]
+  Fetch --> SentinelCheck{Sentinel calendar QPS > 500?}
+  SentinelCheck -->|是| Block[429 · 切 Caffeine cache]
+  SentinelCheck -->|否| FeignCall[CalendarFeignClient.getNodes]
+  FeignCall --> CoreOK{core-service 正常 < 50ms?}
+  CoreOK -->|是| WriteCache[Caffeine 10min TTL 写入 · source=fresh]
+  CoreOK -->|超时 > 3s| CircuitOpen[circuit open · Fallback 读 cache]
+  WriteCache --> Render[月视图 + 每日 due/done 点]
+  CircuitOpen --> CacheCheck{cache staleness ≤ 10min?}
+  CacheCheck -->|是| UseCache[返 cache · source=cache:Nm]
+  CacheCheck -->|过期| FiveOhThree[返 503 source=unavailable]
+  Block --> UseCache
+  UseCache --> Render
+  FiveOhThree --> Warn[P11 顶部 warning Banner]

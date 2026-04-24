@@ -1,0 +1,17 @@
+%% SC-14 · 家长监督视图（家庭组）· owner=[s8, s5, s3] · mockup=P19 observer
+flowchart TD
+  Start([家长打开 P19 Observer]) --> CheckFamily[GET /family/members]
+  CheckFamily --> HasChild{绑定孩子?}
+  HasChild -->|否| InviteCTA[显示邀请 CTA · POST /family/invite]
+  HasChild -->|是| ChildList[显示孩子列表]
+  ChildList --> SelectChild[选某孩子]
+  SelectChild --> PrivacyCheck{孩子隐私模式?}
+  PrivacyCheck -->|开| AggregateOnly[仅显示聚合 · SC-09 top3]
+  PrivacyCheck -->|关| FullView[显示完整学情 + 最近错题]
+  AggregateOnly --> FetchStats[GET /review-stats?user_id=child&range=week · S5 提供数据源]
+  FullView --> FetchStats
+  FetchStats --> RenderChart[渲染趋势 + Top3 薄弱卡]
+  RenderChart --> Interact{家长操作}
+  Interact -->|切换孩子| SelectChild
+  Interact -->|查错题| FetchWrong[GET /wrongbook/items?user_id=child&aggregate=true]
+  Interact -->|邀请另一孩子| InviteCTA

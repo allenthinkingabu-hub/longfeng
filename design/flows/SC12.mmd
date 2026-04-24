@@ -1,0 +1,18 @@
+%% SC-12 · 匿名试用体验 · owner=[s11] · mockup=P15 landing + P16 guest_capture
+flowchart TD
+  Start([P15 Landing 点立即体验]) --> Fp[采集 device_fp · IP · UA]
+  Fp --> CreateAnon[POST /anon/session {device_fp_hash}]
+  CreateAnon --> Check{quota_bucket 可用?}
+  Check -->|已存 anon_id 且 quota < 3/日| ReuseSession[复用 anon_id · 跳 P16]
+  Check -->|新 device_fp| CreateNew[INSERT anon_visitor + quota=3/日]
+  CreateNew --> P16[跳 P16 guest_capture]
+  ReuseSession --> P16
+  P16 --> UseQuota{用户拍照 · 扣 quota}
+  UseQuota -->|quota > 0| DoUpload[走 SC-11 presign+PUT+complete]
+  UseQuota -->|quota == 0| Exceed[429 · 引导注册]
+  DoUpload --> Analyze[走 SC-05 AI 解析]
+  Analyze --> RegisterCTA[底部引导"注册保存"]
+  Exceed --> P01[跳 P01 Login/Register]
+  RegisterCTA --> Convert{用户注册?}
+  Convert -->|是| MergeJump[跳 SC-13 merge]
+  Convert -->|否| Persist[匿名数据保留 · 24h 后可换设备继续]

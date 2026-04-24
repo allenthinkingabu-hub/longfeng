@@ -1,0 +1,15 @@
+%% SC-13 · 匿名试用升级到正式账号数据迁移 · owner=[s11, s3]
+flowchart TD
+  Start([匿名用户点注册]) --> Register[P01 · POST /auth/verify 成功]
+  Register --> HasAnon{有 anon_id?}
+  HasAnon -->|否| Normal[正常注册 · 无迁移]
+  HasAnon -->|是| TriggerMerge[POST /anon/merge {anon_id, user_id}]
+  TriggerMerge --> Transaction[S11 Transaction]
+  Transaction --> MigrateWrongs[迁 guest_wrong_item → wrong_item · owner_id 置 user_id]
+  MigrateWrongs --> MigrateFiles[file_asset.owner_id 置 user_id]
+  MigrateFiles --> MigrateReviewPlans[沿 SC-07 对迁后错题生成 review_plan]
+  MigrateReviewPlans --> MarkAnon[anon_visitor.merged_to_user_id=user_id + deleted_at=now]
+  MarkAnon --> Audit[audit_log append merge 事件]
+  Audit --> Verify[校验：guest_wrong_item 全 deleted_at 非空 · wrong_item 新行 owner=user_id]
+  Verify -->|通过| Done[前端显示"数据已保留到新账号"]
+  Verify -->|不一致| Rollback[事务回滚 · 重试 or 手工处理]

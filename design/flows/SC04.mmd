@@ -1,0 +1,10 @@
+%% SC-04 · 错题软删除与恢复 · owner=[s7, s3] · mockup=P06+P07
+flowchart TD
+  Start([用户删错题]) --> SoftDel[DELETE /wrongbook/items/:id · 软删 deleted_at=now]
+  SoftDel --> Toast[Toast 显示"已删除 · 撤销"]
+  Toast --> Wait{5 秒内点撤销?}
+  Wait -->|是| Restore[POST /wrongbook/items/:id/restore]
+  Wait -->|否| Persist[软删持久 · 30d 后 S10 归档]
+  Restore --> RestoreOK{200?}
+  RestoreOK -->|是| Reappear[item 重新显示在列表]
+  RestoreOK -->|404| FailRestore[提示"无法恢复 · 已硬删"]
