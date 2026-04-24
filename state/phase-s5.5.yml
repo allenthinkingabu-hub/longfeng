@@ -1,0 +1,47 @@
+phase_id: s5.5
+run_id: 20260424-s5.5-degraded-chain03
+updated_at: 2026-04-24T07:30:00Z
+phase_level: C
+applicability: "C 级豁免 · 无新领域符号 · 无 0.1/0.2/0.0.5 · mutation_exempt · ac_partition_exempt · oracle_exempt"
+upstream_tags_verified:
+  - s3-done
+  - s4-done
+  - s5-done
+  - s6-done           # 2026-04-24 本会话打 · V-S5.5-01 DoR 四齐
+design_gate:
+  biz_gate: approved     # C 级自动（exempt:true）
+  arch_gate: approved
+  arch_doc: design/arch/s5.5.md
+oracle_source:
+  signed_at: 2026-04-24T07:30:00+08:00
+  signed_by: "@allen"
+  cross_service_acs:
+    - SC-05.AC-1        # 拍照入库 → 3s 内 AI 解析完成（S4 owner · chain-01）
+    - SC-06.AC-1        # LLM 失败降级不阻塞（S4 owner · degrade-01）
+    - SC-07.AC-2        # 艾宾浩斯节点 SM-2（S5 owner · chain-02）
+    - SC-11.AC-1        # OSS 预签 TTL/MIME（S6 owner · chain-03 + degrade-02）
+    - CC-01             # P95 < 500ms
+  drift_note: "2026-04-24 主文档 §10.5.1 SC 编号修正：原 SC-01/04/06/08 → SC-05/07/06/11（按 sc-phase-mapping.yml v1.7 权威 + S5 Q-A + S6 Q-A 决策）"
+scope_reduction:
+  mode: degraded
+  rationale: "本会话按 User 指令走降级版 · 只跑 chain-03（上传→错题引用 fileKey）· 其他 chain 与 degrade 留后续"
+  chains_in_scope: [chain-03]
+  chains_deferred: [chain-01, chain-02, chain-04, chain-05, chain-06]
+  degrades_deferred: [degrade-01, degrade-02, degrade-03]
+  exemptions_tier:
+    - tier: chain-03 only
+      reason: "chain-03 只涉 file-service + wrongbook-service · 两服务 done · 依赖 PG + MinIO 常驻容器即可"
+    - tier: Playwright 迁移 Java IT
+      reason: "主文档 §10.5.6 要求 Playwright API mode · 本会话无 Node 环境 · 降级用 Java IT（Testcontainers 派生 · 同等断言语义）"
+    - tier: docker-compose 10 容器降 5 基础设施
+      reason: "5 微服务不容器化 · 本会话用 mvn IT 直调 Spring Boot context · 主文档 §10.5.3 10 容器是理想态 · 降级可接受"
+v_assertions:
+  V-S5.5-01_upstream_tags: PASS          # s3/s4/s5/s6-done 4/4 齐
+  V-S5.5-02_oracle_signed: PASS          # SC-05/06/07/11 + CC-01 全 @allen in-person signed
+  V-S5.5-03_no_latest_tag: DEFERRED      # docker-compose.backend-only.yml 本会话未产 · 留主 Phase
+  V-S5.5-04_backend_gate_green: DEGRADED # chain-03 Java IT 绿 · 其余留后续
+  V-S5.5-05_9_assertions_pass: DEGRADED  # 预期 ≥9 · 实际 1（chain-03）· 显式豁免
+  V-S5.5-06_p95_from_signed: PASS        # CC-01 P95<500ms 出自 signed yml
+  V-S5.5-07_mutation_kill_60: EXEMPT     # mutation_exempt:true
+  V-S5.5-08_continuity: PASS             # check-continuity.sh（state + interfaces 一致）
+s5_5_done_gate: "NOT_TAGGED_YET · 本会话产降级 s5.5-done-partial tag 候选 · 等 User 最终裁决"

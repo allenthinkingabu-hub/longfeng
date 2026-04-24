@@ -19,9 +19,9 @@
 
 schema_version: 1.0
 
-signed_by: "@allen"                  # 2026-04-24 · S5 Phase AC 审签
-signed_at: "2026-04-24T05:45:00+08:00"
-signature_method: "in-person"        # User 直接回复"2" · 对 SC-07/08/09/10 AI 代拟 acceptance[] 全量核准
+signed_by: "@allen"                  # 2026-04-24 · S5/S6/S5.5 Phase AC 多轮审签
+signed_at: "2026-04-24T07:30:00+08:00"
+signature_method: "in-person"        # 多轮 User 直接回复 · S5 SC-07/08/09/10 + S6 SC-11 + S5.5 SC-05/06 AI 代拟 全量核准
 
 criteria:
   - sc_id: SC-01
@@ -44,15 +44,30 @@ criteria:
     phase_owner: s7
     acceptance: []
 
+  # ============ S5.5 跨服务 AC · S4 owner（AI 解析）· 2026-04-24 AI 代拟 ============
   - sc_id: SC-05
     title: "AI 错题解析（文字+图像）"
     phase_owner: s4
-    acceptance: []
+    acceptance:
+      - id: SC-05.AC-1
+        statement: "用户拍照入库（POST /wrongbook/items 含 image_ref）后 · 3 秒内 S4 AI 解析完成并产出 wrongbook.item.analyzed 事件 · GET /ai/analysis/{itemId} 返 status=completed"
+        oracle_type: functional+performance
+        threshold: "happy_path: POST wrongbook/items 返 201 · T+3s 内 GET /ai/analysis/{itemId}.status=completed · wrongbook.item.analyzed 事件在 outbox 或 MQ 可观察。error: item 不存在 → GET 返 404。boundary: AI 超时 > 3s → status=timeout + 降级占位卡片（触发 SC-06.AC-1）。性能: 100 次调用 · P95 end-to-end < 3000ms。"
+        source: "落地计划 §10.5.1（2026-04-24 编号修正 · 原误为 SC-01.AC-3）· 方案 §2A.5 拍照流 · §2B.SC-05"
+        draft_by: ai-planner-s5.5
+        draft_at: "2026-04-24T07:25:00+08:00"
 
   - sc_id: SC-06
     title: "AI 解析失败降级与重试"
     phase_owner: s4
-    acceptance: []
+    acceptance:
+      - id: SC-06.AC-1
+        statement: "LLM provider（dashscope/openai）返 429 quota_exceeded 或 5xx 或超时 · S4 自动切备用 provider · 最终失败降级占位卡片（subject=unknown + stemText=[降级]）· 主链路不阻塞 wrongbook create 流程"
+        oracle_type: reliability+fallback
+        threshold: "happy_path: 主 provider 正常 · GET /ai/analysis → status=completed 含真解析。error_paths.0: WireMock 桩 dashscope 429 连续 10 次 · 自动切 openai · 最终 status=completed 主 provider 降级标记 provider=openai。error_paths.1: 两 provider 都 fail · status=degraded · stemText=[降级] · wrongbook.item.analyzed 仍发出（下游 S5 按降级占位处理）。性能: P95 < 3s 含切换开销（CC-01）。"
+        source: "落地计划 §10.5.1（编号修正）· 方案 §2A.8 AI 降级 · §2B.SC-06 · ADR 0008"
+        draft_by: ai-planner-s5.5
+        draft_at: "2026-04-24T07:25:00+08:00"
 
   # ============ S5 Phase owner SCs · Q-H 授权 AI 代拟 ============
   - sc_id: SC-07
@@ -110,10 +125,32 @@ criteria:
         draft_by: ai-planner-s5
         draft_at: "2026-04-23T18:10:00+08:00"
 
+  # ============ S6 Phase owner · 2026-04-24 AI 代拟（Q-H 授权）============
   - sc_id: SC-11
     title: "错题图片 OSS 上传与压缩"
     phase_owner: s6
-    acceptance: []
+    acceptance:
+      - id: SC-11.AC-1
+        statement: "POST /files/presign body {filename, mime, size} → 返回 {uploadUrl, fileKey, expiresAt, ttlSeconds}。MIME ∈ {image/jpeg, image/png, image/heic, image/webp}（白名单）· size ≤ 10MB · TTL ≤ 900s · fileKey 扁平 UUID.ext 避免 @PathVariable 多段解析。FEATURE_STORAGE_PROVIDER 切换 MinIO (默认) / OSS (Q-B Stub)。"
+        oracle_type: functional
+        threshold: "happy_path: POST · 返 200 · ttlSeconds ≤ 900 · fileKey 不含 / 且以 .jpg/.png/.heic 结尾。error_paths.0: mime=application/exe → 400 code=40001 MIME_NOT_ALLOWED。error_paths.1: size=20MB → 400（@Max body 校验）。boundary: size=5MB（分片阈值边界）→ 200 不触发分片。"
+        source: "落地计划 §10.1 A4 A5 · S6 business-analysis SC-11.AC-1 · FileUploadIT scenario_sc11_ac1_*"
+        draft_by: ai-planner-s6
+        draft_at: "2026-04-24T06:00:00+08:00"
+      - id: SC-11.AC-2
+        statement: "POST /files/complete/{fileKey} · 同步链路：读 MinIO 原图 → AntivirusClient.scan (ClamStub CLEAN) → ImageProcessor (thumbnailator 缩放 ≤ 1920px + webp q=85 + metadata-extractor EXIF strip) → putObject 回写 thumb/medium → UPDATE file_asset.status=READY + variant_{thumb,medium}_key"
+        oracle_type: functional+compliance
+        threshold: "happy_path: presign + PUT 后 complete · 返 200 · body.data.status=READY · variantThumbKey/MediumKey 非空 startsWith variants/ · DB file_asset.status=READY。webp 产物魔数 RIFF · hasSensitiveExif=false（GPS/Make/Model 命中 0 · 合规 · 儿童地理位置不可泄漏）。error_paths.0: 不存在 fileKey → 404 FILE_NOT_FOUND。error_paths.1: AntivirusClient 返 INFECTED → 422 VIRUS_DETECTED + status=QUARANTINED。"
+        source: "落地计划 §10.1 A3 A4 · S6 business-analysis SC-11.AC-2 · FileUploadIT scenario_sc11_ac2_*"
+        draft_by: ai-planner-s6
+        draft_at: "2026-04-24T06:00:00+08:00"
+      - id: SC-11.AC-3
+        statement: "GET /files/download/{fileKey}?variant=thumb|medium|original → 返回 {downloadUrl, variant, ttlSeconds}。downloadUrl TTL ≤ 900s · 未指定 variant 默认 medium · fileKey 软删（deleted_at 非空）→ 410 Gone"
+        oracle_type: functional
+        threshold: "happy_path: GET · 返 200 · downloadUrl 非空 · variant=medium（默认）· ttlSeconds=900。"
+        source: "落地计划 §10.1 A5 A7 · S6 business-analysis SC-11.AC-3 · FileUploadIT scenario_sc11_ac3_*"
+        draft_by: ai-planner-s6
+        draft_at: "2026-04-24T06:00:00+08:00"
 
   - sc_id: SC-12
     title: "匿名试用体验（device_fp 无账号）"
