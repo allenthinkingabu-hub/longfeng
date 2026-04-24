@@ -1,0 +1,58 @@
+{
+  "common": {
+    "back": "Back",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "retry": "Retry",
+    "loading": "Loading",
+    "empty": "No data",
+    "error_network": "Network error, please retry"
+  },
+  "capture": {
+    "title": "Add Wrong Item",
+    "tab_camera": "Camera",
+    "tab_gallery": "Gallery",
+    "tab_manual": "Manual",
+    "field_subject": "Subject",
+    "field_stem": "Question",
+    "field_tags": "Tags",
+    "submit": "Submit",
+    "draft_hint": "Draft saved",
+    "draft_restored": "Draft restored",
+    "size_exceeded": "Image > 10MB, please select a smaller one",
+    "ocr_fallback": "OCR failed, please type the question manually",
+    "upload_progress": "Uploading…{{percent}}%"
+  },
+  "wrongbook_list": {
+    "title": "Wrongbook",
+    "tab_active": "Active",
+    "tab_mastered": "Mastered",
+    "filter_subject": "Subject",
+    "filter_tag": "Tag",
+    "filter_difficulty": "Difficulty",
+    "filter_all": "All",
+    "empty_active": "No wrong items yet, try taking a photo",
+    "empty_mastered": "No mastered items yet",
+    "load_more": "Load more",
+    "item_analyzing": "Analyzing…",
+    "item_completed": "Analyzed",
+    "item_error": "Analysis failed"
+  },
+  "wrongbook_detail": {
+    "title": "Detail",
+    "tag_edit": "Edit Tags",
+    "tag_sheet_title": "Pick Subject Tags",
+    "tag_custom_placeholder": "Custom tag",
+    "tag_save": "Save",
+    "tag_limit": "Max 5 custom tags",
+    "explain_title": "AI Explanation",
+    "explain_loading": "Generating…",
+    "explain_error": "Failed to generate",
+    "cause_title": "Error Causes",
+    "similar_title": "Similar",
+    "review_entry": "Add to Review"
+  }
+}
