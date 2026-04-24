@@ -12,6 +12,16 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const DRAFT_KEY = 'lf:capture:draft:v1';
 const DRAFT_TTL_MS = 7 * 24 * 3600 * 1000;
 
+function safeStorageGet(key: string): string | null {
+  try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
+}
+function safeStorageSet(key: string, value: string): void {
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(key, value); } catch {}
+}
+function safeStorageRemove(key: string): void {
+  try { if (typeof localStorage !== 'undefined') localStorage.removeItem(key); } catch {}
+}
+
 type Tab = 'camera' | 'gallery' | 'manual';
 
 type DraftShape = { subject: string; stem_text: string; image_file_key?: string; saved_at: number };
@@ -35,11 +45,11 @@ export const CapturePage: React.FC = () => {
   // 恢复草稿
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = safeStorageGet(DRAFT_KEY);
       if (!raw) return;
       const d = JSON.parse(raw) as DraftShape;
       if (Date.now() - d.saved_at > DRAFT_TTL_MS) {
-        localStorage.removeItem(DRAFT_KEY);
+        safeStorageRemove(DRAFT_KEY);
         return;
       }
       setValue('subject', d.subject);
@@ -47,7 +57,7 @@ export const CapturePage: React.FC = () => {
       if (d.image_file_key) setFileKey(d.image_file_key);
       setBanner(t('capture.draft_restored'));
     } catch {
-      localStorage.removeItem(DRAFT_KEY);
+      safeStorageRemove(DRAFT_KEY);
     }
   }, [setValue, t]);
 
@@ -61,7 +71,7 @@ export const CapturePage: React.FC = () => {
         saved_at: Date.now(),
       };
       if (snap.stem_text || snap.image_file_key) {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(snap));
+        safeStorageSet(DRAFT_KEY, JSON.stringify(snap));
       }
     };
   }, [subject, stem, fileKey]);
@@ -94,7 +104,7 @@ export const CapturePage: React.FC = () => {
     mutationFn: (payload: WrongItemCreate) =>
       wrongbookClient.create({ ...payload, image_id: fileKey }),
     onSuccess: () => {
-      localStorage.removeItem(DRAFT_KEY);
+      safeStorageRemove(DRAFT_KEY);
       reset();
       setFileKey(undefined);
       nav('/wrongbook');
