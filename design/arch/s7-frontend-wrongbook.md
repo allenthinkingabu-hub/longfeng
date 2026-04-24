@@ -1,13 +1,14 @@
 ---
 phase_id: s7
 title: "S7 · 前端错题主循环 (H5 + 小程序)"
-gate_status: draft
+gate_status: approved
 biz_gate: approved
 biz_approved_by: "@allen"
 biz_approved_at: "2026-04-24T12:30:00+08:00"
-approved_by: ""
-approved_at: ""
-arch_review_by: ""
+approved_by: "@allen"
+approved_at: "2026-04-24T13:00:00+08:00"
+approval_method: "in-person"
+arch_review_by: "AI + @allen joint"
 schema_version: 1.8
 ac_partition: true
 oracle_signed: true
@@ -523,11 +524,11 @@ export const TEST_IDS = {
 
 ## 9. G-Arch 签字记录
 
-- [ ] 6 节齐（§1..§6 + §7 Symbol + §8 AC 分节）
-- [ ] `bash ops/scripts/check-arch-consistency.sh s7 --dry-run` 返回 0
-- [ ] front matter `gate_status: approved` + `approved_by: @allen` + `approved_at: ISO8601`
-- [ ] PR description 含 `/arch-ok` 评论
-- [ ] 打 tag `s7-arch-frozen`（见 §11.11）
+- [x] 6 节齐（§1..§6 + §7 Symbol + §8 AC 分节）
+- [x] `bash ops/scripts/check-arch-consistency.sh s7 --dry-run` 返回 0（2026-04-24 12:45）
+- [x] front matter `gate_status: approved` + `approved_by: @allen` + `approved_at: 2026-04-24T13:00:00+08:00`
+- [x] User in-person "哦OK" 确认（2026-04-24 13:00）· 等价 `/arch-ok`
+- [ ] 打 tag `s7-arch-frozen`（本 commit 后立打）
 
 ---
 
@@ -535,4 +536,5 @@ export const TEST_IDS = {
 
 | 日期 | 版本 | 变更 | 签字 |
 |---|---|---|---|
-| 2026-04-24 | v1.0 draft | 初稿 · 5 AC × 5 行 · 7 节主体 + Symbol Registry + ADR 0014 | AI · G-Arch pending |
+| 2026-04-24 | v1.0 draft | 初稿 · 5 AC × 5 行 · 11 节主体 + Symbol Registry + ADR 0014 | AI · G-Arch pending |
+| 2026-04-24 | v1.0 approved | G-Arch 通过（@allen in-person 2026-04-24 13:00）· gate_status: approved · 打 `s7-arch-frozen` tag · 冻结架构符号（§7 Symbol Registry）| @allen · AI 执行 |
