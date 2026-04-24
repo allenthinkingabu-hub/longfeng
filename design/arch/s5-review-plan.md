@@ -630,3 +630,47 @@ G-Arch 阶段 User `/arch-ok` 前 · 以下文件必须落档：
 - `docs/adr/0013-sm2-over-ebbinghaus.md`
 - `docs/adr/0014-review-outcome-outbox-tables.md`
 - `docs/adr/0015-xxljob-over-quartz.md`
+
+---
+
+## AC: SC-07.AC-1 · Consumer 幂等 INSERT 7 行
+
+- API: `WrongItemAnalyzedConsumer.onMessage(WrongItemAnalyzedEvent)` · topic `wrongbook.item.analyzed` · 消费组 `review-plan-cg`
+- Domain: `ReviewPlanService.createSevenNodes(wrongItemId, userId, baseInstant) → ReviewPlan[7]` · 偏移 `[2h, 1d, 2d, 4d, 7d, 14d, 30d]` · 每行 `ease=2.5`
+- Event: 入 `wrongbook.item.analyzed {itemId, userId, subject, analyzedAt}` · 无出站（幂等 INSERT · 出站事件在 complete）
+- Error: `ON CONFLICT DO NOTHING`（唯一索引冲突）· `review_plan_create_duplicate_total +1`；孤儿 `wrong_item_id` → ACK + `orphan_total +1`
+- NFR: Consumer P95 ≤ 100ms · QPS ≤ 50 · DB 连接 ≤ 2 conn/请求
+
+详见 §1.4 五行展开（H4 格式 · 脚本扫 H2）
+
+## AC: SC-07.AC-2 · SM2Algorithm 纯函数
+
+- API: `SM2Algorithm.compute(BigDecimal ease, Integer interval, Integer quality, AlgorithmConfig cfg) → SM2Result(nextEase, nextInterval)` · `@Validated` quality ∈ [0, 5]
+- Domain: `quality<3 → reset ease=easeInit, interval=1`；`quality≥3 → clamp SM-2 adjustment · interval=round(interval * nextEase)`
+- Event: 无（纯函数）
+- Error: `IllegalArgumentException` for quality ∉ [0, 5]
+- NFR: 单次 ≤ 10ms · 无 IO
+
+## AC: SC-08.AC-1 · POST complete + 乐观锁 + mastered
+
+- API: `POST /review-plans/{id}/complete` body `{quality: 0-5}` → 200/404/400/409/410
+- Domain: `ReviewPlanService.complete(planId, quality)` 单事务 · SELECT FOR UPDATE → compute → UPDATE 乐观锁 → INSERT outcome → Outbox
+- Event: 出 `review.completed {planId, quality, nextReviewAt, easeFactorAfter}` + 可选 `review.mastered {wrongItemId, masteredAt}` · Outbox 兜底（ADR 0005）
+- Error: `404 PLAN_NOT_FOUND` / `400 INVALID_QUALITY` / `409 Conflict` / `410 PLAN_MASTERED`
+- NFR: P95 ≤ 200ms · 409 率 ≤ 1% · QPS ≤ 200
+
+## AC: SC-09.AC-1 · GET /review-stats 聚合
+
+- API: `GET /review-stats?range=&subject=` header `X-User-Timezone` → 200 / 400（INVALID_RANGE / INVALID_TIMEZONE）
+- Domain: `ReviewStatsService.aggregate` · JPA `SELECT date(completed_at AT TIME ZONE ?) ... GROUP BY d`（ADR 0011）
+- Event: 无（查询）
+- Error: `400 INVALID_RANGE`（非 week/month/quarter）· `400 INVALID_TIMEZONE`（非法 ZoneId 降默认）· `warnings=[{code:PARTIAL_HISTORY}]` 跨 180d
+- NFR: P95 ≤ 500ms · 10 万 event 规模 · Caffeine L2 5min TTL
+
+## AC: SC-10.AC-1 · Feign + Sentinel + Caffeine
+
+- API: `CalendarFeignClient.getNodes(date)` · `@FeignClient(name="core-service", fallback=CalendarFeignClientFallback.class)` · `@GetMapping("/calendar/nodes")`
+- Domain: `CalendarService.findNodes(date)` · `@SentinelResource("calendar-nodes", blockHandler/fallback="localCache")` · Caffeine TTL=10min / size=1000
+- Event: 无（Feign 同步）
+- Error: 超时 > 3s → circuit open · fallback cache · 无 cache → `503 CALENDAR_DEPENDENCY_DOWN · source=unavailable`
+- NFR: Sentinel QPS 阈值 500 · circuit breaker failureRatio > 50% · P95 ≤ 50ms · cache hit rate ≥ 80%
