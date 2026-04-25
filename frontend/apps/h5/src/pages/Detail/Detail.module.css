@@ -1,0 +1,433 @@
+/* S7 · DetailPage · 对标 design/mockups/wrongbook/06_wrongbook_detail.html · iOS HIG light */
+.root {
+  --blue: #007AFF;
+  --red: #FF3B30;
+  --orange: #FF9500;
+  --green: #34C759;
+  --indigo: #5856D6;
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --text: #1C1C1E;
+  --text2: #3C3C43;
+  --text3: #8E8E93;
+  --sep: rgba(60, 60, 67, 0.14);
+
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #E8EEFB 0%, transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, #F5E8FB 0%, transparent 55%),
+    linear-gradient(180deg, #EEF2F8 0%, #E6ECF5 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 100px;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  padding: 12px 18px 8px;
+  background: rgba(242, 242, 247, 0.78);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 0.5px solid var(--sep);
+  z-index: 20;
+}
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+}
+.back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--blue);
+  font-size: 17px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 44px;
+  padding: 0;
+}
+.navRight {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.navIcon {
+  background: transparent;
+  border: none;
+  color: var(--blue);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  font-size: 17px;
+}
+.navIconDanger { color: var(--red); }
+.navTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.36px;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pillRed {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--red);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+}
+
+.content {
+  padding: 14px 16px 16px;
+}
+
+/* Image card · 题目缩略图 + badge */
+.imgCard {
+  position: relative;
+  height: 170px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fbf8f0, #ece5d3);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 12px 24px rgba(40, 50, 90, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.imgCard img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+.imgPlaceholder {
+  font-family: Georgia, serif;
+  color: #222;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+  background: #fff;
+  border-radius: 6px;
+  width: 70%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+.imgBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* tabs */
+.stab {
+  margin-top: 14px;
+  display: flex;
+  background: rgba(118, 118, 128, 0.12);
+  border-radius: 10px;
+  padding: 2px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.stab button {
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--text2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.stab button.on {
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* brief card */
+.brief {
+  margin-top: 12px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+.kicker {
+  font-size: 11px;
+  color: var(--blue);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.tagRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 0.5px solid var(--sep);
+  background: var(--card);
+  color: var(--text2);
+  cursor: pointer;
+}
+.chipPrimary {
+  background: rgba(0, 122, 255, 0.08);
+  color: var(--blue);
+  border-color: rgba(0, 122, 255, 0.18);
+}
+.chipKp {
+  background: rgba(88, 86, 214, 0.08);
+  color: var(--indigo);
+  border-color: rgba(88, 86, 214, 0.18);
+}
+.tagEdit {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--blue);
+  background: rgba(0, 122, 255, 0.10);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  min-height: 32px;
+}
+.stem {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 10px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Section divider */
+.sec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 4px 8px;
+}
+.sec h3 {
+  font-size: 12px;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.secLine {
+  flex: 1;
+  height: 1px;
+  background: var(--sep);
+}
+
+/* Explain card */
+.explainCard {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  min-height: 80px;
+}
+.explainPlaceholder {
+  color: var(--text3);
+  font-style: italic;
+}
+
+/* Similar items */
+.similarList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.similarCard {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.similarHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.distance {
+  color: var(--text3);
+  font-weight: 600;
+}
+.similarStem {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+/* CTA bar bottom */
+.cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 84px;
+  padding: 14px 16px 24px;
+  background: linear-gradient(180deg, rgba(242, 242, 247, 0), rgba(242, 242, 247, 0.95) 30%, #F2F2F7 100%);
+  display: flex;
+  gap: 8px;
+  z-index: 30;
+}
+@media (min-width: 768px) {
+  .cta {
+    max-width: 414px;
+    margin: 0 auto;
+  }
+}
+.btnGhost, .btnPrimary {
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  border: 0;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btnGhost {
+  background: rgba(118, 118, 128, 0.12);
+  color: var(--text);
+}
+.btnPrimary {
+  flex: 2;
+  background: linear-gradient(180deg, #5FA8FF, var(--blue));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.28);
+}
+.btnPrimary:disabled {
+  background: rgba(118, 118, 128, 0.2);
+  color: var(--text3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Tag Sheet (Bottom Sheet) */
+.sheetBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+}
+.sheet {
+  background: var(--card);
+  width: 100%;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 16px 18px 28px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+@media (min-width: 768px) {
+  .sheet { max-width: 414px; margin: 0 auto; }
+}
+.sheetTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.sheetChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sheetInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 0.5px solid var(--sep);
+  background: rgba(118, 118, 128, 0.08);
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
+.sheetActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Modal · Confirm Delete */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--card);
+  border-radius: 16px;
+  max-width: 340px;
+  width: 100%;
+  padding: 18px;
+}
+.modalTitle {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.modalBody {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.modalFooter {
+  display: flex;
+  gap: 8px;
+}
