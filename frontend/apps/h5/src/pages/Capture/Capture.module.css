@@ -1,0 +1,371 @@
+/* S7 · CapturePage · 对标 design/mockups/wrongbook/02_capture.html · 暗黑相机风 */
+.root {
+  --blue: #007AFF;
+  --yellow: #FFCC00;
+  --red: #FF3B30;
+  --green: #34C759;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #0B0F1A;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* 顶部透明 nav */
+.nav {
+  position: sticky;
+  top: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  z-index: 25;
+  background: rgba(11, 15, 26, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(20px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+}
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* 中心 viewfinder area */
+.view {
+  position: relative;
+  height: 360px;
+  background: radial-gradient(800px 400px at 50% 30%, #1d2433 0%, #0B0F1A 65%);
+  overflow: hidden;
+  border-radius: 0;
+}
+.bracket {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 3px solid var(--yellow);
+  box-shadow: 0 0 18px rgba(255, 204, 0, 0.45);
+}
+.bracketTL { top: 14%; left: 14%; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.bracketTR { top: 14%; right: 14%; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+.bracketBL { bottom: 14%; left: 14%; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+.bracketBR { bottom: 14%; right: 14%; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+
+.scan {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 48%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.95), transparent);
+  box-shadow: 0 0 18px rgba(255, 204, 0, 0.7);
+}
+
+.detect {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px);
+  color: #fff;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 24;
+}
+.detectPulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.18);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.tip {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 50px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 0.1px;
+  z-index: 24;
+}
+.tip svg {
+  flex: 0 0 18px;
+  color: var(--yellow);
+}
+
+/* 文件预览 · 上传时显示 */
+.preview {
+  position: absolute;
+  inset: 24px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbf8f0, #f1ece0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 14px;
+}
+
+/* 下方控制区 */
+.dock {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* subject chips */
+.subjects {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.subjects::-webkit-scrollbar { display: none; }
+.subj {
+  flex: 0 0 auto;
+  height: 36px;
+  min-width: 56px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(18px);
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.subjOn {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--blue);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* mode tabs */
+.modes {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.modeBtn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 6px 0;
+  position: relative;
+}
+.modeOn {
+  color: var(--yellow);
+}
+.modeOn::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--yellow);
+  margin: 4px auto 0;
+}
+
+/* controls · gallery + shutter + manual */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 0 16px;
+}
+.controlBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 60px;
+  min-height: 60px;
+}
+.controlIc {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.shutter {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18),
+              0 0 0 8px rgba(255, 255, 255, 0.10),
+              0 14px 28px rgba(0, 0, 0, 0.35);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.shutterCore {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #5FA8FF, var(--blue));
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* 手动表单（选 manual mode 时） */
+.manualForm {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fieldLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+.fieldInput, .fieldTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+.fieldTextarea { min-height: 80px; }
+.fieldInput::placeholder, .fieldTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.submitBtn {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #5FA8FF, var(--blue));
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 8px 18px rgba(0, 122, 255, 0.3);
+}
+.submitBtn:disabled {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.banner {
+  margin: 12px 18px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 204, 0, 0.15);
+  border: 0.5px solid rgba(255, 204, 0, 0.4);
+  color: var(--yellow);
+  font-size: 13px;
+}
+
+.uploadProgress {
+  margin: 12px 18px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fileOk {
+  margin: 8px 18px;
+  font-size: 12px;
+  color: var(--green);
+}
+
+.draftHint {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 8px;
+}
+
+@media (min-width: 768px) {
+  .root {
+    max-width: 414px;
+    margin: 0 auto;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  }
+}
