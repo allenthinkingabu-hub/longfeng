@@ -71,8 +71,8 @@ describe('DetailPage · SC-02 + SC-03', () => {
     const deleteBtn = await findByTestId(TEST_IDS.wrongbookDetail.delete.btn);
     fireEvent.click(deleteBtn);
     await waitFor(() => {
-      // Modal 打开后 confirm 按钮出现（ui-kit Button 生成 {prefix}.btn）
-      expect(getByTestId(`${TEST_IDS.wrongbookDetail.delete.confirm}.btn`)).toBeInTheDocument();
+      // Sd.3 重写：用原生 button · testid 不带 .btn 后缀
+      expect(getByTestId(TEST_IDS.wrongbookDetail.delete.confirm)).toBeInTheDocument();
     });
   });
 });

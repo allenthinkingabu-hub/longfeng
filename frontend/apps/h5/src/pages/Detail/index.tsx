@@ -1,19 +1,23 @@
-// S7 · SC-02.AC-1 + SC-03.AC-1 + SC-04.AC-1 · 错题详情 · AI 讲解 SSE + Tag 编辑 + 相似题 + 软删除
+// S7 · SC-02.AC-1 + SC-03.AC-1 + SC-04.AC-1 · 错题详情 · 对标 design/mockups/wrongbook/06_wrongbook_detail.html
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { wrongbookClient, analysisClient, WrongItemVO, ExplainChunk } from '@longfeng/api-contracts';
-import { NavBar, Card, Tag, Sheet, Modal, Input, Button, Divider, Skeleton, Banner } from '@longfeng/ui-kit';
+import { wrongbookClient, analysisClient, ExplainChunk } from '@longfeng/api-contracts';
 import { TEST_IDS } from '@longfeng/testids';
+import s from './Detail.module.css';
 
 const SUBJECT_POOL = ['math', 'physics', 'chemistry', 'english'];
+const SUBJECT_LABEL: Record<string, string> = {
+  math: '数学', physics: '物理', chemistry: '化学', english: '英语',
+};
 
 export const DetailPage: React.FC = () => {
   const { id = '' } = useParams();
   const { t } = useTranslation();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const [stab, setStab] = useState<'explain' | 'plan'>('explain');
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['wrongbook', 'item', id],
@@ -47,17 +51,6 @@ export const DetailPage: React.FC = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [localTags, setLocalTags] = useState<string[]>([]);
   const [custom, setCustom] = useState('');
-
-  // 软删除（SC-04.AC-1）
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const softDelete = useMutation({
-    mutationFn: () => wrongbookClient.softDelete(id),
-    onSuccess: () => {
-      setConfirmDelete(false);
-      qc.invalidateQueries({ queryKey: ['wrongbook'] });
-      nav('/wrongbook', { replace: true });
-    },
-  });
   useEffect(() => {
     if (item) setLocalTags(item.tags);
   }, [item]);
@@ -76,207 +69,213 @@ export const DetailPage: React.FC = () => {
   const toggleTag = (tag: string) => {
     setLocalTags((p) => (p.includes(tag) ? p.filter((x) => x !== tag) : [...p, tag]));
   };
-
   const addCustom = () => {
     if (!custom.trim()) return;
-    const customTags = localTags.filter((t) => !SUBJECT_POOL.includes(t));
+    const customTags = localTags.filter((tg) => !SUBJECT_POOL.includes(tg));
     if (customTags.length >= 5) return;
     setLocalTags((p) => [...p, custom.trim()]);
     setCustom('');
   };
 
-  if (isLoading) {
+  // SC-04 软删除
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const softDelete = useMutation({
+    mutationFn: () => wrongbookClient.softDelete(id),
+    onSuccess: () => {
+      setConfirmDelete(false);
+      qc.invalidateQueries({ queryKey: ['wrongbook'] });
+      nav('/wrongbook', { replace: true });
+    },
+  });
+
+  if (isLoading || !item) {
     return (
-      <div style={{ padding: 16 }}>
-        <Skeleton height={120} />
+      <div className={s.root} data-testid={TEST_IDS.wrongbookDetail.root}>
+        <div className={s.content}><div className={s.explainPlaceholder}>{t('common.loading')}…</div></div>
       </div>
     );
   }
-  if (!item) return null;
+
+  const masteryLabel = item.mastery < 40 ? '未掌握' : item.mastery < 70 ? '部分' : '已掌握';
+  const subjectLabel = SUBJECT_LABEL[item.subject] ?? item.subject;
 
   return (
-    <div data-testid={TEST_IDS.wrongbookDetail.root}>
-      <NavBar
-        title={t('wrongbook_detail.title')}
-        onBack={() => nav(-1)}
-        testIdPrefix="wrongbook.detail"
-        right={
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            aria-label="删除"
-            data-testid={TEST_IDS.wrongbookDetail.delete.btn}
-            style={{
-              minHeight: 32,
-              minWidth: 44,
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--tkn-color-danger-default, #c0392b)',
-              fontSize: 13,
-              cursor: 'pointer',
-            }}
-          >
-            删除
+    <div className={s.root} data-testid={TEST_IDS.wrongbookDetail.root}>
+      <div className={s.nav}>
+        <div className={s.navRow}>
+          <button className={s.back} onClick={() => nav(-1)} data-testid="wrongbook.detail.back">
+            <svg width="12" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>{t('common.back')}</span>
           </button>
-        }
-      />
-
-      {/* 题干 · 图 · 标签 */}
-      <main style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <Card>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-            <Tag color="primary">{item.subject}</Tag>
-            {item.tags.map((t) => (
-              <Tag key={t}>{t}</Tag>
-            ))}
+          <div className={s.navRight}>
             <button
-              onClick={() => setSheetOpen(true)}
-              data-testid={TEST_IDS.wrongbookDetail['tag-sheet']}
-              style={{
-                minHeight: 28,
-                padding: '2px 8px',
-                fontSize: 12,
-                background: 'var(--tkn-color-button-default-light)',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-              }}
+              className={`${s.navIcon} ${s.navIconDanger}`}
+              onClick={() => setConfirmDelete(true)}
+              aria-label={t('common.delete')}
+              data-testid={TEST_IDS.wrongbookDetail.delete.btn}
             >
+              {t('common.delete')}
+            </button>
+          </div>
+        </div>
+        <h1 className={s.navTitle}>
+          {t('wrongbook_detail.title')}
+          <span className={s.pillRed}>{masteryLabel}</span>
+        </h1>
+      </div>
+
+      <div className={s.content}>
+        <div className={s.imgCard}>
+          {item.image_url ? (
+            <img src={item.image_url} alt="" data-testid={TEST_IDS.wrongbookDetail['image-view']} />
+          ) : (
+            <div className={s.imgPlaceholder}>{item.stem_text}</div>
+          )}
+          <div className={s.imgBadge}>{subjectLabel}</div>
+        </div>
+
+        <div className={s.stab} role="tablist">
+          <button role="tab" aria-selected={stab === 'explain'} className={stab === 'explain' ? s.on : ''} onClick={() => setStab('explain')}>
+            AI 讲解
+          </button>
+          <button role="tab" aria-selected={stab === 'plan'} className={stab === 'plan' ? s.on : ''} onClick={() => setStab('plan')}>
+            复习计划
+          </button>
+        </div>
+
+        <div className={s.brief}>
+          <div className={s.kicker}>{subjectLabel} · {item.tags[0] ?? '错题详情'}</div>
+          <div className={s.tagRow}>
+            <span className={`${s.chip} ${s.chipPrimary}`}>{subjectLabel}</span>
+            {item.tags.map((tg) => (
+              <span key={tg} className={`${s.chip} ${s.chipKp}`}>{tg}</span>
+            ))}
+            <button className={s.tagEdit} onClick={() => setSheetOpen(true)} data-testid={TEST_IDS.wrongbookDetail['tag-sheet']}>
               {t('wrongbook_detail.tag_edit')}
             </button>
           </div>
-          <div data-testid={TEST_IDS.wrongbookDetail['stem-text']} style={{ fontSize: 15, lineHeight: 1.6 }}>
+          <div className={s.stem} data-testid={TEST_IDS.wrongbookDetail['stem-text']}>
             {item.stem_text}
           </div>
-          {item.image_url && (
-            <img
-              data-testid={TEST_IDS.wrongbookDetail['image-view']}
-              src={item.image_url}
-              alt=""
-              style={{ width: '100%', borderRadius: 8, marginTop: 8 }}
-            />
-          )}
-        </Card>
+        </div>
 
-        <Divider text={t('wrongbook_detail.explain_title')} />
-        <Card>
-          {streamError && <Banner type="error" message={streamError} testIdPrefix="wrongbook.detail.explain" />}
-          <div
-            data-testid={TEST_IDS.wrongbookDetail['explain-stream']}
-            aria-live="polite"
-            style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}
-          >
-            {explain || t('wrongbook_detail.explain_loading')}
-          </div>
-        </Card>
-
-        {similar?.items && similar.items.length > 0 && (
+        {stab === 'explain' && (
           <>
-            <Divider text={t('wrongbook_detail.similar_title')} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {similar.items.map((s) => (
-                <Card
-                  key={s.id}
-                  testIdPrefix={TEST_IDS.wrongbookDetail['similar-card']}
-                  padding={12}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Tag color="primary">{s.subject}</Tag>
-                    <span style={{ fontSize: 12, color: 'var(--tkn-color-text-secondary)' }}>
-                      d={s.distance.toFixed(2)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 14 }}>{s.stem_text.slice(0, 80)}</div>
-                </Card>
-              ))}
+            <div className={s.sec}>
+              <h3>{t('wrongbook_detail.explain_title')}</h3>
+              <span className={s.secLine} />
             </div>
+            <div className={s.explainCard} data-testid={TEST_IDS.wrongbookDetail['explain-stream']} aria-live="polite">
+              {streamError ? (
+                <span style={{ color: '#FF3B30' }}>{streamError}</span>
+              ) : explain || (
+                <span className={s.explainPlaceholder}>{t('wrongbook_detail.explain_loading')}</span>
+              )}
+            </div>
+
+            {similar?.items && similar.items.length > 0 && (
+              <>
+                <div className={s.sec}>
+                  <h3>{t('wrongbook_detail.similar_title')}</h3>
+                  <span className={s.secLine} />
+                </div>
+                <div className={s.similarList}>
+                  {similar.items.map((sim) => (
+                    <div key={sim.id} className={s.similarCard} data-testid={TEST_IDS.wrongbookDetail['similar-card']}>
+                      <div className={s.similarHead}>
+                        <span className={s.kicker}>{SUBJECT_LABEL[sim.subject] ?? sim.subject}</span>
+                        <span className={s.distance}>d={sim.distance.toFixed(2)}</span>
+                      </div>
+                      <div className={s.similarStem}>{sim.stem_text.slice(0, 80)}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
-      </main>
 
-      {/* Tag 编辑 Sheet */}
-      <Sheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title={t('wrongbook_detail.tag_sheet_title')}
-        testIdPrefix="wrongbook.detail.tag-sheet"
-      >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-          {SUBJECT_POOL.map((tk) => {
-            const active = localTags.includes(tk);
-            return (
+        {stab === 'plan' && (
+          <div className={s.brief}>
+            <div className={s.kicker}>艾宾浩斯节点 · 7 天 · 14 天 · 30 天</div>
+            <div className={s.stem}>掌握度 {item.mastery}% · 下次复习时间见列表 / 日历</div>
+          </div>
+        )}
+      </div>
+
+      <div className={s.cta}>
+        <button className={s.btnGhost} onClick={() => setSheetOpen(true)}>{t('wrongbook_detail.tag_edit')}</button>
+        <button className={s.btnPrimary} data-testid={TEST_IDS.wrongbookDetail['review-entry']}>
+          {t('wrongbook_detail.review_entry')}
+        </button>
+      </div>
+
+      {sheetOpen && (
+        <div className={s.sheetBackdrop} onClick={() => setSheetOpen(false)}>
+          <div className={s.sheet} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('wrongbook_detail.tag_sheet_title')}>
+            <div className={s.sheetTitle}>{t('wrongbook_detail.tag_sheet_title')}</div>
+            <div className={s.sheetChips}>
+              {SUBJECT_POOL.map((tg) => {
+                const active = localTags.includes(tg);
+                return (
+                  <button
+                    key={tg}
+                    className={`${s.chip} ${active ? s.chipPrimary : ''}`}
+                    onClick={() => toggleTag(tg)}
+                    data-testid={TEST_IDS.wrongbookDetail['tag-chip']}
+                  >
+                    {SUBJECT_LABEL[tg]}
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              className={s.sheetInput}
+              placeholder={t('wrongbook_detail.tag_custom_placeholder')}
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              data-testid={TEST_IDS.wrongbookDetail['tag-custom-input']}
+            />
+            <button className={s.btnGhost} onClick={addCustom} style={{ width: '100%' }}>+ 添加</button>
+            <div className={s.sheetActions}>
+              <button className={s.btnGhost} onClick={() => setSheetOpen(false)}>{t('common.cancel')}</button>
               <button
-                key={tk}
-                data-testid={TEST_IDS.wrongbookDetail['tag-chip']}
-                onClick={() => toggleTag(tk)}
-                style={{
-                  minHeight: 32,
-                  padding: '4px 12px',
-                  border: `1px solid ${active ? 'var(--tkn-color-primary-default)' : 'var(--tkn-color-button-default-light)'}`,
-                  background: active ? 'var(--tkn-color-primary-default)' : 'transparent',
-                  color: active ? 'var(--tkn-color-white)' : 'var(--tkn-color-text-primary)',
-                  borderRadius: 16,
-                  fontSize: 13,
-                  cursor: 'pointer',
-                }}
+                className={s.btnPrimary}
+                onClick={() => saveTags.mutate()}
+                disabled={saveTags.isPending}
+                data-testid={TEST_IDS.wrongbookDetail['tag-save']}
               >
-                {tk}
+                {saveTags.isPending ? '…' : t('wrongbook_detail.tag_save')}
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
-        <Input
-          placeholder={t('wrongbook_detail.tag_custom_placeholder')}
-          value={custom}
-          onChange={(e) => setCustom(e.target.value)}
-          testIdPrefix={TEST_IDS.wrongbookDetail['tag-custom-input']}
-        />
-        <div style={{ marginTop: 8 }}>
-          <Button variant="secondary" onClick={addCustom} testIdPrefix="wrongbook.detail.tag-add">
-            +
-          </Button>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <Button
-            variant="primary"
-            block
-            onClick={() => saveTags.mutate()}
-            loading={saveTags.isPending}
-            testIdPrefix={TEST_IDS.wrongbookDetail['tag-save']}
-          >
-            {t('wrongbook_detail.tag_save')}
-          </Button>
-        </div>
-      </Sheet>
+      )}
 
-      {/* SC-04.AC-1 · 删除确认 */}
-      <Modal
-        open={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        title="确认删除"
-        testIdPrefix="wrongbook.detail.delete.confirm-modal"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setConfirmDelete(false)}
-              testIdPrefix={TEST_IDS.wrongbookDetail.delete.cancel}
-            >
-              取消
-            </Button>
-            <Button
-              variant="danger"
-              loading={softDelete.isPending}
-              onClick={() => softDelete.mutate()}
-              testIdPrefix={TEST_IDS.wrongbookDetail.delete.confirm}
-            >
-              删除
-            </Button>
-          </>
-        }
-      >
-        删除后此错题 7 天内可在「设置 → 回收站」恢复，之后永久清除。
-      </Modal>
+      {confirmDelete && (
+        <div className={s.modalBackdrop} onClick={() => setConfirmDelete(false)}>
+          <div className={s.modal} onClick={(e) => e.stopPropagation()} role="dialog">
+            <div className={s.modalTitle}>确认删除</div>
+            <div className={s.modalBody}>删除后此错题 7 天内可在「设置 → 回收站」恢复，之后永久清除。</div>
+            <div className={s.modalFooter}>
+              <button className={s.btnGhost} onClick={() => setConfirmDelete(false)} data-testid={TEST_IDS.wrongbookDetail.delete.cancel}>
+                {t('common.cancel')}
+              </button>
+              <button
+                className={s.btnPrimary}
+                style={{ background: 'linear-gradient(180deg,#FF6B5E,#FF3B30)', boxShadow: '0 10px 24px rgba(255,59,48,.28)' }}
+                onClick={() => softDelete.mutate()}
+                disabled={softDelete.isPending}
+                data-testid={TEST_IDS.wrongbookDetail.delete.confirm}
+              >
+                {softDelete.isPending ? '…' : t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
