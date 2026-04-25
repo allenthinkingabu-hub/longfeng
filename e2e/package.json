@@ -1,10 +1,16 @@
 {
   "name": "@longfeng/e2e",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Playwright E2E test root · SC-01..SC-15 · real suites in Phase S9",
+  "description": "S7 · Playwright smoke + miniprogram-automator · V-S7-11/12/20d 视觉回归",
   "scripts": {
-    "test": "echo \"[e2e] skeleton test noop (Phase S9)\"",
-    "smoke": "echo \"[e2e] skeleton smoke noop (Phase S9)\""
+    "test": "playwright test",
+    "smoke": "playwright test --reporter=list",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "@axe-core/playwright": "^4.9.1",
+    "miniprogram-automator": "^0.11.0"
   }
 }
