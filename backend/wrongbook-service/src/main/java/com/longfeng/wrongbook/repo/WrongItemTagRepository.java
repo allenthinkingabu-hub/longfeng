@@ -17,4 +17,8 @@ public interface WrongItemTagRepository extends JpaRepository<WrongItemTag, Long
   @Query("delete from WrongItemTag t where t.wrongItemId = :wrongItemId and t.tagCode = :tagCode")
   int deleteByWrongItemIdAndTagCode(
       @Param("wrongItemId") Long wrongItemId, @Param("tagCode") String tagCode);
+
+  @Modifying
+  @Query("delete from WrongItemTag t where t.wrongItemId = :wrongItemId")
+  void deleteByWrongItemId(@Param("wrongItemId") Long wrongItemId);
 }
