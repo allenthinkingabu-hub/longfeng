@@ -52,6 +52,8 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
     jdbc.update("DELETE FROM wrong_attempt");
     jdbc.update("DELETE FROM wrong_item_outbox");
     jdbc.update("DELETE FROM audit_log");
+    jdbc.update("DELETE FROM review_plan");
+    jdbc.update("DELETE FROM wrong_item_analysis");
     jdbc.update("DELETE FROM wrong_item");
     jdbc.update(
         "INSERT INTO user_account (id, username, role, status) VALUES (?, ?, 'STUDENT', 1) "
@@ -96,9 +98,9 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
     long id = createItem("rid-create", "2x + 3 = 7");
     mvc.perform(get("/wrongbook/items/" + id))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.id").value(id))
+        .andExpect(jsonPath("$.data.id").value(String.valueOf(id)))
         .andExpect(jsonPath("$.data.subject").value("math"))
-        .andExpect(jsonPath("$.data.status").value(0));
+        .andExpect(jsonPath("$.data.status").value("pending"));
   }
 
   @Test
@@ -191,16 +193,22 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
   }
 
   @Test
-  @DisplayName("tag · add then remove")
+  @DisplayName("tag · bulk replace via PATCH (G-01)")
   void tagLifecycle() throws Exception {
     long id = createItem("rid-tag", "tag-test");
-    Map<String, Object> addBody = Map.of("tagCode", "math.algebra.linear", "weight", 0.95);
+    Map<String, Object> replaceBody = Map.of("tags", List.of("math.algebra.linear"));
     mvc.perform(
-            post("/wrongbook/items/" + id + "/tags")
+            patch("/wrongbook/items/" + id + "/tags")
+                .header("If-Match", 0)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(addBody)))
-        .andExpect(status().isOk());
-    mvc.perform(delete("/wrongbook/items/" + id + "/tags/math.algebra.linear"))
+                .content(om.writeValueAsString(replaceBody)))
+        .andExpect(status().isNoContent());
+    // clear all tags
+    mvc.perform(
+            patch("/wrongbook/items/" + id + "/tags")
+                .header("If-Match", 0)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(Map.of("tags", List.of()))))
         .andExpect(status().isNoContent());
   }
 

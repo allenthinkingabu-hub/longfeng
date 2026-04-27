@@ -1,7 +1,7 @@
 package com.longfeng.wrongbook.controller;
 
 import com.longfeng.common.dto.ApiResult;
-import com.longfeng.wrongbook.dto.AddTagReq;
+import com.longfeng.wrongbook.dto.BulkTagReq;
 import com.longfeng.wrongbook.dto.ConfirmImageReq;
 import com.longfeng.wrongbook.dto.CreateWrongItemReq;
 import com.longfeng.wrongbook.dto.SetDifficultyReq;
@@ -52,14 +52,16 @@ public class WrongItemController {
         .orElseThrow(() -> new WrongItemService.NotFoundException("wrong_item not found: " + id));
   }
 
+  /** G-08: status param accepts 'active'|'mastered' string; tagCode for tag filter. */
   @GetMapping
   public ApiResult<WrongItemPageVO> page(
       @RequestParam(required = false) String subject,
-      @RequestParam(required = false) Short status,
+      @RequestParam(required = false) String status,
+      @RequestParam(required = false) String tagCode,
       @RequestParam(required = false) Long studentId,
       @RequestParam(required = false) Long cursor,
       @RequestParam(defaultValue = "20") int size) {
-    return ApiResult.ok(service.page(subject, status, studentId, cursor, size));
+    return ApiResult.ok(service.page(subject, status, tagCode, studentId, cursor, size));
   }
 
   @PatchMapping("/{id}")
@@ -78,21 +80,14 @@ public class WrongItemController {
     return ResponseEntity.noContent().build();
   }
 
-  @PostMapping("/{id}/tags")
-  public ApiResult<Void> addTag(
+  /** G-01: bulk replace tags — replaces entire tag list atomically. */
+  @PatchMapping("/{id}/tags")
+  public ResponseEntity<Void> replaceTags(
       @PathVariable Long id,
-      @Valid @RequestBody AddTagReq req,
+      @Valid @RequestBody BulkTagReq req,
+      @RequestHeader(name = "If-Match", required = false) Long ifMatch,
       @RequestHeader(name = "X-Request-Id", required = false) String requestId) {
-    service.addTag(id, req, requestId);
-    return ApiResult.ok(null);
-  }
-
-  @DeleteMapping("/{id}/tags/{tagCode}")
-  public ResponseEntity<Void> removeTag(
-      @PathVariable Long id,
-      @PathVariable String tagCode,
-      @RequestHeader(name = "X-Request-Id", required = false) String requestId) {
-    service.removeTag(id, tagCode, requestId);
+    service.replaceTags(id, req, ifMatch, requestId);
     return ResponseEntity.noContent().build();
   }
 

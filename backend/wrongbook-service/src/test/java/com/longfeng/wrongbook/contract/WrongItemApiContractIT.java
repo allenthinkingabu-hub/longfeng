@@ -39,7 +39,7 @@ class WrongItemApiContractIT extends WrongbookIntegrationTestBase {
     assertThat(paths.has("/wrongbook/items")).isTrue();
     assertThat(paths.has("/wrongbook/items/{id}")).isTrue();
     assertThat(paths.has("/wrongbook/items/{id}/tags")).isTrue();
-    assertThat(paths.has("/wrongbook/items/{id}/tags/{tagCode}")).isTrue();
+    assertThat(paths.has("/wrongbook/tags")).isTrue();
     assertThat(paths.has("/wrongbook/items/{id}/images")).isTrue();
     assertThat(paths.has("/wrongbook/items/{id}/difficulty")).isTrue();
     assertThat(paths.has("/wrongbook/items/{id}/attempts")).isTrue();
