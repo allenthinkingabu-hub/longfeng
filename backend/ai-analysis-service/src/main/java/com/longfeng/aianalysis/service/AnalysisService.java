@@ -223,7 +223,7 @@ public class AnalysisService {
     @SuppressWarnings("unchecked")
     List<Object[]> rows =
         em.createNativeQuery(
-                "SELECT id, stem_text, subject, 1 - (embedding <=> CAST(:probe AS vector)) AS distance "
+                "SELECT id, stem_text, subject, (embedding <=> CAST(:probe AS vector)) AS distance "
                     + "FROM wrong_item "
                     + "WHERE embedding IS NOT NULL "
                     + "  AND id <> :itemId "

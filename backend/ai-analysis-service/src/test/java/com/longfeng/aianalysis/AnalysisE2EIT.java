@@ -14,6 +14,7 @@ import com.longfeng.aianalysis.entity.WrongItemAnalysis;
 import com.longfeng.aianalysis.event.ItemChangedEvent;
 import com.longfeng.aianalysis.llm.LlmProvider;
 import com.longfeng.aianalysis.llm.StubProvider;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -255,7 +256,7 @@ class AnalysisE2EIT extends AiAnalysisIntegrationTestBase {
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
-            .getContentAsString();
+            .getContentAsString(StandardCharsets.UTF_8);
     assertThat(body).contains("\"done\":true").contains("尚未分析");
   }
 

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.DispatcherServlet;
 
 /**
@@ -24,6 +25,13 @@ import org.springframework.web.servlet.DispatcherServlet;
 public class GlobalExceptionHandler {
 
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+  /** Let Spring's own ResponseStatusException propagate with its intended HTTP status code. */
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<ApiResult<Void>> handleResponseStatus(ResponseStatusException e) {
+    return ResponseEntity.status(e.getStatusCode())
+        .body(ApiResult.fail(e.getStatusCode().value(), e.getReason() != null ? e.getReason() : e.getMessage()));
+  }
 
   @ExceptionHandler(BizException.class)
   public ResponseEntity<ApiResult<Void>> handleBiz(BizException e) {
