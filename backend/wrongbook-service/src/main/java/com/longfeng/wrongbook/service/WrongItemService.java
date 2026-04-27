@@ -3,7 +3,7 @@ package com.longfeng.wrongbook.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.longfeng.wrongbook.domain.WrongItemStatus;
-import com.longfeng.wrongbook.dto.AddTagReq;
+import com.longfeng.wrongbook.dto.BulkTagReq;
 import com.longfeng.wrongbook.dto.ConfirmImageReq;
 import com.longfeng.wrongbook.dto.CreateWrongItemReq;
 import com.longfeng.wrongbook.dto.SetDifficultyReq;
@@ -29,7 +29,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Limit;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,7 +97,6 @@ public class WrongItemService {
             saved.getVersion(),
             Instant.now()));
 
-    // Fire-and-forget idempotency claim; if Redis races, DB unique-per-requestId can be added later.
     idempotency.tryClaim(requestId, saved.getId());
     return toVo(saved);
   }
@@ -109,10 +107,16 @@ public class WrongItemService {
   }
 
   @Transactional(readOnly = true)
-  public WrongItemPageVO page(String subject, Short status, Long studentId, Long cursor, int size) {
+  public WrongItemPageVO page(
+      String subject,
+      String statusGroup,
+      String tagCode,
+      Long studentId,
+      Long cursor,
+      int size) {
     int capped = Math.min(Math.max(size, 1), 100);
-    List<WrongItem> rows =
-        itemRepo.page(subject, status, studentId, cursor, Limit.of(capped + 1));
+    List<Short> statuses = resolveStatusGroup(statusGroup);
+    List<WrongItem> rows = itemRepo.findPage(subject, statuses, tagCode, studentId, cursor, capped + 1);
     boolean more = rows.size() > capped;
     List<WrongItem> page = more ? rows.subList(0, capped) : rows;
     String nextCursor = more ? String.valueOf(page.get(page.size() - 1).getId()) : null;
@@ -174,26 +178,32 @@ public class WrongItemService {
             id, WrongItemChangedEvent.ACTION_DELETED, version, Instant.now()));
   }
 
+  /** G-01: bulk replace tags (PATCH semantics — delete-all then re-insert). */
   @Transactional
-  public void addTag(Long itemId, AddTagReq req, String requestId) {
+  public void replaceTags(Long itemId, BulkTagReq req, Long ifMatchVersion, String requestId) {
     WrongItem item =
         itemRepo
             .findById(itemId)
             .orElseThrow(() -> new NotFoundException("wrong_item not found: " + itemId));
-    TagTaxonomy tag =
-        taxonomyRepo
-            .findByCode(req.tagCode())
-            .orElseThrow(() -> new NotFoundException("tag not found: " + req.tagCode()));
-    if (tagRepo.findByWrongItemIdAndTagCode(itemId, tag.getCode()).isPresent()) {
-      return;
+    if (!item.getVersion().equals(ifMatchVersion)) {
+      throw new ObjectOptimisticLockingFailureException(WrongItem.class, itemId);
     }
-    WrongItemTag row = new WrongItemTag();
-    row.setId(ids.nextId());
-    row.setWrongItemId(itemId);
-    row.setTagCode(tag.getCode());
-    row.setWeight(req.weight() == null ? new BigDecimal("1.000") : req.weight());
-    tagRepo.save(row);
-    writeAudit(itemId, "add-tag", req, requestId);
+    tagRepo.deleteByWrongItemId(itemId);
+    if (req.tags() != null) {
+      for (String code : req.tags()) {
+        TagTaxonomy tag =
+            taxonomyRepo
+                .findByCode(code)
+                .orElseThrow(() -> new NotFoundException("tag not found: " + code));
+        WrongItemTag row = new WrongItemTag();
+        row.setId(ids.nextId());
+        row.setWrongItemId(itemId);
+        row.setTagCode(tag.getCode());
+        row.setWeight(new BigDecimal("1.000"));
+        tagRepo.save(row);
+      }
+    }
+    writeAudit(itemId, "replace-tags", req, requestId);
     producer.publish(
         new WrongItemChangedEvent(
             itemId,
@@ -202,23 +212,13 @@ public class WrongItemService {
             Instant.now()));
   }
 
-  @Transactional
-  public void removeTag(Long itemId, String tagCode, String requestId) {
-    WrongItem item =
-        itemRepo
-            .findById(itemId)
-            .orElseThrow(() -> new NotFoundException("wrong_item not found: " + itemId));
-    int affected = tagRepo.deleteByWrongItemIdAndTagCode(itemId, tagCode);
-    if (affected == 0) {
-      throw new NotFoundException("tag not associated: " + tagCode);
+  /** G-02: return active tags from taxonomy. */
+  @Transactional(readOnly = true)
+  public List<TagTaxonomy> getActiveTags(String subject) {
+    if (subject != null && !subject.isBlank()) {
+      return taxonomyRepo.findBySubjectAndStatus(subject, (short) 1);
     }
-    writeAudit(itemId, "remove-tag", tagCode, requestId);
-    producer.publish(
-        new WrongItemChangedEvent(
-            itemId,
-            WrongItemChangedEvent.ACTION_UPDATED,
-            item.getVersion(),
-            Instant.now()));
+    return taxonomyRepo.findByStatus((short) 1);
   }
 
   @Transactional
@@ -311,7 +311,7 @@ public class WrongItemService {
         e.getProcessedImageKey(),
         e.getOcrText(),
         e.getStemText(),
-        e.getStatus(),
+        mapStatus(e.getStatus()),
         e.getMastery(),
         e.getDifficulty(),
         e.getVersion(),
@@ -319,6 +319,26 @@ public class WrongItemService {
         e.getUpdatedAt(),
         tags,
         images);
+  }
+
+  /** G-03: maps internal SMALLINT status to frontend string. */
+  private static String mapStatus(Short code) {
+    if (code == null) return "pending";
+    return switch (code) {
+      case 0 -> "pending";
+      case 1 -> "analyzing";
+      default -> "completed";
+    };
+  }
+
+  /** "active" = all non-mastered/non-archived; "mastered" = mastered only. */
+  private static List<Short> resolveStatusGroup(String statusGroup) {
+    if (statusGroup == null) return null;
+    return switch (statusGroup) {
+      case "active" -> List.of((short) 0, (short) 1, (short) 2, (short) 3);
+      case "mastered" -> List.of((short) 8);
+      default -> null;
+    };
   }
 
   private void writeAudit(Long targetId, String action, Object payload, String requestId) {
