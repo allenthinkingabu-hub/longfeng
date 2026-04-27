@@ -93,8 +93,7 @@
 
 ## 六、User 决策
 
-- [ ] **接受**当前视觉偏差（14.00%，超阈值 6pp）——色系冲突为已知 CONFLICT，不属于实现 bug
-- [ ] **打回** Builder 修复色系：先在 token-mapping-review.md 做颜色决策，再重测
-- [ ] 接受合规评分（4/4 ✅）
-- [ ] 排查 P2：filter sheet testid 问题（`wrongbook.list.filter-sheet` 是否已写入 TSX？）
-- [ ] 接受 OCR/SSE/持久化延迟验证（A 轨 Sprint 联调时验）
+- [x] **接受**当前视觉偏差（14.00%，超阈值 6pp）——色系冲突为已知 CONFLICT，不属于实现 bug · 已接受 2026-04-27
+- [x] 接受合规评分（4/4 ✅）
+- [x] P2 filter sheet 已修复（filterOpen state + Sheet 组件 + filter-subject testid）
+- [x] 接受 OCR/SSE/持久化延迟验证（A 轨 Sprint 联调时验）

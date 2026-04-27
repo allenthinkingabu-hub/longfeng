@@ -9,7 +9,9 @@ export const analysisClient = {
 
   /** SSE 订阅 · onChunk 流式回调 · 返回 close 函数 */
   explainStream(itemId: string, onChunk: (chunk: ExplainChunk) => void, onError?: (e: unknown) => void): () => void {
-    const es = new EventSource(`/api/v1/analysis/${itemId}`);
+    let token = '';
+    try { token = localStorage.getItem('access_token') ?? ''; } catch { /* ignore */ }
+    const es = new EventSource(`/api/v1/analysis/${itemId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data) as ExplainChunk;

@@ -12,7 +12,7 @@
     "error_network": "网络异常，请重试"
   },
   "capture": {
-    "title": "录入错题",
+    "title": "拍下错题",
     "tab_camera": "拍照",
     "tab_gallery": "相册",
     "tab_manual": "手动输入",

@@ -180,7 +180,7 @@ export const CapturePage: React.FC = () => {
 
       <div className={s.dock}>
         {/* subject quick selector */}
-        <div className={s.subjects}>
+        <div className={s.subjects} data-testid={TEST_IDS.capture.form.subject}>
           {SUBJECTS.map((sj) => (
             <button
               key={sj.value}

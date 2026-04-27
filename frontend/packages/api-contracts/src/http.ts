@@ -54,7 +54,12 @@ async function request<T>(method: string, path: string, body?: unknown, config?:
     throw err;
   }
   if (res.status === 204) return undefined as unknown as T;
-  return (await res.json()) as T;
+  const json = await res.json();
+  // Unwrap ApiResult envelope { code, message, data } from real backend
+  if (json && typeof json === 'object' && 'code' in json && 'data' in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 export const httpClient = {

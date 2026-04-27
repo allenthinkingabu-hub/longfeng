@@ -49,6 +49,13 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     String auth = exchange.getRequest().getHeaders().getFirst("Authorization");
+    // EventSource cannot send Authorization headers; accept token from query param as fallback
+    if (auth == null || !auth.startsWith("Bearer ")) {
+      String tokenParam = exchange.getRequest().getQueryParams().getFirst("token");
+      if (tokenParam != null && !tokenParam.isBlank()) {
+        auth = "Bearer " + tokenParam;
+      }
+    }
     if (auth == null || !auth.startsWith("Bearer ")) {
       return unauthorized(exchange);
     }

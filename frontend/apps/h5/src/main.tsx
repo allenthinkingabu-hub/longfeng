@@ -19,8 +19,12 @@ const queryClient = new QueryClient({
 
 async function bootstrap() {
   if (import.meta.env.DEV) {
-    const { worker } = await import('./__mocks__/browser');
-    await worker.start({ onUnhandledRequest: 'bypass' });
+    try {
+      const { worker } = await import('./__mocks__/browser');
+      await worker.start({ onUnhandledRequest: 'bypass' });
+    } catch {
+      // service workers unavailable (e2e with sw blocked)
+    }
   }
 
   ReactDOM.createRoot(document.getElementById('root')!).render(

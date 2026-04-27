@@ -22,7 +22,7 @@ export const wrongbookClient = {
   },
 
   updateTags(id: string, payload: TagUpdatePayload): Promise<void> {
-    return httpClient.patch(`/wrongbook/items/${id}/tags`, payload.tags, {
+    return httpClient.patch(`/wrongbook/items/${id}/tags`, { tags: payload.tags }, {
       headers: { 'If-Match': String(payload.version) },
     });
   },
