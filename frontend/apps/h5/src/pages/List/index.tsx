@@ -5,6 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { wrongbookClient, WrongItemVO, WrongItemListResponse } from '@longfeng/api-contracts';
 import { TEST_IDS } from '@longfeng/testids';
+import { Button } from '@longfeng/ui-kit';
 import s from './List.module.css';
 
 type StatusTab = 'active' | 'mastered';
@@ -184,15 +185,16 @@ export const ListPage: React.FC = () => {
         ))}
 
         {query.hasNextPage && (
-          <button
-            className={s.card}
+          <Button
+            variant="ghost"
+            block
             onClick={() => query.fetchNextPage()}
             disabled={query.isFetchingNextPage}
             data-testid={TEST_IDS.wrongbookList['load-more']}
-            style={{ justifyContent: 'center', textAlign: 'center', display: 'flex' }}
+            style={{ color: 'var(--tkn-color-primary-default)', fontWeight: 600 }}
           >
-            <span className={s.loadMoreText}>{t('wrongbook_list.load_more')}</span>
-          </button>
+            {t('wrongbook_list.load_more')}
+          </Button>
         )}
       </div>
 
