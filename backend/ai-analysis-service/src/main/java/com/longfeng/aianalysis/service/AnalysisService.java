@@ -3,6 +3,7 @@ package com.longfeng.aianalysis.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.longfeng.aianalysis.entity.AiUsageLog;
 import com.longfeng.aianalysis.entity.WrongItemAnalysis;
 import com.longfeng.aianalysis.llm.LlmProvider;
@@ -11,8 +12,12 @@ import com.longfeng.aianalysis.pii.PIIRedactor;
 import com.longfeng.aianalysis.prompt.PromptTemplates;
 import com.longfeng.aianalysis.repo.AiUsageLogRepository;
 import com.longfeng.aianalysis.repo.WrongItemAnalysisRepository;
+import com.longfeng.aianalysis.service.dto.AnalysisVO;
 import com.longfeng.aianalysis.support.SnowflakeIdGenerator;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -30,6 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AnalysisService {
 
   private static final Logger LOG = LoggerFactory.getLogger(AnalysisService.class);
+
+  /** Embedding vector dimension locked by INV-05 / BR-09 (pgvector vector(1024)). */
+  static final int EMBEDDING_DIM = 1024;
 
   private final WrongItemAnalysisRepository analysisRepo;
   private final AiUsageLogRepository usageRepo;
@@ -141,6 +149,76 @@ public class AnalysisService {
     return version;
   }
 
+  /**
+   * Read the latest (max version) analysis row for a wrong-item and project it as the REST DTO.
+   * Returns {@link Optional#empty()} when no analysis row exists — controller layer translates
+   * that to an HTTP 404. Read-only · no transaction needed beyond Spring Data's default.
+   */
+  @Transactional(readOnly = true)
+  public Optional<AnalysisVO> findLatest(Long itemId) {
+    return analysisRepo.findTopByWrongItemIdOrderByVersionDesc(itemId).map(this::toVO);
+  }
+
+  /**
+   * Admin-triggered re-run for a wrong-item (BR-06). Reuses the main {@link #analyze(Long, boolean)}
+   * pipeline with {@code bypassIdempotency=true} so a fresh row lands at {@code maxVersion + 1} —
+   * historical rows stay immutable per BR-07. Authorization (admin gate) is enforced at the
+   * controller layer; this method assumes the caller is already authorized.
+   *
+   * @return the version code newly written ({@code -1} when the wrong-item itself is missing)
+   */
+  public int retry(Long itemId) {
+    return analyze(itemId, true);
+  }
+
+  private AnalysisVO toVO(WrongItemAnalysis a) {
+    JsonNode solutionSteps = readJsonOrNull(a.getSolutionSteps());
+    List<String> autoTags = readStringArray(a.getKnowledgePoints());
+    return new AnalysisVO(
+        a.getId() == null ? null : String.valueOf(a.getId()),
+        a.getWrongItemId() == null ? null : String.valueOf(a.getWrongItemId()),
+        a.getVersion() == null ? 0 : a.getVersion(),
+        a.getModelProvider(),
+        a.getModelName(),
+        AnalysisVO.mapStatus(a.getStatus()),
+        a.getErrorReason(),
+        a.getErrorType(),
+        autoTags,
+        solutionSteps,
+        a.getFinishedAt() == null ? null : a.getFinishedAt().toString());
+  }
+
+  private JsonNode readJsonOrNull(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return null;
+    }
+    try {
+      return om.readTree(raw);
+    } catch (Exception ex) {
+      LOG.warn("solution_steps JSON parse failed · returning null · raw len={}", raw.length());
+      return null;
+    }
+  }
+
+  private List<String> readStringArray(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return Collections.emptyList();
+    }
+    try {
+      JsonNode n = om.readTree(raw);
+      if (n instanceof ArrayNode arr) {
+        List<String> out = new ArrayList<>(arr.size());
+        for (JsonNode el : arr) {
+          out.add(el.asText());
+        }
+        return out;
+      }
+    } catch (Exception ex) {
+      LOG.warn("knowledge_points JSON parse failed · returning empty list");
+    }
+    return Collections.emptyList();
+  }
+
   private JsonNode parseOrFallback(String raw) {
     if (raw == null || raw.isBlank()) return null;
     try {
@@ -153,6 +231,11 @@ public class AnalysisService {
   }
 
   private void updateEmbedding(Long itemId, float[] embedding) {
+    // BR-09 / INV-05 — service-layer guard so the violation surfaces before the SQL roundtrip.
+    if (embedding == null || embedding.length != EMBEDDING_DIM) {
+      throw new IllegalStateException(
+          "embedding dimension must be " + EMBEDDING_DIM + " · got=" + (embedding == null ? "null" : embedding.length));
+    }
     StringBuilder sb = new StringBuilder("[");
     for (int i = 0; i < embedding.length; i++) {
       if (i > 0) sb.append(',');
