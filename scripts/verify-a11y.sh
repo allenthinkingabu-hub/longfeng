@@ -68,8 +68,30 @@ pnpm exec test-storybook --url http://127.0.0.1:6007 --maxWorkers=2 2>&1 | tee /
 RC=${PIPESTATUS[0]}
 set -e
 
+# 写 Sd.7 a11y.json 报告（不论绿红 · 留 artifact）
+REPORT="$REPO_ROOT/design/system/reports/a11y.json"
+mkdir -p "$(dirname "$REPORT")"
+NOW=$(date -u +%Y-%m-%dT%H:%M:%S+08:00)
+TESTS_LINE=$(grep -oE 'Tests: +[0-9]+ +failed, +[0-9]+ +passed, +[0-9]+ +total|Tests: +[0-9]+ +passed, +[0-9]+ +total' /tmp/sb-axe.log 2>/dev/null | tail -1)
+PASSED=$(echo "$TESTS_LINE" | grep -oE '[0-9]+ passed' | head -1 | grep -oE '[0-9]+' || echo 0)
+FAILED=$(echo "$TESTS_LINE" | grep -oE '[0-9]+ failed' | head -1 | grep -oE '[0-9]+' || echo 0)
+STATUS=$([[ "$RC" -eq 0 ]] && echo "green" || echo "red")
+cat > "$REPORT" <<EOF
+{
+  "schema_version": "1.0",
+  "generated_at": "$NOW",
+  "generated_by": "scripts/verify-a11y.sh",
+  "status": "$STATUS",
+  "wcag_levels": ["wcag2a", "wcag2aa"],
+  "results": { "passed": $PASSED, "failed": $FAILED, "violations": $FAILED },
+  "evidence_log": "/tmp/sb-axe.log",
+  "exit_code": $RC
+}
+EOF
+echo "[verify-a11y] report written: $REPORT (status=$STATUS · passed=$PASSED · failed=$FAILED)"
+
 if [[ "$RC" -ne 0 ]]; then
-  echo "FAIL: axe violations detected · 见 /tmp/sb-axe.log"
+  echo "FAIL: axe violations detected · 见 /tmp/sb-axe.log + $REPORT"
   exit 1
 fi
 echo "[verify-a11y] G3 axe 0 violations ✓ · 80 stories × WCAG 2A/2AA"

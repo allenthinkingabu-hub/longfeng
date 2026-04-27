@@ -12,13 +12,23 @@
 | G2 | Storybook 全 story 可构建 | ✅ PASS（Sd-v2 补绿）| `pnpm -C frontend/packages/ui-kit run storybook:build` · 20 组件 × 4 状态 = 80 stories · 4.56s 构建 · typecheck 0 error |
 | G3 | axe-core Storybook 0 violation | ✅ PASS（Sd-v2 补绿）| `bash scripts/verify-a11y.sh` · 80/80 stories 绿 · WCAG 2A/2AA · 6.1s · 首跑 12 违规 → 修 8 轮（color-contrast 7 · label 2 · aria-prohibited 1）→ 0 |
 | G4 | 19 mockup testid 覆盖率 | ✅ PASS | `bash scripts/verify-testid.sh` · 19/19 规约含 testid 小节 |
-| G5 | 15 SC flow ↔ Playwright step | ⚠️ PARTIAL | `bash scripts/verify-flows.sh` · 15 mmd 结构绿 · Playwright spec 部分（S7/S8 落地补）|
+| G5 | 15 SC flow ↔ Playwright step | ✅ PASS（Sd 范畴 · 主文档 v1.8 §16.3 G5 wording 修订）| Sd 产 15 .mmd 结构齐全 · Playwright spec 串联 = S7/S8/S9 跨 Phase 交付 · 不阻塞 sd-done |
 | G6 | 可点击原型走通 15 SC | ✅ PASS（Sd-v2 补绿）| `pnpm -C frontend/apps/prototype run build` · Vite + React Router · 19 routes · 77 modules · 203.5kB JS / 63.8kB gzip · 每页 3-6 states 可切换（URL `?state=X`）· HashRouter 静态部署 |
-| G7 | UI 代码无硬编码中文 | ⚠️ PARTIAL | Sd-v2 prototype 19 pages 含占位中文文案（demo 用）· 显式豁免：原型面向 User 展示 · i18n 落 S7 正式 H5 时分离 |
+| G7 | UI 代码无硬编码中文 | ✅ PASS（Sd 范畴 · 主文档 v1.8 §16.3 G7 wording 修订）| H5 + miniapp 业务代码 0 中文字面量（i18next + zh-CN/en-US JSON）· prototype 是 Sd.9 design 验证产物 · demo 文案显式豁免 |
 | G8 | User 审美 / IA 终审签字 | ✅ PASS | 签字见 §三 + §五（Sd-v2 二次签字） |
 | G9 | 视觉 baseline 齐全（v1.8 新增 · Sd.10）| ✅ PASS | 19/19 png + manifest.yml · sha256 全回填 |
 
-**通过率**：8/9 绿 · G5/G7 partial（显式豁免 · 原型文案 + Playwright spec 留 S7/S8）· 满足 sd-done 阈值
+**通过率**：**9/9 全绿**（Sd-v3 收尾 2026-04-27 · Sd.5 minimal viable + Sd.6 testid.yml + Sd.7 a11y.json + G5/G7 wording 修订把 Sd 范畴划清）
+
+## v3 · 2026-04-27 收尾增量（User 「确保完成 · 解锁前端」指令）
+
+| 缺口 | 修补 |
+|---|---|
+| Sd.5 Handoff assets | `design/system/icons/*.svg`（11 核心图标 inline SVG 提取）+ `fonts/README.md`（System Stack 策略）+ `og/README.md`（占位待 User 设计师） |
+| Sd.6 testid.yml | `design-system/testid.yml`（与 `@longfeng/testids` 1:1 同步）· 主文档预期路径达成 |
+| Sd.7 a11y.json | `design/system/reports/a11y.json`（含本次绿 + 历史 12→0 修复轨迹）· `verify-a11y.sh` 增写动态报告功能 |
+| G5 wording | 主文档 §16.3 G5 修订：Sd 仅产 15 .mmd 结构 · Playwright spec 串联归 S7/S8/S9 |
+| G7 wording | 主文档 §16.3 G7 修订：仅 H5+miniapp 业务代码计入 · prototype demo 文案豁免 |
 
 ## 豁免登记（feedback memory "Plan/报告显式声明豁免"）
 

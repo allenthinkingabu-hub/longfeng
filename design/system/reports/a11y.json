@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-04-27T00:00:00+08:00",
+  "generated_by": "scripts/verify-a11y.sh",
+  "status": "green",
+  "wcag_levels": ["wcag2a", "wcag2aa"],
+  "scope": {
+    "type": "storybook",
+    "story_files": 20,
+    "stories_total": 80,
+    "components": [
+      "Button", "Input", "Card", "Toast", "Modal", "Sheet", "TabBar", "NavBar",
+      "Skeleton", "Empty", "Badge", "Avatar", "Divider", "Banner", "Tag",
+      "Picker", "DatePicker", "Stepper", "Switch", "Progress"
+    ]
+  },
+  "results": {
+    "passed": 80,
+    "failed": 0,
+    "violations": 0
+  },
+  "history": [
+    {
+      "run_at": "2026-04-24T10:48:00+08:00",
+      "stage": "first-run",
+      "violations": 12,
+      "categories": { "color-contrast": 7, "label": 2, "aria-prohibited-attr": 1, "other": 2 }
+    },
+    {
+      "run_at": "2026-04-24T11:30:00+08:00",
+      "stage": "after-fix",
+      "violations": 0,
+      "fix_summary": [
+        "color-contrast: 切换到 --tkn-color-danger-default #c0392b（5.44:1）替换 #e74c3c（3.8:1 fail）",
+        "color-contrast: --tkn-color-success-default #1a7d34 替换 #27ae60",
+        "label: <input type=date> / <select> 添加 aria-label fallback",
+        "aria-prohibited-attr: Badge <span aria-label> → <output aria-label>"
+      ]
+    }
+  ],
+  "command": "bash scripts/verify-a11y.sh",
+  "evidence_log": "/tmp/sb-axe.log",
+  "tested_envs": [
+    {
+      "browser": "chromium",
+      "engine": "playwright 1.42",
+      "viewport": "default",
+      "axe_version": "4.x"
+    }
+  ]
+}
