@@ -3,6 +3,7 @@ package com.longfeng.wrongbook.controller;
 import com.longfeng.common.dto.ApiResult;
 import com.longfeng.wrongbook.entity.TagTaxonomy;
 import com.longfeng.wrongbook.service.WrongItemService;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class WrongbookTagController {
     this.service = service;
   }
 
+  @Operation(summary = "获取活跃标签列表")
   @GetMapping("/tags")
   public ApiResult<List<Map<String, Object>>> getTags(
       @RequestParam(required = false) String subject) {

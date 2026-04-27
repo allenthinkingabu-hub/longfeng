@@ -10,6 +10,7 @@ import com.longfeng.wrongbook.dto.WrongItemImageVO;
 import com.longfeng.wrongbook.dto.WrongItemPageVO;
 import com.longfeng.wrongbook.dto.WrongItemVO;
 import com.longfeng.wrongbook.service.WrongItemService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class WrongItemController {
     this.service = service;
   }
 
+  @Operation(summary = "创建错题")
   @PostMapping
   public ResponseEntity<ApiResult<WrongItemVO>> create(
       @Valid @RequestBody CreateWrongItemReq req,
@@ -44,6 +46,7 @@ public class WrongItemController {
         .body(ApiResult.ok(vo));
   }
 
+  @Operation(summary = "获取单条错题")
   @GetMapping("/{id}")
   public ResponseEntity<ApiResult<WrongItemVO>> get(@PathVariable Long id) {
     return service
@@ -52,7 +55,7 @@ public class WrongItemController {
         .orElseThrow(() -> new WrongItemService.NotFoundException("wrong_item not found: " + id));
   }
 
-  /** G-08: status param accepts 'active'|'mastered' string; tagCode for tag filter. */
+  @Operation(summary = "分页列举错题")
   @GetMapping
   public ApiResult<WrongItemPageVO> page(
       @RequestParam(required = false) String subject,
@@ -64,6 +67,7 @@ public class WrongItemController {
     return ApiResult.ok(service.page(subject, status, tagCode, studentId, cursor, size));
   }
 
+  @Operation(summary = "更新错题字段或状态")
   @PatchMapping("/{id}")
   public ApiResult<WrongItemVO> update(
       @PathVariable Long id,
@@ -72,6 +76,7 @@ public class WrongItemController {
     return ApiResult.ok(service.update(id, req, requestId));
   }
 
+  @Operation(summary = "软删除错题")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(
       @PathVariable Long id,
@@ -80,7 +85,7 @@ public class WrongItemController {
     return ResponseEntity.noContent().build();
   }
 
-  /** G-01: bulk replace tags — replaces entire tag list atomically. */
+  @Operation(summary = "批量替换标签（PATCH 语义）")
   @PatchMapping("/{id}/tags")
   public ResponseEntity<Void> replaceTags(
       @PathVariable Long id,
@@ -91,6 +96,7 @@ public class WrongItemController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "确认图片上传")
   @PostMapping("/{id}/images")
   public ApiResult<WrongItemImageVO> confirmImage(
       @PathVariable Long id,
@@ -99,6 +105,7 @@ public class WrongItemController {
     return ApiResult.ok(service.confirmImage(id, req, requestId));
   }
 
+  @Operation(summary = "设置题目难度")
   @PostMapping("/{id}/difficulty")
   public ApiResult<WrongItemVO> setDifficulty(
       @PathVariable Long id,

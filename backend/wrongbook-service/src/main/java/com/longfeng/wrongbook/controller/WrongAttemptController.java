@@ -4,6 +4,7 @@ import com.longfeng.common.dto.ApiResult;
 import com.longfeng.wrongbook.dto.CreateAttemptReq;
 import com.longfeng.wrongbook.dto.WrongAttemptVO;
 import com.longfeng.wrongbook.service.WrongAttemptService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class WrongAttemptController {
     this.service = service;
   }
 
+  @Operation(summary = "提交作答（append-only）")
   @PostMapping
   public ResponseEntity<ApiResult<WrongAttemptVO>> create(
       @PathVariable Long id, @Valid @RequestBody CreateAttemptReq req) {
@@ -32,6 +34,7 @@ public class WrongAttemptController {
     return ResponseEntity.status(201).body(ApiResult.ok(vo));
   }
 
+  @Operation(summary = "列举作答历史")
   @GetMapping
   public ApiResult<List<WrongAttemptVO>> list(
       @PathVariable Long id, @RequestParam(defaultValue = "20") int size) {
