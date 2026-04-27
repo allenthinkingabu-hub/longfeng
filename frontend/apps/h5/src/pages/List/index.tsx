@@ -20,11 +20,11 @@ const SUBJECT_OPTS: Array<{ value: string; label: string; count: number }> = [
 ];
 
 const SUBJECT_COLOR: Record<string, string> = {
-  math: s.subBlue,
-  physics: s.subOrange,
-  chemistry: s.subIndigo,
-  english: s.subGreen,
-  chinese: s.subBlue,
+  math: s.subMath,
+  physics: s.subPhysics,
+  chemistry: s.subChemistry,
+  english: s.subEnglish,
+  chinese: s.subMath,
 };
 const SUBJECT_LABEL: Record<string, string> = {
   math: '数学', physics: '物理', chemistry: '化学', english: '英语', chinese: '语文',
@@ -99,7 +99,7 @@ export const ListPage: React.FC = () => {
           <div className={s.navRight}>
             <button className={s.navIconBtn} aria-label="筛选" data-testid="wrongbook.list.filter-toggle">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 7h16M6 12h12M9 17h6" stroke="#007AFF" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M4 7h16M6 12h12M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -191,7 +191,7 @@ export const ListPage: React.FC = () => {
             data-testid={TEST_IDS.wrongbookList['load-more']}
             style={{ justifyContent: 'center', textAlign: 'center', display: 'flex' }}
           >
-            <span style={{ color: '#007AFF', fontWeight: 600 }}>{t('wrongbook_list.load_more')}</span>
+            <span className={s.loadMoreText}>{t('wrongbook_list.load_more')}</span>
           </button>
         )}
       </div>
@@ -221,7 +221,7 @@ export const ListPage: React.FC = () => {
           className={`${s.tab} ${s.tabActive}`}
           role="tab"
           aria-selected={true}
-          data-testid="wrongbook.list.tabbar-wrongbook"
+          data-testid={TEST_IDS.wrongbookList['tabbar-wrongbook']}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />

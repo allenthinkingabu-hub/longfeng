@@ -1,0 +1,255 @@
+{
+  "page": "CapturePage",
+  "mockup_source": "design/mockups/wrongbook/02_capture.html",
+  "business_analysis": "design/analysis/s7-business-analysis.yml",
+  "generated_at": "2026-04-27T00:00:00Z",
+  "testids_source": "frontend/packages/testids/src/index.ts → TEST_IDS.capture.*",
+  "_color_decisions": {
+    "A1": "#007AFF → --tkn-color-primary-default (#0071e3)",
+    "B1": "#FF3B30/#FF9500/#34C759 → --tkn-color-danger/warning/success-default",
+    "camera_yellow": "#FFCC00 → custom（相机扫描专属装饰色，无 token，允许裸色值）",
+    "dark_bg": "#0B0F1A → --tkn-color-surface-dark-5 近似（Δ23，相机黑色背景）"
+  },
+
+  "blocks": [
+    {
+      "id": "camera-screen",
+      "label": "相机全屏深色背景",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "全屏相机黑色背景，无 ui-kit 对应组件",
+      "tokens": {
+        "background": "--tkn-color-surface-dark-5（#0b0b0b，mockup #0B0F1A Δ23，相机背景近似可接受）",
+        "fallback_bg": "literal #0B0F1A（相机 UI 允许绑定特定暗色，不走 token）"
+      },
+      "testids": ["capture.root"],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "position:absolute inset:0 · 深色相机主屏幕背景"
+    },
+
+    {
+      "id": "status-bar",
+      "label": "状态栏（时间/信号/电量）",
+      "ui_kit_component": "custom",
+      "custom_css": false,
+      "custom_css_reason": "装饰性，仅渲染系统状态栏占位高度 54px",
+      "tokens": {
+        "height": "54px（固定，env(safe-area-inset-top) 兜底）",
+        "text_color": "--tkn-color-white"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "高度 54px · 白色文字（相机深色背景上）"
+    },
+
+    {
+      "id": "nav-transparent",
+      "label": "顶部透明导航（返回 + 标题 + 设置）",
+      "ui_kit_component": "NavBar",
+      "ui_kit_props": {
+        "title": "拍下错题",
+        "onBack": true,
+        "right": "SettingsIcon",
+        "testIdPrefix": "capture"
+      },
+      "custom_css": true,
+      "custom_css_reason": "NavBar 默认白色背景；相机页需完全透明覆盖在取景框上，icon 圆形半透明黑色背景",
+      "tokens": {
+        "background": "transparent",
+        "icon_btn_bg": "rgba(0,0,0,.45)（custom · 相机专属，无 token）",
+        "icon_btn_backdrop": "blur(20px)（custom · 相机专属）",
+        "title_color": "--tkn-color-white",
+        "icon_color": "--tkn-color-white"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "position:absolute top:54px · 透明背景 · icon 圆形 36×36px · backdrop-filter blur(20px)"
+    },
+
+    {
+      "id": "camera-viewfinder",
+      "label": "相机取景框区域",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "纯相机 UI，无 ui-kit 组件对应；内含纸张 mockup 和扫描动画",
+      "tokens": {
+        "background": "radial-gradient（#1d2433 → #0B0F1A · custom 渐变，相机专属）",
+        "paper_bg": "linear-gradient(#fbf8f0, #f1ece0)（custom · 装饰性题目纸张）",
+        "paper_shadow": "rgba(0,0,0,.55)（custom · 纸张投影）",
+        "strike_bg": "rgba(255,80,80,.55)（custom · 错误划线装饰）",
+        "pen_color": "--tkn-color-danger-default（#c0392b，mockup #c9302c Δ12.8 · B1 决策）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "top:104px bottom:240px · 纸张 255×330px rotate(-3deg) · 内部题目为展示用 mockup 内容"
+    },
+
+    {
+      "id": "corner-brackets",
+      "label": "四角对齐框（自动识别边框）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "CSS 动画装饰，无 ui-kit 对应",
+      "tokens": {
+        "bracket_color": "#FFCC00（custom · 相机黄色专属 · 无 token · 允许裸色值）",
+        "bracket_shadow": "rgba(255,204,0,.45)（custom · 配套黄色发光）",
+        "border_radius": "--tkn-radius-md（11px，mockup 10px Δ1）",
+        "size": "46×46px（固定）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "4 个绝对定位角 · 各占 14% 边缘 · 纯装饰相机 UI"
+    },
+
+    {
+      "id": "scan-line",
+      "label": "扫描线动画",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "CSS keyframe 动画，纯相机装饰",
+      "tokens": {
+        "scan_color": "rgba(255,204,0,.95)→transparent（custom · 黄色渐变 · 无 token）",
+        "glow": "rgba(255,204,0,.7)（custom）",
+        "height": "2px（固定）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "left:14% right:14% · 水平扫描渐变线 · 无业务数据"
+    },
+
+    {
+      "id": "detect-badge",
+      "label": "自动识别 badge（页面边界已检测）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "含 pulse 动画点，无 ui-kit 组件；类似 Badge 但含动画",
+      "tokens": {
+        "background": "rgba(0,0,0,.55)（custom · 半透明黑，相机专属）",
+        "backdrop": "blur(18px)（custom）",
+        "text_color": "--tkn-color-white",
+        "pulse_color": "#FFCC00（custom · 相机专属黄色）",
+        "border_radius": "--tkn-radius-pill（999px）",
+        "padding": "--tkn-spacing-3（6px）× --tkn-spacing-6（12px）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "absolute top:122px 居中 · 12px 文字 + 7px 黄色 pulse 点"
+    },
+
+    {
+      "id": "tip-card",
+      "label": "拍摄提示卡（磨砂玻璃）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "半透明磨砂卡片，无 ui-kit Card 变体；Card 为白色实底",
+      "tokens": {
+        "background": "rgba(255,255,255,.12)（custom · 相机专属半透明）",
+        "border": "rgba(255,255,255,.15)（custom）",
+        "backdrop": "blur(20px)（custom）",
+        "text_color": "--tkn-color-white",
+        "icon_color": "#FFCC00（custom · 相机黄色）",
+        "border_radius": "--tkn-radius-lg（12px，mockup 14px Δ2 · D1 规则取最近 token）",
+        "padding": "--tkn-spacing-5（10px）× --tkn-spacing-7（14px）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "absolute left/right:18px top:170px · border:.5px solid"
+    },
+
+    {
+      "id": "subject-selector",
+      "label": "学科快速选择条（横向 5 个学科）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "横向等分 flex，含 active 半透明白色；与 ListPage subject-chips 不同（无滚动，等分，相机深色背景）",
+      "tokens": {
+        "item_bg": "rgba(255,255,255,.10)（custom · 相机专属半透明）",
+        "item_border": "rgba(255,255,255,.18)（custom）",
+        "item_backdrop": "blur(18px)（custom）",
+        "item_text": "--tkn-color-white",
+        "active_bg": "rgba(255,255,255,.95)（custom · 高不透明度白）",
+        "active_text": "--tkn-color-primary-default（A1 决策：#007AFF → #0071e3）",
+        "active_shadow": "rgba(0,0,0,.18)（custom）",
+        "height": "36px（固定）",
+        "border_radius": "--tkn-radius-md（11px，mockup 10px Δ1）",
+        "gap": "--tkn-spacing-4（8px）"
+      },
+      "testids": ["capture.form.subject"],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "absolute bottom:228px · flex 1:1:1:1:1 五等分 · 数学/物理/化学/英语/语文"
+    },
+
+    {
+      "id": "mode-tabs",
+      "label": "拍摄模式切换（相册/拍题/文档）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "文字 tab + 黄色下划线 indicator，无 ui-kit 对应",
+      "tokens": {
+        "inactive_color": "rgba(255,255,255,.55)（custom · 白色半透明）",
+        "active_color": "#FFCC00（custom · 相机黄色专属）",
+        "active_indicator": "#FFCC00（custom · 2px 下划线）",
+        "font_size": "12px（0.75rem）",
+        "gap": "--tkn-spacing-10（20px，mockup 22px Δ2）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "absolute bottom:122px · 三项居中 · active 带下划线 2px"
+    },
+
+    {
+      "id": "control-dock",
+      "label": "底部控制区（相册 + 快门 + 文件）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "FAB 快门 + 两侧功能按钮，无 ui-kit FAB 变体",
+      "tokens": {
+        "dock_gradient": "linear-gradient(rgba(11,15,26,0), rgba(11,15,26,.85), #0B0F1A)（custom · 相机渐变）",
+        "side_btn_bg": "rgba(255,255,255,.10)（custom · 半透明）",
+        "side_btn_border": "rgba(255,255,255,.18)（custom）",
+        "side_btn_size": "48×48px · border-radius --tkn-radius-lg（12px，mockup 14px Δ2）",
+        "shutter_outer": "78×78px · white · 多层 ring box-shadow",
+        "shutter_core": "60×60px · linear-gradient(#5FA8FF, --tkn-color-primary-default)（A1 决策，渐变起点 #5FA8FF 无 token 允许 custom）",
+        "shutter_border": "--tkn-color-white（3px solid）",
+        "side_label_color": "rgba(255,255,255,.85)（custom）",
+        "label_font_size": "11px（0.6875rem）"
+      },
+      "testids": [
+        "capture.camera.btn",
+        "capture.gallery.btn"
+      ],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "快门 78px 圆 + 两侧 48px 圆角方形 · space-around 布局"
+    },
+
+    {
+      "id": "tabbar",
+      "label": "底部 Tab 导航（拍题 Tab active）",
+      "ui_kit_component": "TabBar",
+      "ui_kit_props": {
+        "items": [
+          {"key": "home", "label": "首页"},
+          {"key": "wrongbook", "label": "错题本"},
+          {"key": "capture", "label": "拍题"},
+          {"key": "review", "label": "复习"},
+          {"key": "me", "label": "我的"}
+        ],
+        "activeKey": "capture",
+        "testIdPrefix": "capture"
+      },
+      "custom_css": true,
+      "custom_css_reason": "TabBar 用于相机深色背景，active 色为黄色 #FFCC00（相机专属），需 override",
+      "tokens": {
+        "background": "rgba(11,15,26,.78)（custom · 相机深色半透明 tabbar）",
+        "backdrop": "blur(22px) saturate(180%)（custom）",
+        "border_top": "rgba(255,255,255,.08)（custom · 亮色细线）",
+        "active_color": "#FFCC00（custom · 相机专属黄色）",
+        "inactive_color": "rgba(255,255,255,.50)（custom · 半透明白）",
+        "height": "84px · padding-bottom:24px（safe-area）"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "拍题 Tab active · 相机页 tabbar 为深色 + 黄色 active（与其他页白底蓝色不同）"
+    }
+  ]
+}

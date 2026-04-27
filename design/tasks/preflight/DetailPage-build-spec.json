@@ -1,0 +1,287 @@
+{
+  "page": "DetailPage",
+  "mockup_source": "design/mockups/wrongbook/06_wrongbook_detail.html",
+  "business_analysis": "design/analysis/s7-business-analysis.yml",
+  "generated_at": "2026-04-27T00:00:00Z",
+  "testids_source": "frontend/packages/testids/src/index.ts → TEST_IDS.wrongbookDetail.*",
+  "_color_decisions": {
+    "A1": "#007AFF → --tkn-color-primary-default (#0071e3)",
+    "B1": "#FF3B30/#FF9500/#34C759 → --tkn-color-danger/warning/success-default",
+    "C1": "subject colors → --tkn-subject-* tokens",
+    "D1": "border-radius 16px → --tkn-radius-lg (12px)"
+  },
+
+  "blocks": [
+    {
+      "id": "status-bar",
+      "label": "状态栏（时间/信号/电量）",
+      "ui_kit_component": "custom",
+      "custom_css": false,
+      "tokens": {
+        "height": "54px（固定）",
+        "text_color": "--tkn-color-text-primary（#1d1d1f，mockup #111 Δ22 · 装饰元素可接受）"
+      },
+      "testids": [],
+      "ac": "SC-02.AC-1",
+      "mockup_notes": "高度 54px · 深色文字（浅色背景 #F2F2F7）"
+    },
+
+    {
+      "id": "nav-bar",
+      "label": "顶部导航栏（返回「错题本」 + 标题 + 编辑/更多）",
+      "ui_kit_component": "NavBar",
+      "ui_kit_props": {
+        "title": "错题 #17",
+        "onBack": true,
+        "backLabel": "错题本",
+        "right": "EditIcon + MoreIcon",
+        "testIdPrefix": "wrongbook.detail"
+      },
+      "custom_css": true,
+      "custom_css_reason": "NavBar 无 pill badge slot；标题旁需 inline pill（未掌握/已掌握/部分掌握）；back 链接为文字+箭头",
+      "tokens": {
+        "background": "--tkn-color-bg-light（rgba(242,242,247,.78) + backdrop-filter）",
+        "backdrop": "blur(22px) saturate(180%)（自带）",
+        "border_bottom": "--tkn-color-border-subtle（mockup rgba(60,60,67,.14) · 建议用 separator token）",
+        "back_color": "--tkn-color-primary-default（A1 · mockup #007AFF）",
+        "right_icon_color": "--tkn-color-primary-default（A1）",
+        "title_color": "--tkn-color-text-primary",
+        "pill_bg_unmastered": "--tkn-color-danger-default（B1 · mockup --red）",
+        "pill_text": "--tkn-color-white",
+        "pill_border_radius": "--tkn-radius-sm（6px，mockup 6px ✓ exact）"
+      },
+      "testids": [
+        "wrongbook.detail.delete.btn"
+      ],
+      "ac": "SC-04.AC-1",
+      "mockup_notes": "sticky top:54px · h1 22px/700 + 右侧 pill inline · 整体高度约 100px（两行）"
+    },
+
+    {
+      "id": "image-card",
+      "label": "原题图片预览卡（纸张 + badge + 放大按钮）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "Card 无 image overlay + paper mockup slot；高度 170px 定高",
+      "tokens": {
+        "card_bg": "linear-gradient(#fbf8f0, #ece5d3)（custom · 装饰性暖色渐变背景）",
+        "card_border_radius": "--tkn-radius-lg（12px，mockup 18px Δ6 · D1 取最近 token）",
+        "card_shadow": "0 1px 0 rgba(0,0,0,.04) + 0 12px 24px rgba(40,50,90,.1)（custom · shadow 无 token）",
+        "paper_bg": "linear-gradient(#fff, #f8f4e8)（custom · 纸张渐变）",
+        "paper_shadow": "rgba(0,0,0,.18)（custom）",
+        "paper_border_radius": "--tkn-radius-xs（5px，mockup 4px Δ1）",
+        "badge_bg": "rgba(0,0,0,.6)（custom · 半透明黑）",
+        "badge_text": "--tkn-color-white",
+        "badge_border_radius": "--tkn-radius-sm（8px，mockup 6px Δ2）",
+        "magn_bg": "rgba(0,0,0,.55)（custom）",
+        "magn_border_radius": "--tkn-radius-sm（8px，mockup 8px ✓）",
+        "strike_bg": "rgba(255,80,80,.55)（custom · 错题红色划线装饰）",
+        "pen_color": "--tkn-color-danger-default（B1 · mockup #c9302c Δ12.8）",
+        "height": "170px（固定）"
+      },
+      "testids": [],
+      "ac": "SC-02.AC-1",
+      "mockup_notes": "border-radius:18px（实际用 --tkn-radius-lg:12px · D1）· paper 62%宽 rotate(-2deg) · badge 左上 · 放大按钮右下"
+    },
+
+    {
+      "id": "segment-tabs",
+      "label": "分段控件（分析 / 复习记录 / 变式题）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "iOS 分段控件（segment control），ui-kit 无此组件",
+      "tokens": {
+        "track_bg": "rgba(118,118,128,.12)（MISSING_TOKEN · 建议新增 --tkn-color-segment-track 或用 --tkn-color-button-active Δ大）",
+        "track_border_radius": "--tkn-radius-md（11px，mockup 10px Δ1）",
+        "track_padding": "--tkn-spacing-1（2px）",
+        "item_active_bg": "--tkn-color-white",
+        "item_active_shadow": "rgba(0,0,0,.06)（custom）",
+        "item_active_border_radius": "--tkn-radius-sm（8px，mockup 8px ✓）",
+        "item_active_text": "--tkn-color-text-primary",
+        "item_inactive_text": "--tkn-color-text-secondary（#3C3C43 近似）",
+        "height": "32px（固定）"
+      },
+      "testids": [],
+      "ac": "SC-03.AC-1",
+      "mockup_notes": "margin-top:14px · track 背景灰色 12% · active 白色带阴影"
+    },
+
+    {
+      "id": "analysis-brief",
+      "label": "错题分析区（学科/题干/答案对比/错因）",
+      "ui_kit_component": "Card",
+      "ui_kit_props": {
+        "variant": "default",
+        "padding": 12,
+        "testIdPrefix": "wrongbook.detail"
+      },
+      "custom_css": true,
+      "custom_css_reason": "Card 为外容器；内部答案格子/错因色块无 slot，需自定义",
+      "tokens": {
+        "card_bg": "--tkn-color-white",
+        "card_border_radius": "--tkn-radius-lg（12px，mockup 14px Δ2）",
+        "card_shadow": "0 1px 0 rgba(0,0,0,.03)（近似 --tkn-shadow-card）",
+        "kicker_color": "--tkn-color-primary-default（A1 · mockup --blue）",
+        "stem_color": "--tkn-color-text-primary",
+        "ans_wrong_bg": "rgba(255,59,48,.08)（custom · 基于 danger 色，透明度 8%）",
+        "ans_wrong_border": "rgba(255,59,48,.20)（custom）",
+        "ans_wrong_label": "--tkn-color-danger-default（B1）",
+        "ans_right_bg": "rgba(52,199,89,.08)（custom · 基于 success 色，透明度 8%）",
+        "ans_right_border": "rgba(52,199,89,.20)（custom）",
+        "ans_right_label": "--tkn-color-success-default（B1）",
+        "ans_border_radius": "--tkn-radius-md（11px，mockup 10px Δ1）",
+        "err_bg": "rgba(255,59,48,.06)（custom）",
+        "err_border_left": "--tkn-color-danger-default（B1）3px solid",
+        "err_text": "--tkn-color-text-secondary",
+        "err_highlight_bg": "rgba(255,59,48,.10)（custom）",
+        "err_highlight_text": "--tkn-color-danger-default（B1）",
+        "err_border_radius_right": "--tkn-radius-sm（8px）"
+      },
+      "testids": [
+        "wrongbook.detail.explain-stream"
+      ],
+      "ac": "SC-03.AC-1",
+      "mockup_notes": "border-radius:14px · 2×1 grid 答案对比 · err 区左侧红色 3px border"
+    },
+
+    {
+      "id": "ebbinghaus-timeline",
+      "label": "艾宾浩斯复习时间线（曲线 + 节点 + 统计）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "无 ui-kit 对应；SVG 曲线 + 节点组合，ui-kit 仅有 Progress 直线",
+      "tokens": {
+        "card_bg": "--tkn-color-white",
+        "card_border_radius": "--tkn-radius-lg（12px，mockup 14px Δ2）",
+        "card_shadow": "0 1px 0 rgba(0,0,0,.03)（近似 --tkn-shadow-card）",
+        "node_empty_bg": "--tkn-color-button-active（#ededf2，mockup #E5E5EA Δ13.9 · 近似可接受）",
+        "node_empty_border": "--tkn-color-white",
+        "node_empty_ring": "--tkn-color-border-subtle（mockup rgba(60,60,67,.14)）",
+        "node_done_bg": "--tkn-color-success-default（B1 · mockup #34C759）",
+        "node_now_bg": "linear-gradient(#5FA8FF, --tkn-color-primary-default)（custom · 渐变，起点无 token）",
+        "node_now_ring": "rgba(0,122,255,.2)（custom · 基于 primary 透明 20%，建议 rgba(0,113,227,.2)）",
+        "label_done": "--tkn-color-success-default（B1）",
+        "label_now": "--tkn-color-primary-default（A1）",
+        "label_empty": "--tkn-color-text-tertiary（mockup --text3 #8E8E93）",
+        "curve_gradient": "linear-gradient(#34C759 → #5FA8FF → #C7C7CC)（custom SVG · 颜色决策 B1/A1 导向）",
+        "stat_value_blue": "--tkn-color-primary-default（A1）",
+        "stat_value_green": "--tkn-color-success-default（B1）",
+        "stat_value_orange": "--tkn-color-warning-default（B1）",
+        "stat_label": "--tkn-color-text-tertiary",
+        "divider": "--tkn-color-border-subtle（mockup --sep）"
+      },
+      "testids": [],
+      "ac": "SC-03.AC-1",
+      "mockup_notes": "SVG 曲线 viewport 320×60 · 6 节点 done/done/done/now/empty/empty · stats 3 列"
+    },
+
+    {
+      "id": "kp-radar",
+      "label": "知识点能力雷达图 + 图例（并排卡片）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "SVG 五边形雷达图，无 ui-kit 对应",
+      "tokens": {
+        "card_bg": "--tkn-color-white",
+        "card_border_radius": "--tkn-radius-lg（12px，mockup 14px Δ2）",
+        "card_shadow": "0 1px 0 rgba(0,0,0,.03）",
+        "ring_stroke": "--tkn-color-button-active（#ededf2，mockup #E5E5EA Δ13.9）",
+        "axis_stroke": "--tkn-color-button-active（同上）",
+        "data_fill": "rgba(0,122,255,.18)（custom · 基于 primary，建议 rgba(0,113,227,.18)）",
+        "data_stroke": "--tkn-color-primary-default（A1）",
+        "label_color": "--tkn-color-text-secondary（mockup #3C3C43）",
+        "legend_label": "--tkn-color-text-tertiary",
+        "legend_dot_blue": "--tkn-color-primary-default（A1）",
+        "legend_dot_indigo": "--tkn-subject-chemistry（C1 · mockup #5856D6 无 token · 取学科色）",
+        "legend_dot_green": "--tkn-color-success-default（B1）",
+        "legend_pct_orange": "--tkn-color-warning-default（B1）",
+        "legend_pct_green": "--tkn-color-success-default（B1）",
+        "gap": "--tkn-spacing-5（10px）"
+      },
+      "testids": [],
+      "ac": "SC-03.AC-1",
+      "mockup_notes": "flex-row gap:10 · 雷达图 130×130px · 图例右侧 · dot 8px 圆"
+    },
+
+    {
+      "id": "cta-bar",
+      "label": "底部 CTA 操作栏（归档 + 立即复习）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "固定底部渐变遮罩 + 两个按钮（1:2 比例），Button 组件可复用但布局需自定义",
+      "tokens": {
+        "gradient_mask": "linear-gradient(rgba(242,242,247,0), rgba(242,242,247,.95), #F2F2F7)（custom）",
+        "ghost_bg": "rgba(118,118,128,.12)（MISSING_TOKEN · 同 segment-tabs track · 建议 --tkn-color-segment-track）",
+        "ghost_text": "--tkn-color-text-primary",
+        "primary_bg": "linear-gradient(#5FA8FF, --tkn-color-primary-default)（custom · A1 + 渐变起点）",
+        "primary_text": "--tkn-color-white",
+        "primary_shadow": "rgba(0,122,255,.28)（custom · 建议 rgba(0,113,227,.28)）",
+        "btn_border_radius": "--tkn-radius-lg（12px，mockup 14px Δ2）",
+        "btn_height": "46px（固定）",
+        "padding": "--tkn-spacing-7（14px）× --tkn-spacing-8（16px）× --tkn-spacing-9（18px）",
+        "gap": "--tkn-spacing-4（8px）"
+      },
+      "testids": [
+        "wrongbook.detail.delete.btn",
+        "wrongbook.detail.delete.confirm"
+      ],
+      "ac": "SC-04.AC-1",
+      "mockup_notes": "absolute bottom:84px height:78px · 归档 flex:1 · 立即复习 flex:2 · 渐变遮罩"
+    },
+
+    {
+      "id": "tag-sheet",
+      "label": "标签编辑 Bottom Sheet（SC-02 · 不在 mockup 主视图）",
+      "ui_kit_component": "Sheet",
+      "ui_kit_props": {
+        "title": "编辑标签",
+        "testIdPrefix": "wrongbook.detail"
+      },
+      "custom_css": true,
+      "custom_css_reason": "Sheet 为容器；内部 chip 列表 + 自定义输入框 + 保存按钮需自定义",
+      "tokens": {
+        "chip_active_bg": "--tkn-color-primary-default（A1）",
+        "chip_inactive_bg": "--tkn-color-bg-light",
+        "chip_border_radius": "--tkn-radius-pill（999px）",
+        "input_bg": "--tkn-color-bg-light",
+        "save_btn_variant": "Button primary"
+      },
+      "testids": [
+        "wrongbook.detail.tag-sheet",
+        "wrongbook.detail.tag-chip",
+        "wrongbook.detail.tag-custom-input",
+        "wrongbook.detail.tag-save"
+      ],
+      "ac": "SC-02.AC-1",
+      "mockup_notes": "从 mockup 右上角编辑按钮触发 · Sheet slide-up · 非主视图区块"
+    },
+
+    {
+      "id": "tabbar",
+      "label": "底部 Tab 导航（错题本 Tab active）",
+      "ui_kit_component": "TabBar",
+      "ui_kit_props": {
+        "items": [
+          {"key": "home", "label": "首页"},
+          {"key": "wrongbook", "label": "错题本"},
+          {"key": "capture", "label": "拍题"},
+          {"key": "review", "label": "复习"},
+          {"key": "me", "label": "我的"}
+        ],
+        "activeKey": "wrongbook",
+        "testIdPrefix": "wrongbook.detail"
+      },
+      "custom_css": true,
+      "custom_css_reason": "active 色需对齐 A1 决策",
+      "tokens": {
+        "active_color": "--tkn-color-primary-default（A1）",
+        "inactive_color": "--tkn-color-text-tertiary（mockup #8E8E93）",
+        "background": "--tkn-color-white（rgba(.78) + backdrop）",
+        "border_top": "--tkn-color-border-subtle（mockup rgba(60,60,67,.14)）"
+      },
+      "testids": [],
+      "ac": "SC-02.AC-1",
+      "mockup_notes": "height 84px · padding-bottom 24px · 错题本 tab active"
+    }
+  ]
+}

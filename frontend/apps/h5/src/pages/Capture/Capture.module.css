@@ -1,15 +1,27 @@
-/* S7 · CapturePage · 对标 design/mockups/wrongbook/02_capture.html · 暗黑相机风 */
+/* S7 · CapturePage · design tokens aligned · pre-flight decisions applied
+ *
+ * Camera-specific exceptions (approved in CapturePage-token-mapping-review.md):
+ *   --cam-bg, --cam-bg-grad : #0B0F1A dark camera background
+ *   --cam-yellow            : #FFCC00 scan/bracket/mode indicator
+ *   --grad-start            : #5FA8FF shutter gradient start (no token)
+ *   All rgba(255,255,255,X) and rgba(0,0,0,X) values: permitted (camera translucency)
+ */
 .root {
-  --blue: #007AFF;
-  --yellow: #FFCC00;
-  --red: #FF3B30;
-  --green: #34C759;
+  --cam-bg: #0B0F1A;
+  --cam-bg-grad: #1d2433;
+  --cam-yellow: #FFCC00;
+  --grad-start: #5FA8FF;
+  --primary-rgb: 0, 113, 227;
+  --danger-rgb: 192, 57, 43;
+  --preview-start: #fbf8f0;
+  --preview-end: #f1ece0;
+
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: #0B0F1A;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  background: var(--cam-bg);
+  color: var(--tkn-color-white);
+  font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -31,14 +43,14 @@
 .iconBtn {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--tkn-radius-circle);
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(20px);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--tkn-color-white);
   cursor: pointer;
 }
 .title {
@@ -51,7 +63,7 @@
 .view {
   position: relative;
   height: 360px;
-  background: radial-gradient(800px 400px at 50% 30%, #1d2433 0%, #0B0F1A 65%);
+  background: radial-gradient(800px 400px at 50% 30%, var(--cam-bg-grad) 0%, var(--cam-bg) 65%);
   overflow: hidden;
   border-radius: 0;
 }
@@ -59,13 +71,13 @@
   position: absolute;
   width: 46px;
   height: 46px;
-  border: 3px solid var(--yellow);
+  border: 3px solid var(--cam-yellow);
   box-shadow: 0 0 18px rgba(255, 204, 0, 0.45);
 }
-.bracketTL { top: 14%; left: 14%; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
-.bracketTR { top: 14%; right: 14%; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
-.bracketBL { bottom: 14%; left: 14%; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
-.bracketBR { bottom: 14%; right: 14%; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+.bracketTL { top: 14%; left: 14%; border-right: 0; border-bottom: 0; border-top-left-radius: var(--tkn-radius-md); }
+.bracketTR { top: 14%; right: 14%; border-left: 0; border-bottom: 0; border-top-right-radius: var(--tkn-radius-md); }
+.bracketBL { bottom: 14%; left: 14%; border-right: 0; border-top: 0; border-bottom-left-radius: var(--tkn-radius-md); }
+.bracketBR { bottom: 14%; right: 14%; border-left: 0; border-top: 0; border-bottom-right-radius: var(--tkn-radius-md); }
 
 .scan {
   position: absolute;
@@ -84,10 +96,10 @@
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(18px);
-  color: #fff;
+  color: var(--tkn-color-white);
   font-size: 12px;
-  padding: 7px 12px;
-  border-radius: 999px;
+  padding: 7px var(--tkn-spacing-6);
+  border-radius: var(--tkn-radius-pill);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -96,8 +108,8 @@
 .detectPulse {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
-  background: var(--yellow);
+  border-radius: var(--tkn-radius-circle);
+  background: var(--cam-yellow);
   box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.18);
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -114,56 +126,56 @@
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px);
   border: 0.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  padding: 11px 14px;
+  border-radius: var(--tkn-radius-lg);
+  padding: 11px var(--tkn-spacing-7);
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #fff;
+  gap: var(--tkn-spacing-5);
+  color: var(--tkn-color-white);
   font-size: 13px;
   letter-spacing: 0.1px;
   z-index: 24;
 }
 .tip svg {
   flex: 0 0 18px;
-  color: var(--yellow);
+  color: var(--cam-yellow);
 }
 
 /* 文件预览 · 上传时显示 */
 .preview {
   position: absolute;
   inset: 24px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #fbf8f0, #f1ece0);
+  border-radius: var(--tkn-radius-lg);
+  background: linear-gradient(180deg, var(--preview-start), var(--preview-end));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #333;
+  color: var(--tkn-color-text-primary);
   font-size: 14px;
 }
 
 /* 下方控制区 */
 .dock {
-  padding: 16px 18px;
+  padding: var(--tkn-spacing-8) 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--tkn-spacing-8);
 }
 
-/* subject chips */
+/* subject chips — 等分横排 */
 .subjects {
   display: flex;
-  gap: 8px;
+  gap: var(--tkn-spacing-4);
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: var(--tkn-spacing-2);
 }
 .subjects::-webkit-scrollbar { display: none; }
 .subj {
   flex: 0 0 auto;
   height: 36px;
   min-width: 56px;
-  padding: 0 14px;
-  border-radius: 10px;
+  padding: 0 var(--tkn-spacing-7);
+  border-radius: var(--tkn-radius-md);
   background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(18px);
   border: 0.5px solid rgba(255, 255, 255, 0.18);
@@ -172,12 +184,12 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--tkn-color-white);
   cursor: pointer;
 }
 .subjOn {
   background: rgba(255, 255, 255, 0.95);
-  color: var(--blue);
+  color: var(--tkn-color-primary-default);
   border-color: transparent;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
@@ -200,11 +212,11 @@
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
-  padding: 6px 0;
+  padding: var(--tkn-spacing-3) 0;
   position: relative;
 }
 .modeOn {
-  color: var(--yellow);
+  color: var(--cam-yellow);
 }
 .modeOn::after {
   content: "";
@@ -212,22 +224,22 @@
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background: var(--yellow);
+  background: var(--cam-yellow);
   margin: 4px auto 0;
 }
 
-/* controls · gallery + shutter + manual */
+/* controls · gallery + shutter + file */
 .controls {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 8px 0 16px;
+  padding: var(--tkn-spacing-4) 0 var(--tkn-spacing-8);
 }
 .controlBtn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--tkn-spacing-2);
   color: rgba(255, 255, 255, 0.85);
   font-size: 11px;
   letter-spacing: 0.2px;
@@ -241,27 +253,28 @@
 .controlIc {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: var(--tkn-radius-lg);
   background: rgba(255, 255, 255, 0.10);
   border: 0.5px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--tkn-color-white);
 }
 
 .shutter {
   width: 78px;
   height: 78px;
-  border-radius: 50%;
-  background: #fff;
+  border-radius: var(--tkn-radius-circle);
+  background: var(--tkn-color-white);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18),
-              0 0 0 8px rgba(255, 255, 255, 0.10),
-              0 14px 28px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.18),
+    0 0 0 8px rgba(255, 255, 255, 0.10),
+    0 14px 28px rgba(0, 0, 0, 0.35);
   border: none;
   cursor: pointer;
   padding: 0;
@@ -269,39 +282,39 @@
 .shutterCore {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #5FA8FF, var(--blue));
-  border: 3px solid #fff;
+  border-radius: var(--tkn-radius-circle);
+  background: linear-gradient(180deg, var(--grad-start), var(--tkn-color-primary-default));
+  border: 3px solid var(--tkn-color-white);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--tkn-color-white);
 }
 
-/* 手动表单（选 manual mode 时） */
+/* 手动表单 */
 .manualForm {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(18px);
   border: 0.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: var(--tkn-radius-lg);
+  padding: var(--tkn-spacing-8);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--tkn-spacing-6);
 }
 .fieldLabel {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 4px;
+  margin-bottom: var(--tkn-spacing-2);
   letter-spacing: 0.3px;
 }
 .fieldInput, .fieldTextarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--tkn-spacing-5) var(--tkn-spacing-6);
   background: rgba(0, 0, 0, 0.25);
   border: 0.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  color: #fff;
+  border-radius: var(--tkn-radius-md);
+  color: var(--tkn-color-white);
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
@@ -313,15 +326,15 @@
 .submitBtn {
   width: 100%;
   min-height: 50px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #5FA8FF, var(--blue));
+  border-radius: var(--tkn-radius-lg);
+  background: linear-gradient(180deg, var(--grad-start), var(--tkn-color-primary-default));
   border: none;
-  color: #fff;
+  color: var(--tkn-color-white);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 8px 18px rgba(0, 122, 255, 0.3);
+  box-shadow: 0 8px 18px rgba(var(--primary-rgb), 0.30);
 }
 .submitBtn:disabled {
   background: rgba(255, 255, 255, 0.15);
@@ -331,35 +344,35 @@
 }
 
 .banner {
-  margin: 12px 18px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  margin: var(--tkn-spacing-6) 18px;
+  padding: var(--tkn-spacing-5) var(--tkn-spacing-7);
+  border-radius: var(--tkn-radius-md);
   background: rgba(255, 204, 0, 0.15);
   border: 0.5px solid rgba(255, 204, 0, 0.4);
-  color: var(--yellow);
+  color: var(--cam-yellow);
   font-size: 13px;
 }
 
 .uploadProgress {
-  margin: 12px 18px;
-  padding: 8px 14px;
-  border-radius: 10px;
+  margin: var(--tkn-spacing-6) 18px;
+  padding: var(--tkn-spacing-4) var(--tkn-spacing-7);
+  border-radius: var(--tkn-radius-md);
   background: rgba(255, 255, 255, 0.08);
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .fileOk {
-  margin: 8px 18px;
+  margin: var(--tkn-spacing-4) 18px;
   font-size: 12px;
-  color: var(--green);
+  color: var(--tkn-color-success-default);
 }
 
 .draftHint {
   text-align: center;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
-  margin-top: 8px;
+  margin-top: var(--tkn-spacing-4);
 }
 
 @media (min-width: 768px) {

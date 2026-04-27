@@ -33,6 +33,7 @@ export const TEST_IDS = {
     'load-more': 'wrongbook.list.load-more',
     empty: 'wrongbook.list.empty',
     skeleton: 'wrongbook.list.skeleton',
+    'tabbar-wrongbook': 'wrongbook.list.tabbar-wrongbook',
   },
   // P07 Detail · SC-02 + SC-03 + SC-04
   wrongbookDetail: {

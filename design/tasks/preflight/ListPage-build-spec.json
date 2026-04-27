@@ -1,0 +1,237 @@
+{
+  "page": "ListPage",
+  "mockup_source": "design/mockups/wrongbook/05_wrongbook_list.html",
+  "business_analysis": "design/analysis/s7-business-analysis.yml",
+  "generated_at": "2026-04-27T00:00:00Z",
+  "testids_source": "frontend/packages/testids/src/index.ts → TEST_IDS.wrongbookList.*",
+  "_design_conflict_notice": "mockup 使用 iOS 系统色（#007AFF / #FF3B30 / #FF9500 / #34C759），design-tokens 使用 Apple web 色（#0071e3 / #c0392b / #b45309 / #1a7d34），两套体系色值有明显差异。Subject 颜色分配也与 --tkn-subject-* 完全不同。所有冲突项已在 token-mapping-review.md 中列出，需 User 决策后 Builder 方可开工。",
+
+  "blocks": [
+    {
+      "id": "nav-bar",
+      "label": "顶部导航栏（大标题 + 筛选图标）",
+      "ui_kit_component": "NavBar",
+      "ui_kit_props": {
+        "title": "错题本",
+        "testIdPrefix": "wrongbook.list",
+        "right": "FilterIcon（SVG · 色值待 User 决策）"
+      },
+      "custom_css": true,
+      "custom_css_reason": "NavBar 组件标准高度 44pt，mockup 大标题 34px/700 需通过 CSS override；sticky + backdrop-filter 由 NavBar 自带，但 title font-size 需 override",
+      "tokens": {
+        "background": "--tkn-color-bg-light（rgba + backdrop-filter 效果）",
+        "title_color": "--tkn-color-text-primary（#1d1d1f ≈ mockup #1C1C1E Δ1.7）",
+        "border_bottom": "MISSING_TOKEN: rgba(60,60,67,.14)，建议用 var(--tkn-color-bg-light) 或新增 --tkn-color-separator",
+        "filter_icon_color": "CONFLICT: mockup #007AFF，token --tkn-color-primary-default #0071e3，User 决策"
+      },
+      "testids": ["wrongbook.list.root"],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "position sticky top:54px（状态栏下方）· padding 6px 18px 10px · backdrop-filter blur(22px) saturate(180%) · h1 34px/700"
+    },
+
+    {
+      "id": "search-bar",
+      "label": "搜索框（含 AI 语义 badge）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "无对应 ui-kit 组件；含 AI 语义 badge，非标准 Input",
+      "tokens": {
+        "background": "MISSING_TOKEN: rgba(118,118,128,.12)，建议新增 --tkn-color-input-bg 或用 --tkn-color-button-active（#ededf2 Δ大）",
+        "placeholder_color": "MISSING_TOKEN: #8E8E93，建议用 --tkn-color-text-tertiary（rgba(0,0,0,.48)）",
+        "border_radius": "--tkn-radius-md（11px，mockup 10px Δ1）",
+        "ai_badge_bg": "CONFLICT: rgba(0,122,255,.10)，依赖 User 对 #007AFF 的决策",
+        "ai_badge_text": "CONFLICT: #007AFF，同上",
+        "padding": "--tkn-spacing-4（8px）× --tkn-spacing-5（10px）"
+      },
+      "testids": ["wrongbook.list.filter-bar"],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "margin-top 8px · border-radius 10px · 右侧 AI 语义 badge 独立样式"
+    },
+
+    {
+      "id": "subject-chips",
+      "label": "学科筛选 chip 横向滚动栏",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "ui-kit Tag 组件无横向滚动容器；chip active 状态使用 #007AFF 色（设计系统冲突）",
+      "tokens": {
+        "chip_inactive_bg": "--tkn-color-white",
+        "chip_inactive_border": "MISSING_TOKEN: rgba(60,60,67,.14)，同 separator",
+        "chip_inactive_text": "MISSING_TOKEN: #3C3C43，建议 --tkn-color-text-secondary",
+        "chip_active_bg": "CONFLICT: #007AFF，User 决策",
+        "chip_active_text": "--tkn-color-white",
+        "chip_active_shadow": "CONFLICT: rgba(0,122,255,.25)，User 决策",
+        "border_radius": "--tkn-radius-pill（999px）",
+        "padding": "--tkn-spacing-3（6px）× --tkn-spacing-5+（11px ≈ --tkn-spacing-5 10px Δ1）",
+        "gap": "--tkn-spacing-4（8px）"
+      },
+      "testids": [
+        "wrongbook.list.filter-subject",
+        "wrongbook.list.filter-bar"
+      ],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "overflow-x:auto · flex-shrink:0 · 全部/数学/物理/化学/英语/语文 + 各自数量 · active chip 带 box-shadow"
+    },
+
+    {
+      "id": "mastery-filter",
+      "label": "掌握度三格筛选（未掌握 / 部分掌握 / 已掌握）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "无对应聚合组件；三格使用 iOS 系统色，与 token 差异大",
+      "tokens": {
+        "card_bg": "--tkn-color-white",
+        "card_border_radius": "--tkn-radius-lg（12px，mockup 12px ✓ exact）",
+        "card_shadow": "--tkn-shadow-card 近似（mockup: 0 1px 0 rgba(0,0,0,.03)）",
+        "value_red": "CONFLICT: #FF3B30（iOS red），token --tkn-color-danger-default #c0392b，User 决策",
+        "value_orange": "CONFLICT: #FF9500（iOS orange），token --tkn-color-warning-default #b45309，User 决策",
+        "value_green": "CONFLICT: #34C759（iOS green），token --tkn-color-success-default #1a7d34，User 决策",
+        "label_color": "MISSING_TOKEN: #8E8E93，建议 --tkn-color-text-tertiary",
+        "active_bg": "CONFLICT: gradient #fff → #F5FAFF（依赖 #007AFF 决策）",
+        "active_border": "CONFLICT: rgba(0,122,255,.25)，User 决策",
+        "active_bar_gradient": "CONFLICT: #5FA8FF → #007AFF，无 token，User 决策",
+        "padding": "--tkn-spacing-4（8px）× --tkn-spacing-5（10px）"
+      },
+      "testids": [
+        "wrongbook.list.active-tab",
+        "wrongbook.list.archive-tab"
+      ],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "flex 1:1:1 三格 · 顶部 3px 渐变 bar（active 时可见）· 数字大字 18px/700 · 标签 11px · active 状态 box-shadow"
+    },
+
+    {
+      "id": "sort-hint",
+      "label": "排序提示栏（按复习时间 · 条数）",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "简单文本行，无对应组件",
+      "tokens": {
+        "text_muted": "MISSING_TOKEN: #8E8E93，建议 --tkn-color-text-tertiary",
+        "text_label": "MISSING_TOKEN: #3C3C43，建议 --tkn-color-text-secondary",
+        "font_size": "12px（无 token，直接写 0.75rem）",
+        "padding": "--tkn-spacing-1（2px）× --tkn-spacing-2（4px）"
+      },
+      "testids": [],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "两端对齐 flex · strong 标签高亮排序字段和条数"
+    },
+
+    {
+      "id": "card-item",
+      "label": "错题卡片（left-bar + thumb缩略图 + body内容 + right状态）",
+      "ui_kit_component": "Card",
+      "ui_kit_props": {
+        "variant": "default",
+        "padding": 12,
+        "testIdPrefix": "wrongbook.list"
+      },
+      "custom_css": true,
+      "custom_css_reason": "Card 为外容器；left-bar / thumb / stage-bar / pill 均无对应 slot，需内部自定义",
+      "tokens": {
+        "card_bg": "--tkn-color-white",
+        "card_border_radius": "APPROX: mockup 16px，token --tkn-radius-lg 12px（Δ4），需 User 决策",
+        "card_shadow": "近似 --tkn-shadow-card（mockup: 0 1px 0 + 0 8px 22px rgba(40,50,90,.05)）",
+        "card_margin_bottom": "--tkn-spacing-5（10px）",
+        "left_bar_width": "3px（固定值，无 spacing token）",
+        "left_bar_red": "CONFLICT: #FF3B30，同 danger 决策",
+        "left_bar_orange": "CONFLICT: #FF9500，同 warning 决策",
+        "left_bar_green": "CONFLICT: #34C759，同 success 决策",
+        "thumb_bg": "MISSING: gradient #fbf8f0 → #f1ece0（无 token，纯自定义）",
+        "thumb_border_radius": "--tkn-radius-sm（8px）",
+        "qno_bg": "MISSING: #fde9e9（无 token）",
+        "qno_color": "MISSING: #7a3b3b（无 token）",
+        "subject_math": "CONFLICT: mockup=--blue(#007AFF)，token=--tkn-subject-math(#c41e3a)，完全不同，User 决策",
+        "subject_physics": "CONFLICT: mockup=--orange(#FF9500)，token=--tkn-subject-physics(#0057b7)，User 决策",
+        "subject_chemistry": "CONFLICT: mockup=--indigo(#5856D6)，token=--tkn-subject-chemistry(#1a6b3a)，User 决策",
+        "subject_english": "CONFLICT: mockup=--green(#34C759)，token=--tkn-subject-english(#9c4f00)，User 决策",
+        "tag_kp_bg": "CONFLICT: rgba(88,86,214,.08)（依赖 #5856D6，无 token）",
+        "tag_kp_text": "CONFLICT: #5856D6（无 token）",
+        "tag_err_bg": "CONFLICT: rgba(255,59,48,.08)（依赖 iOS red）",
+        "tag_err_text": "CONFLICT: #FF3B30",
+        "tag_diff_bg": "MISSING: #FFFAF0（近似 --tkn-color-button-default-light Δ13）",
+        "tag_diff_text": "CONFLICT: #FF9500（iOS orange）",
+        "stage_bar_done": "CONFLICT: #34C759（iOS green）",
+        "stage_bar_now": "CONFLICT: gradient #5FA8FF → #007AFF（无 token）",
+        "stage_bar_empty": "APPROX: #E5E5EA（近似 --tkn-color-button-active #ededf2 Δ13.9）",
+        "pill_red_bg": "CONFLICT: rgba(255,59,48,.12)",
+        "pill_red_text": "CONFLICT: #FF3B30",
+        "pill_orange_bg": "CONFLICT: rgba(255,149,0,.14)",
+        "pill_orange_text": "CONFLICT: #FF9500",
+        "pill_green_bg": "CONFLICT: rgba(52,199,89,.14)",
+        "pill_green_text": "CONFLICT: #34C759",
+        "due_color": "MISSING_TOKEN: #8E8E93，建议 --tkn-color-text-tertiary",
+        "gap_internal": "--tkn-spacing-6（12px）"
+      },
+      "testids": ["wrongbook.list.item-card", "wrongbook.list.skeleton", "wrongbook.list.empty"],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "border-radius:16px（与 --tkn-radius-lg:12px 有差异）· left-bar absolute 0 top 0 bottom，width 3px · thumb 60×74px · Card padding:12"
+    },
+
+    {
+      "id": "fab",
+      "label": "圆形拍照 FAB 按钮",
+      "ui_kit_component": "custom",
+      "custom_css": true,
+      "custom_css_reason": "Button 组件无 FAB 变体；背景和阴影依赖 #007AFF",
+      "tokens": {
+        "bg_gradient": "CONFLICT: #5FA8FF → #007AFF，User 决策",
+        "shadow": "CONFLICT: rgba(0,122,255,.35) + rgba(0,122,255,.20)，User 决策",
+        "size": "60×60px（固定尺寸）",
+        "border_radius": "--tkn-radius-circle（50%）",
+        "icon_color": "--tkn-color-white",
+        "position": "position:absolute right:18px bottom:104px"
+      },
+      "testids": [],
+      "ac": "SC-01.AC-1",
+      "mockup_notes": "fixed 右下 · 高于 tabbar · 点击跳转 /capture"
+    },
+
+    {
+      "id": "tabbar",
+      "label": "底部 Tab 导航（首页/错题本/拍题/复习/我的）",
+      "ui_kit_component": "TabBar",
+      "ui_kit_props": {
+        "items": [
+          {"key": "home", "label": "首页"},
+          {"key": "wrongbook", "label": "错题本"},
+          {"key": "capture", "label": "拍题"},
+          {"key": "review", "label": "复习"},
+          {"key": "me", "label": "我的"}
+        ],
+        "activeKey": "wrongbook",
+        "testIdPrefix": "wrongbook.list"
+      },
+      "custom_css": true,
+      "custom_css_reason": "TabBar 组件使用 --tkn-color-primary-default 作为 active 色；mockup 用 #007AFF，需 User 决策是否统一",
+      "tokens": {
+        "active_color": "CONFLICT: #007AFF，token --tkn-color-primary-default #0071e3，User 决策",
+        "inactive_color": "MISSING_TOKEN: #8E8E93，建议 --tkn-color-text-tertiary",
+        "background": "--tkn-color-white（rgba(.78) + backdrop-filter，TabBar 自带）",
+        "border_top": "MISSING_TOKEN: rgba(60,60,67,.14)"
+      },
+      "testids": [
+        "wrongbook.list.tabbar-wrongbook"
+      ],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "height 84px · padding-bottom 24px（safe area）· 错题本 tab 为 active · TabBar 组件可直接复用但需 active 色对齐"
+    },
+
+    {
+      "id": "load-more",
+      "label": "加载更多按钮（列表底部）",
+      "ui_kit_component": "Button",
+      "ui_kit_props": {
+        "variant": "ghost",
+        "fullWidth": true
+      },
+      "custom_css": false,
+      "tokens": {
+        "text_color": "CONFLICT: #007AFF，User 决策"
+      },
+      "testids": ["wrongbook.list.load-more"],
+      "ac": "SC-15.AC-1",
+      "mockup_notes": "游标分页 · 有更多时显示 · Button ghost 变体"
+    }
+  ]
+}

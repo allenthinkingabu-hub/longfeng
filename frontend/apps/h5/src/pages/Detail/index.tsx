@@ -169,7 +169,7 @@ export const DetailPage: React.FC = () => {
             </div>
             <div className={s.explainCard} data-testid={TEST_IDS.wrongbookDetail['explain-stream']} aria-live="polite">
               {streamError ? (
-                <span style={{ color: '#FF3B30' }}>{streamError}</span>
+                <span className={s.explainError}>{streamError}</span>
               ) : explain || (
                 <span className={s.explainPlaceholder}>{t('wrongbook_detail.explain_loading')}</span>
               )}
@@ -264,8 +264,7 @@ export const DetailPage: React.FC = () => {
                 {t('common.cancel')}
               </button>
               <button
-                className={s.btnPrimary}
-                style={{ background: 'linear-gradient(180deg,#FF6B5E,#FF3B30)', boxShadow: '0 10px 24px rgba(255,59,48,.28)' }}
+                className={`${s.btnPrimary} ${s.btnDanger}`}
                 onClick={() => softDelete.mutate()}
                 disabled={softDelete.isPending}
                 data-testid={TEST_IDS.wrongbookDetail.delete.confirm}
