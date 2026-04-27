@@ -1,0 +1,143 @@
+{
+  "phase": "s4",
+  "service": "ai-analysis-service",
+  "orm": {
+    "allowed": ["JPA", "QueryDSL", "@Query nativeQuery=true（仅 pgvector 余弦查询用）"],
+    "forbidden": ["MyBatis", "Mapper XML", "JdbcTemplate（除 migration 外）"],
+    "source": "ADR 0006 (S3) · 沿用"
+  },
+  "messaging": {
+    "subscribed_topics": ["wrongbook.item.changed"],
+    "consumer_group": "ai-analysis-cg",
+    "published_topics": [],
+    "publish_simplification_note": "原计划 wrongbook.similar.requested 改为同步查询 · 见 ADR 0015",
+    "allowed": ["RocketMQ 5.x · @RocketMQMessageListener"],
+    "forbidden": ["Seata", "DTM", "Spring Cloud Stream（非本项目模式）"]
+  },
+  "id_strategy": {
+    "allowed": ["Snowflake（应用层 SnowflakeIdGenerator）", "BIGSERIAL（仅 ai_usage_log · DDL 已定）"],
+    "forbidden": ["UUID 主键", "Random Long", "其他 sequence"],
+    "note": "wrong_item_analysis.id 走 Snowflake；ai_usage_log.id 走 BIGSERIAL（原 DDL 设计 · 不改）"
+  },
+  "state_machine": {
+    "allowed": ["Service 层手写枚举 + 守卫"],
+    "forbidden": ["Spring Statemachine 库"],
+    "transitions_codes": {
+      "0": "success",
+      "1": "fallback_to_manual",
+      "9": "pending_analysis"
+    }
+  },
+  "transaction": {
+    "rule": "AnalysisService.analyze 主路径必须单事务：INSERT wrong_item_analysis + UPDATE wrong_item.embedding + INSERT ai_usage_log",
+    "audit_log_rule": "管理员 retry 时同事务写 audit_log（沿用 S3 audit_log 表）",
+    "forbidden": ["@Async 写 ai_usage_log", "embedding 异步回填", "事后单独写审计"]
+  },
+  "soft_delete": {
+    "applies": false,
+    "note": "本服务无软删需求 · ai_usage_log INSERT-only · wrong_item_analysis 删除走级联（FK ON DELETE RESTRICT · 见 §1.5）"
+  },
+  "circuit_breaker": {
+    "library": "Sentinel 2023.0.1.0",
+    "allowed": ["@SentinelResource 包装 chat/embed", "Nacos file-ds 规则源"],
+    "forbidden": ["Resilience4j", "Hystrix（已 EOL）", "自实现重试 + 熔断双重叠加"],
+    "rules": {
+      "circuit_breaker": "failureRatio > 50% · 滑窗 10s · 最小调用 5",
+      "rate_limit": "QPS = 10 per provider",
+      "timeout": "30s per LLM call · retry 2 次 · consumer 总预算 90s"
+    }
+  },
+  "feature_flag": {
+    "config_source": "Nacos · feature.llm-provider",
+    "allowed_values": ["dashscope", "openai"],
+    "test_only_value": "stub",
+    "hot_reload": true,
+    "forbidden": ["写死 if-else by env", "通过 application.yml 而非 Nacos 切换"]
+  },
+  "secrets": {
+    "scheme": "External Secrets · K8s Secret · 本地 .env",
+    "env_vars": ["AI_DASHSCOPE_KEY", "AI_OPENAI_KEY"],
+    "yml_pattern": "${AI_DASHSCOPE_KEY:} 占位 · 默认空值",
+    "forbidden": [
+      "明文 API Key 写入任何 src/ 或 *.yml",
+      "API Key 出现在 git log 或 PR diff",
+      "API Key 写入 README / docs"
+    ],
+    "ci_check": "secret-detection 扫描 sk-* / AI_*_KEY=<value> 模式 · 命中 block merge"
+  },
+  "pii": {
+    "redactor_class": "PIIRedactor",
+    "patterns": {
+      "phone": "1[3-9]\\d{9}",
+      "idcard": "\\d{17}[\\dX]",
+      "student_name": "user_account.username 反查"
+    },
+    "placeholders": ["{phone}", "{idcard}", "{student}"],
+    "enforcement": "WireMock IT CapturedMessage 双断言（含占位符 + 不含原 PII）",
+    "violation_behavior": "CI red · block merge · 安全红线"
+  },
+  "llm_client": {
+    "preferred": "Spring AI 1.0.0-M1（org.springframework.ai:spring-ai-openai-spring-boot-starter / spring-ai-dashscope）",
+    "fallback": "HttpLlmProvider（WebClient / Feign）+ Sentinel 包装",
+    "switch_condition": "Spring AI milestone 拉不下 → 启用 fallback · 记 ADR 0014",
+    "forbidden": ["LangChain4j（ADR 0008 决议）", "OpenAI 官方 SDK 直接使用（Spring AI 已封装）"]
+  },
+  "embedding": {
+    "dimension": 1024,
+    "models_allowed": ["dashscope text-embedding-v2", "openai text-embedding-3-small（截断到 1024）"],
+    "write_target": "wrong_item.embedding（pgvector vector(1024)）",
+    "forbidden": ["维度 != 1024", "embedding 写到 ai-analysis 自有表（应回写 wrong_item）"]
+  },
+  "cost_log": {
+    "table": "ai_usage_log",
+    "migration": "V1.0.023__ai_usage_log.sql",
+    "renumber_reason": "原计划 V1.0.020 已被 S3 wrong_item_version 占用（漂移 DA）",
+    "fields": ["id", "user_id", "provider", "model", "tokens_in", "tokens_out", "cost_cents", "created_at"],
+    "operations_allowed": ["INSERT"],
+    "operations_forbidden": ["UPDATE", "DELETE（90 天清理走 S10 scheduler）"],
+    "must_not_contain": ["stemText 原文", "PII"]
+  },
+  "test_strategy": {
+    "unit": ["PIIRedactorTest 必须覆盖手机/身份证/姓名三类 + 边缘 case"],
+    "integration": ["AiAnalysisIntegrationTestBase 提供 WireMock + Postgres + RocketMQ Embedded"],
+    "e2e": ["AnalysisE2EIT 覆盖：正常 LLM、JSON 失败 fallback、双 provider 失败 pending、admin retry、similar 查询"],
+    "smoke": ["MockMvcSmokeIT 覆盖 4 个域端点 + 2 probe 探针"],
+    "wiremock_assertion": "PIIRedactorAssertion · CapturedMessage.body 必须含占位符且不含原 PII",
+    "real_llm_local": "不要求 · IT 全走 WireMock 桩（Q3-R1）"
+  },
+  "openapi": {
+    "tooling": "springdoc-openapi 2.x",
+    "endpoints_required_annotation": ["GET /analysis/{itemId}", "POST /analysis/{itemId}/retry", "GET /analysis/provider", "GET /analysis/{itemId}/similar"],
+    "static_contract_file": "backend/ai-analysis-service/src/main/resources/openapi/ai-analysis.yaml",
+    "consistency_check": "Builder 完成后比对 controller 注解生成的 spec 与静态 yaml · 不一致需更新静态文件"
+  },
+  "forbidden_patterns_summary": [
+    "MyBatis / Mapper XML",
+    "Seata 分布式事务",
+    "DTM",
+    "Spring Statemachine 库",
+    "UUID 主键（wrong_item_analysis）",
+    "Resilience4j（用 Sentinel）",
+    "LangChain4j（用 Spring AI）",
+    "API Key 明文",
+    "@Async 写 ai_usage_log",
+    "embedding 异步回填",
+    "原始 PII 出现在 LLM 请求 body",
+    "ai_usage_log 记 stemText 原文",
+    "本 Phase 引入 @Scheduled 自动重试 pending_analysis",
+    "subject-based / cost-based 动态路由（违反 ADR 0011）",
+    "prompt 升级时回溯历史 status=0 记录"
+  ],
+  "required_patterns_summary": [
+    "JPA + QueryDSL",
+    "Snowflake @GeneratedValue 自定义 generator",
+    "RocketMQ @RocketMQMessageListener · ai-analysis-cg consumer group",
+    "Sentinel @SentinelResource 包装 LLM 调用",
+    "Nacos feature.llm-provider 热切换",
+    "External Secrets 注入 API Key",
+    "PIIRedactor 强制前置",
+    "@Transactional 单事务覆盖 analysis + embedding + usage_log",
+    "Consumer 入口幂等 SELECT 1",
+    "JSON schema 校验 + raw_json 保真"
+  ]
+}

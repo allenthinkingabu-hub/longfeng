@@ -1,0 +1,409 @@
+{
+  "phase": "s4",
+  "service": "ai-analysis-service",
+  "service_root": "backend/ai-analysis-service",
+  "base_package": "com.longfeng.aianalysis",
+  "arch_source": "design/arch/s4-ai-analysis.md",
+  "api_contracts_source": [
+    "frontend/packages/api-contracts/src/clients/analysis.ts",
+    "frontend/packages/api-contracts/src/types.ts"
+  ],
+  "business_analysis": "NOT_FOUND · special_requirements 已在 arch front matter 内联（gate_status=approved）",
+  "generated_at": "2026-04-27T00:00:00Z",
+  "scaffold_status": "PARTIAL_EXISTS · §8 符号清单中所列类已建有空骨架，Builder 任务为按 spec 填充实现",
+
+  "_api_contracts": {
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/analysis/{itemId}/similar",
+        "query": { "k": "integer · default 3 · max 10" },
+        "request_dto": null,
+        "response_dto": "SimilarResponse · { items: SimilarItem[] }",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/analysis.ts:6-8",
+        "arch_ref": "design/arch/s4-ai-analysis.md §4.1 · L403-411",
+        "match_status": "RESOLVED · G-02 决议为方案 (a) 后端跟前端字段"
+      },
+      {
+        "method": "GET",
+        "path": "/analysis/{itemId}",
+        "request_dto": null,
+        "response_dto": "AnalysisVO · application/json",
+        "frontend_file": "（前端无独立 client · 短轮询场景使用 httpClient.get）",
+        "arch_ref": "design/arch/s4-ai-analysis.md §4.1 · L383-390",
+        "match_status": "RESOLVED · G-01 决议为方案 (c) 双端点并存 · 此端点保留为 REST JSON · 取已分析的完整结果"
+      },
+      {
+        "method": "GET",
+        "path": "/analysis/{itemId}/stream",
+        "request_dto": null,
+        "response_dto": "SSE · text/event-stream · 流式 ExplainChunk",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/analysis.ts:11-27（待前端把 EventSource 路径从 /analysis/{id} 改为 /analysis/{id}/stream）",
+        "arch_ref": "design/arch/s4-ai-analysis.md §4.1（待提 PR 同步新增）",
+        "match_status": "NEW · G-01 决议引入 · 仅做已存 explain 的流式回放，未存或 status=9 时返回单条提示 chunk + done:true"
+      },
+      {
+        "method": "POST",
+        "path": "/analysis/{itemId}/retry",
+        "request_dto": null,
+        "response_dto": "202 Accepted",
+        "frontend_file": "NOT_CALLED · 管理员接口",
+        "arch_ref": "design/arch/s4-ai-analysis.md §4.1 · L391-397",
+        "match_status": "ACCEPTED · G-03 接受现状（前端不调，仅后端实现）"
+      },
+      {
+        "method": "GET",
+        "path": "/analysis/provider",
+        "request_dto": null,
+        "response_dto": "{ provider: 'dashscope' | 'openai' | 'stub' }",
+        "frontend_file": "NOT_CALLED · 观测接口",
+        "arch_ref": "design/arch/s4-ai-analysis.md §4.1 · L398-402",
+        "match_status": "ACCEPTED · G-04 接受现状（前端不调，仅后端实现）"
+      }
+    ],
+    "frontend_types": {
+      "SimilarItem": "{ id: string, stem_text: string, distance: number, subject: string }",
+      "SimilarResponse": "{ items: SimilarItem[] }",
+      "ExplainChunk": "{ chunk: string, done?: boolean }"
+    },
+    "resolved_dtos": {
+      "SimilarItem": {
+        "decision": "G-02 方案 (a) · 后端跟前端字段",
+        "schema": {
+          "id": "string · Snowflake-Long → String.valueOf",
+          "stem_text": "string · 题干原文（用于前端列表项直渲，避免 N+1）",
+          "subject": "string · math/physics/chemistry/english/chinese",
+          "distance": "number · 1 - cosine_similarity · 范围 [0, 2] · 仅返回 ≤ 1.5 项"
+        },
+        "implementation_hint": "native SQL：SELECT id, stem_text, subject, 1 - (embedding <=> ?::vector) AS distance FROM wrong_item WHERE embedding IS NOT NULL AND id <> ? AND deleted_at IS NULL ORDER BY embedding <=> ?::vector LIMIT ?；distance > 1.5 在 Service 层 filter 掉，避免索引失效"
+      },
+      "AnalysisVO": {
+        "decision": "G-05 落定 · 基于 §2.1 类图 + S1 DDL 推导 · 与 G-01 (c) 决议配套",
+        "schema": {
+          "id": "string · Snowflake-Long → string",
+          "wrong_item_id": "string",
+          "version": "integer · 即 PROMPT_VERSION_CODE",
+          "model_provider": "string · 'dashscope' | 'openai' | 'stub'",
+          "model_name": "string",
+          "status": "string · 'success' | 'fallback' | 'pending' · 序列化时映射 0→success / 1→fallback / 9→pending",
+          "explain": "string · 来自 error_reason 字段（漂移 DD 决议）",
+          "cause_tag": "string · 'CONCEPT' | 'CALCULATION' | 'COMPREHENSION' | 'HANDWRITING' | 'OTHER'",
+          "auto_tags": "string[] · 来自 knowledge_points",
+          "solution_steps": "object · JSONB 透传",
+          "finished_at": "string · ISO 8601"
+        }
+      },
+      "ExplainChunk": {
+        "decision": "G-01 (c) 决议 · SSE 帧 payload",
+        "schema": {
+          "chunk": "string · 一段 explain 文本",
+          "done": "boolean · 末帧为 true · 触发前端 es.close()"
+        }
+      }
+    },
+    "status_type": {
+      "frontend_values": "N/A · 前端无 AnalysisVO.status 字段使用",
+      "backend_values": [0, 1, 9],
+      "backend_meaning": {
+        "0": "success · LLM 返回且 JSON 校验通过",
+        "1": "fallback_to_manual · LLM JSON schema 校验失败",
+        "9": "pending_analysis · LLM 两家均超时/熔断 · 等管理员 /retry"
+      },
+      "mapping_required": false,
+      "mapping_note": "DDL CHECK IN(0,1,9) 是真源（Q1-R1 决议）· 暂无前端 status 消费场景；若日后 AnalysisVO 暴露给前端，应序列化为字符串枚举（如 'success'/'fallback'/'pending'）"
+    },
+    "sse_protocol": {
+      "endpoint": "GET /analysis/{itemId}/stream",
+      "media_type": "text/event-stream",
+      "chunk_shape": "{ chunk: string, done?: boolean }",
+      "frontend_path_prefix": "/api/v1/ · 前端 EventSource 直接写死（绕过 httpClient · analysis.ts:12 待改路径加 /stream 后缀）",
+      "termination": "末条 chunk 携带 done:true · 前端调用 es.close()",
+      "behavior_rules": [
+        "仅做已存数据的流式回放 · 不旁路 MQ 触发即时分析（避免与 consumer 主路径竞态）",
+        "status=0 → 分块推送 wrong_item_analysis.error_reason · 末帧 done:true",
+        "status=1 (fallback_to_manual) → 单帧 chunk='当前题目暂未生成解析，请稍后重试' + done:true",
+        "status=9 (pending_analysis) → 单帧 chunk='正在分析中，请稍后查看' + done:true",
+        "未分析（404 等价场景） → 单帧 chunk='尚未分析' + done:true · HTTP 仍返 200（SSE 不应中途 4xx）",
+        "分块策略：按句号 / 80 字符为单位切（实现细节由 Builder 定）",
+        "实现选型：@GetMapping(produces=TEXT_EVENT_STREAM_VALUE) + SseEmitter 或 Flux<ExplainChunk> · 不强制引入 WebFlux 全栈"
+      ]
+    }
+  },
+
+  "_business_rules": {
+    "state_machine": {
+      "states": ["pending", "success", "fallback_to_manual", "pending_analysis"],
+      "state_codes": { "pending": "(临时态 · 不持久化)", "success": 0, "fallback_to_manual": 1, "pending_analysis": 9 },
+      "transitions": [
+        { "from": "pending", "to": "success", "trigger": "LLM 返回 + JSON schema 通过" },
+        { "from": "pending", "to": "fallback_to_manual", "trigger": "LLM 返回但 JSON schema 失败" },
+        { "from": "pending", "to": "pending_analysis", "trigger": "LLM 两家均超时/熔断" },
+        { "from": "pending_analysis", "to": "success", "trigger": "admin /retry 成功" },
+        { "from": "pending_analysis", "to": "fallback_to_manual", "trigger": "admin /retry 仍 JSON 坏" }
+      ],
+      "invariants": [
+        "INV-01: (wrong_item_id, version) 唯一 · uq_analysis_version",
+        "INV-02: version >= 1 · ck_analysis_version",
+        "INV-03: status ∈ {0,1,9} · ck_analysis_status",
+        "INV-04: LLM 请求 body 永不含原 PII",
+        "INV-05: embedding 写回维度 = 1024",
+        "INV-06: 每次 LLM 调用一行 ai_usage_log",
+        "INV-07: API Key 不出现在源码 / yml"
+      ]
+    },
+    "idempotency": {
+      "scope": "Consumer side · wrong_item_analysis(wrong_item_id, version)",
+      "key_pattern": "DB unique index uq_analysis_version",
+      "duplicate_behavior": "consumer 入口 SELECT 1 命中即 ack 跳过 · 不再调 LLM",
+      "note": "本 Phase 无 HTTP POST 写入端点，幂等只作用于 MQ 消费"
+    },
+    "pii_redaction": {
+      "scope": "PIIRedactor.redact(rawText, studentId) → sanitized",
+      "patterns": {
+        "phone": "1[3-9]\\d{9} → {phone}",
+        "idcard": "\\d{17}[\\dX] → {idcard}",
+        "student_name": "user_account.username 反查 → {student}"
+      },
+      "enforcement": "WireMock IT 双断言：① PIIRedactorTest 单元测试 ② WireMock CapturedMessage 回放断言 LLM 请求 body 含占位符且不含原 PII",
+      "violation_behavior": "CI red · block merge（Q7-R2 决议 · 安全红线）"
+    },
+    "provider_routing": {
+      "default": "dashscope",
+      "fallback": "openai",
+      "test_profile": "stub",
+      "switch_strategy": "默认 dashscope · 超时/配额/熔断 → openai · 两家皆败 → AllProvidersFailedException → status=9",
+      "feature_flag": "feature.llm-provider · Nacos 热切换",
+      "note": "Q5-R2 决议：不按学科 · 不按成本动态切换"
+    },
+    "circuit_breaker": {
+      "library": "Sentinel 2023.0.1.0",
+      "rule": "failureRatio > 50% · 滑窗 10s · 最小调用 5",
+      "timeout": "30s per LLM call",
+      "retry": "2 次（每 provider）",
+      "consumer_budget": "90s 总预算（worst-case 3 × 30s）"
+    },
+    "cost_control": {
+      "table": "ai_usage_log",
+      "granularity": "每次 LLM 调用 1 行",
+      "fields": ["user_id", "provider", "model", "tokens_in", "tokens_out", "cost_cents", "created_at"],
+      "daily_budget_cents": 10000,
+      "over_budget_behavior": "Sentinel 降级 · 保 embedding · 舍 chat",
+      "purge": "90 天滚动清理 · scheduler 留 S10",
+      "note": "ai_usage_log 不记 stemText 原文"
+    },
+    "prompt_versioning": {
+      "storage": "src/main/resources/prompts/subject-<subject>-v<N>.md",
+      "version_code_constant": "PROMPT_VERSION_CODE · INT · 写入 wrong_item_analysis.version（Q2-R1 决议）",
+      "front_matter_required": ["prompt_version", "prompt_version_code", "subject", "output_schema"],
+      "schema_validation": "LLM 返回 JSON 必须通过 output_schema 校验，否则 status=1",
+      "upgrade_policy": "新增错题按新 version · status=0 老记录保持 · 不回溯（Q6-R2 决议）"
+    },
+    "embedding": {
+      "dimension": 1024,
+      "models": ["dashscope text-embedding-v2", "openai text-embedding-3-small（截断到 1024）"],
+      "write_target": "wrong_item.embedding（UPDATE · 非 ai-analysis 自有表）",
+      "similarity_query": "Top-3 · pgvector cosine · distance = 1 - (embedding <=> target) · distance > 1.5 视为不够相似返回空"
+    }
+  },
+
+  "_arch_constraints": {
+    "orm": "JPA + QueryDSL（禁 MyBatis · 沿用 ADR 0006）",
+    "mq": "RocketMQ 5.x · 仅订阅 wrongbook.item.changed（consumer group ai-analysis-cg）· 本 Phase 不发独立事件（ADR 0015 简化）",
+    "id_generation": "Snowflake（沿用 SnowflakeIdGenerator · 禁 BIGSERIAL）",
+    "llm_client": "Spring AI 1.0.0-M1 优先 · 不可用退到 HttpLlmProvider（Feign / WebClient）+ Sentinel 包装（ADR 0014 条件性）",
+    "circuit_breaker": "Sentinel（禁 Resilience4j · 计划 §8.4 决议）",
+    "feature_flag": "Nacos · feature.llm-provider",
+    "secrets": "External Secrets · K8s Secret 注入 AI_API_KEY · 禁源码/yml 明文",
+    "forbidden_patterns": [
+      "MyBatis / Mapper XML",
+      "Seata 分布式事务",
+      "DTM",
+      "Spring Statemachine 库",
+      "UUID 主键",
+      "BIGSERIAL 主键",
+      "Resilience4j",
+      "API Key 明文写入源码或 application.yml",
+      "ai_usage_log 记原始 stemText",
+      "原始 PII 出现在 LLM 请求 body"
+    ],
+    "required_patterns": [
+      "HikariCP 连接池（min=5 max=20）",
+      "Nacos 服务发现 + 配置中心",
+      "Sentinel 熔断 + 流控（QPS=10 / provider）",
+      "@Transactional：INSERT wrong_item_analysis + UPDATE wrong_item.embedding + INSERT ai_usage_log 同事务",
+      "Consumer 幂等：SELECT 1 FROM wrong_item_analysis WHERE wrong_item_id=? AND version=?",
+      "PIIRedactor 在 LLM 调用前强制执行",
+      "Spring AI / HttpLlmProvider 双轨可切换"
+    ],
+    "migrations": {
+      "new_in_s4": [
+        { "version": "V1.0.023", "file": "ai_usage_log.sql", "purpose": "新建 ai_usage_log 表 · 重号原因：V1.0.020 已被 S3 占用（漂移 DA）" }
+      ],
+      "depends_on": [
+        "S1 V1.0.012 · wrong_item_analysis 表（version INT · status SMALLINT CHECK IN(0,1,9) · uq_analysis_version）",
+        "S1 · wrong_item.embedding vector(1024) + pgvector 扩展",
+        "S1 · user_account（PIIRedactor.redact 反查 username）"
+      ]
+    }
+  },
+
+  "layers": [
+    {
+      "id": "entity",
+      "label": "实体层（Entity / Domain Model）",
+      "symbols": ["WrongItemAnalysis", "AiUsageLog", "ItemChangedEvent"],
+      "key_rules": [
+        "WrongItemAnalysis 聚合根 · 字段对齐 S1 DDL：id BIGINT, wrong_item_id BIGINT, version INT, model_provider VARCHAR, model_name VARCHAR, input_tokens INT, output_tokens INT, cost_cents INT, error_reason TEXT, error_type VARCHAR, solution_steps JSONB, knowledge_points JSONB, difficulty SMALLINT, raw_json JSONB, status SMALLINT, finished_at TIMESTAMPTZ",
+        "解释文本（explain）落 error_reason · solution_steps 落分步 · autoTags 序列化入 knowledge_points（漂移 DD/DE 决议）",
+        "uq_analysis_version (wrong_item_id, version) 唯一索引",
+        "ck_analysis_status: status ∈ {0,1,9}",
+        "ck_analysis_version: version >= 1",
+        "AiUsageLog · INSERT-only · 字段：id BIGSERIAL（DB 侧）· user_id, provider, model, tokens_in, tokens_out, cost_cents, created_at",
+        "ItemChangedEvent · MQ payload VO · 字段：itemId, action, version, occurredAt",
+        "Snowflake 主键由 SnowflakeIdGenerator 应用层生成（@GeneratedValue 自定义 generator）"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/entity/WrongItemAnalysis.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/entity/AiUsageLog.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/event/ItemChangedEvent.java"
+      ]
+    },
+    {
+      "id": "repository",
+      "label": "仓储层（Repository）",
+      "symbols": ["WrongItemAnalysisRepository", "AiUsageLogRepository"],
+      "key_rules": [
+        "继承 JpaRepository<Entity, Long>",
+        "WrongItemAnalysisRepository 自定义查询：findByWrongItemIdAndVersion · findTopByWrongItemIdOrderByVersionDesc（取 max version）· similar 查询走 native SQL（pgvector cosine）",
+        "AiUsageLogRepository 仅需 save · 无需自定义",
+        "复杂相似题查询用 @Query nativeQuery=true（pgvector <=> 操作符 JPA 不直接支持）"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/repo/WrongItemAnalysisRepository.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/repo/AiUsageLogRepository.java"
+      ]
+    },
+    {
+      "id": "llm_provider",
+      "label": "LLM Provider 层（接口 + 实现 + 路由）",
+      "symbols": ["LlmProvider", "HttpLlmProvider", "StubProvider", "ProviderRouter", "NoProviderException", "AllProvidersFailedException", "LlmCallException", "LlmTransportException"],
+      "key_rules": [
+        "LlmProvider 接口：String name() · ChatResponse chat(PromptSpec) · float[] embed(String text)",
+        "HttpLlmProvider 是 dashscope/openai 通用实现 · 通过 LlmConfig 注入 baseUrl + apiKey",
+        "StubProvider 仅 @Profile('test') 装载 · IT 由 WireMock 驱动",
+        "ProviderRouter 维护 currentChat() / currentEmbed() / currentProviderName() · 读 Nacos feature.llm-provider 热切换",
+        "异常层级：LlmTransportException（IO/超时）· LlmCallException（4xx/5xx 业务）· NoProviderException（无可用 provider）· AllProvidersFailedException（fallback 也败）",
+        "Sentinel @SentinelResource 包装 chat/embed · blockHandler 触发 fallback provider"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/llm/LlmProvider.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/llm/HttpLlmProvider.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/llm/StubProvider.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/llm/ProviderRouter.java"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "业务层（Service）",
+      "symbols": ["AnalysisService", "PIIRedactor", "PromptTemplates"],
+      "key_rules": [
+        "AnalysisService.analyze(itemId, version) · 主路径：① consumer 入口幂等 SELECT ② 拉 wrong_item ③ PIIRedactor.redact ④ ProviderRouter.currentChat → chat ⑤ ProviderRouter.currentEmbed → embed ⑥ 事务内 INSERT wrong_item_analysis(status=0) + UPDATE wrong_item.embedding + INSERT ai_usage_log",
+        "AnalysisService.persistPending(itemId, version) · 降级路径：INSERT wrong_item_analysis(status=9) + INSERT ai_usage_log（标记降级）",
+        "AnalysisService.retry(itemId) · 管理员触发 · 取当前 max version + 1 · 走主路径",
+        "AnalysisService.findLatest(itemId) · 取 max version 的 AnalysisVO · 字段映射：DB error_reason→explain · status SMALLINT→string('success'/'fallback'/'pending') · id/wrong_item_id Long→string · knowledge_points JSONB→auto_tags[]",
+        "AnalysisService.streamExplain(itemId) · 返回 Flux<ExplainChunk> 或 SseEmitter · G-01 (c) 决议：仅读已存数据流式回放 · 不旁路 MQ · status=0 分块推送 error_reason · status=1/9/未存返回单条提示 chunk + done:true",
+        "AnalysisService.findSimilar(itemId, k) · G-02 (a) 决议字段：{ id:string, stem_text, subject, distance } · native SQL 用 pgvector <=> · distance > 1.5 在 Service 层 filter",
+        "PIIRedactor.redact(rawText, studentId) · 正则 + user_account 反查 · 返回 sanitized",
+        "PromptTemplates · ResourceClass · subject + versionCode → 模板字符串 · render(req) 填充占位符",
+        "JSON schema 校验：LLM 返回非合法 JSON 或不通过 output_schema → status=1（fallback_to_manual）",
+        "audit_log：MVP 阶段沿用 S3 audit_log 表 · admin retry 写一行（actor=admin, action=ai_retry）"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/service/AnalysisService.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/pii/PIIRedactor.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/prompt/PromptTemplates.java"
+      ]
+    },
+    {
+      "id": "consumer",
+      "label": "MQ 消费层（RocketMQ Consumer）",
+      "symbols": ["WrongItemChangedConsumer"],
+      "key_rules": [
+        "订阅 topic = wrongbook.item.changed · consumer group = ai-analysis-cg",
+        "consumeThreadMax = 16 · timeout 90s（线程级总预算）",
+        "@RocketMQMessageListener · 入口先反序列化为 ItemChangedEvent · 调 AnalysisService.analyze(itemId, version)",
+        "AllProvidersFailedException 不抛出而是 catch → AnalysisService.persistPending → ack（不阻塞主链路）",
+        "其他 RuntimeException 抛出 · MQ 重试机制兜底"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/consumer/WrongItemChangedConsumer.java"
+      ]
+    },
+    {
+      "id": "controller",
+      "label": "控制层（Controller + DTO）",
+      "symbols": ["AnalysisController", "HealthController"],
+      "key_rules": [
+        "路径前缀：/analysis（无 /api/v1/ 前缀，由 gateway 统一加）",
+        "GET /analysis/{itemId} · REST JSON · produces=application/json · 返回 AnalysisVO（字段见 _api_contracts.resolved_dtos.AnalysisVO）· 404 if 未分析或仅 status=9",
+        "GET /analysis/{itemId}/stream · SSE · produces=MediaType.TEXT_EVENT_STREAM_VALUE · 返回 SseEmitter 或 Flux<ExplainChunk> · 行为见 _api_contracts.sse_protocol.behavior_rules",
+        "POST /analysis/{itemId}/retry · 仅管理员（@PreAuthorize 或 admin gate · 暂沿用 X-Admin header 或 Spring Security role）· 返回 202 Accepted",
+        "GET /analysis/provider · 返回 { provider: 'dashscope' | 'openai' | 'stub' } · 反查 ProviderRouter.currentProviderName",
+        "GET /analysis/{itemId}/similar?k=3 · k default=3 max=10 · 返回 { items: SimilarItem[] } · 字段：{ id:string, stem_text:string, subject:string, distance:number }",
+        "异常映射：NoProviderException → 503 · AllProvidersFailedException 不暴露给 HTTP（仅 consumer 内消化）· LlmCallException → 502 · 404 by ResponseStatusException(NOT_FOUND)",
+        "HealthController · GET /health 探针 · 返回 { status: 'UP', provider: <name> }"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/controller/AnalysisController.java",
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/controller/HealthController.java"
+      ]
+    },
+    {
+      "id": "openapi",
+      "label": "OpenAPI 规格（springdoc）",
+      "symbols": ["OpenApiConfig"],
+      "key_rules": [
+        "5 个域端点（GET /{id} REST · GET /{id}/stream SSE · POST /{id}/retry · GET /provider · GET /{id}/similar）+ 1 probe 探针（GET /health）全部带 @Operation 注解",
+        "AnalysisVO / SimilarItem / SimilarResponse / ExplainChunk DTO 必须 @Schema 注解 · 字段见 _api_contracts.resolved_dtos",
+        "SSE 端点 OpenAPI 描述：response Content-Type 标注 text/event-stream，schema 注明流式 ExplainChunk",
+        "路径与 §4.1 OpenAPI 片段匹配 · arch §4.1 待 PR 同步加上 GET /analysis/{itemId}/stream 定义",
+        "已存在静态契约 src/main/resources/openapi/ai-analysis.yaml · Builder 需检查与 controller 一致并加上 /stream 端点"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/config/OpenApiConfig.java",
+        "backend/ai-analysis-service/src/main/resources/openapi/ai-analysis.yaml"
+      ]
+    },
+    {
+      "id": "config",
+      "label": "配置层（LlmConfig + Spring AI 接线）",
+      "symbols": ["LlmConfig", "OpenApiConfig"],
+      "key_rules": [
+        "LlmConfig · @ConfigurationProperties(prefix='ai.llm') · 字段：dashscopeBaseUrl, dashscopeApiKey, openaiBaseUrl, openaiApiKey, timeoutSeconds, retryCount",
+        "API Key 来自环境变量 ${AI_DASHSCOPE_KEY} / ${AI_OPENAI_KEY} · 禁明文",
+        "@ConditionalOnProperty 控制 Spring AI 优先 / Feign 退路（ADR 0014）"
+      ],
+      "files_to_implement_or_extend": [
+        "backend/ai-analysis-service/src/main/java/com/longfeng/aianalysis/config/LlmConfig.java",
+        "backend/ai-analysis-service/src/main/resources/application.yml"
+      ]
+    }
+  ],
+
+  "has_blocking_gaps": false,
+  "blocking_gaps_summary": "全部 BLOCKER 已决议（2026-04-27 · @allenthinking）· G-01 选方案 (c) 双端点并存（保留 REST JSON · 新增 GET /analysis/{itemId}/stream SSE 仅做已存数据流式回放）· G-02 选方案 (a) 后端跟前端字段（SimilarItem = {id:string, stem_text, subject, distance}）· 详见 design/tasks/preflight/s4-contract-gaps.md 决议章节",
+  "decisions": {
+    "G-01": {
+      "decision": "方案 (c) 双端点并存",
+      "decided_at": "2026-04-27",
+      "decided_by": "@allenthinking",
+      "rationale": "异步主流程（consumer + DB）保持不变 · SSE 仅做读取层流式回放 · 既满足前端打字机体验又不破坏数据流"
+    },
+    "G-02": {
+      "decision": "方案 (a) 后端跟前端字段",
+      "decided_at": "2026-04-27",
+      "decided_by": "@allenthinking",
+      "rationale": "与 S3 WrongItemVO snake_case + string id 风格一致 · 避免前端 N+1 查询"
+    }
+  }
+}

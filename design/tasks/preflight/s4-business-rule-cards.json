@@ -1,0 +1,231 @@
+[
+  {
+    "id": "BR-01",
+    "title": "Status 数值码映射（DC 漂移决议）",
+    "layer": "service",
+    "rule": "wrong_item_analysis.status SMALLINT 仅取 {0, 1, 9}：0=success（LLM 返回 + JSON schema 通过）· 1=fallback_to_manual（LLM 返回但 schema 失败）· 9=pending_analysis（双 provider 均失败 · 等管理员 /retry）",
+    "violation_behavior": "落库前 Service 层校验 · 非 {0,1,9} 抛 IllegalStateException；DDL CHECK 兜底",
+    "test_scenarios": [
+      "正常 LLM 返回 → status=0",
+      "LLM 返回非法 JSON → status=1",
+      "dashscope 超时 + openai 熔断 → status=9",
+      "管理员 /retry pending_analysis → version+1 重新走主路径"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L8-9 (special_requirements Q1-R1) + L143 (漂移 DC)"
+  },
+  {
+    "id": "BR-02",
+    "title": "Version 列复用 INT（DB 漂移决议）",
+    "layer": "entity+service",
+    "rule": "wrong_item_analysis.version 沿用 S1 DDL INT 类型 · Service 层维护常量 PromptTemplate.PROMPT_VERSION_CODE 映射（prompt-v1.0=1, v1.1=2, ...）· 写入 version=PROMPT_VERSION_CODE",
+    "violation_behavior": "禁止新增 migration 改类型；禁止与字符串 prompt_version 并存",
+    "test_scenarios": [
+      "首次分析 prompt-v1.0 → version=1 写入",
+      "升级 prompt-v1.1 后新分析 → version=2 写入",
+      "(wrong_item_id, version) 唯一冲突 → 复用幂等跳过"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L11-12 (Q2-R1) + L142 (漂移 DB)"
+  },
+  {
+    "id": "BR-03",
+    "title": "幂等键 = (wrong_item_id, version)",
+    "layer": "service+consumer",
+    "rule": "Consumer 入口先 SELECT 1 FROM wrong_item_analysis WHERE wrong_item_id=? AND version=PROMPT_VERSION_CODE · 命中即 ack 跳过 · 不重复调 LLM；DB uq_analysis_version 唯一索引兜底",
+    "violation_behavior": "唯一冲突抛 DataIntegrityViolationException · 上层 catch 后 ack（视为重复消费）",
+    "test_scenarios": [
+      "首次消息 → 走主路径写入",
+      "同一消息重发 → SELECT 命中 ack 跳过",
+      "并发双写命中 uq_analysis_version → 后写者 catch + ack"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L131 (A9 幂等键) + §3.1 L315"
+  },
+  {
+    "id": "BR-04",
+    "title": "PII 脱敏覆盖三类",
+    "layer": "service",
+    "rule": "PIIRedactor.redact(rawText, studentId) 在 LLM 调用前强制执行；覆盖：① 手机号 1[3-9]\\d{9} → {phone}；② 身份证 \\d{17}[\\dX] → {idcard}；③ 学生姓名（user_account.username 反查）→ {student}；不脱敏学校名",
+    "violation_behavior": "WireMock IT 抓到原始 PII（手机号/身份证/姓名 substring）→ 立即 fail + block CI（安全红线）",
+    "test_scenarios": [
+      "PIIRedactorTest 单元：含手机号 + 身份证 + 姓名 → 返回三占位符",
+      "WireMock IT：CapturedMessage.body 含 {phone} 不含 13800138000",
+      "WireMock IT：CapturedMessage.body 不含原始姓名 substring",
+      "学校名（如 '北京四中'）保留不脱敏"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L26-28 (Q7-R2) + L125 (A3) + §4.4"
+  },
+  {
+    "id": "BR-05",
+    "title": "Provider 路由 · dashscope 默认 + openai fallback",
+    "layer": "service+llm",
+    "rule": "ProviderRouter 默认返回 dashscope；超时（30s）/ 配额耗尽 / Sentinel 熔断后 fallback 到 openai；两家皆败抛 AllProvidersFailedException → status=9；不按学科 · 不按成本动态切换",
+    "violation_behavior": "若引入 subject-based 路由或 cost-based 路由 → 违反 ADR 0011，PR 需新写 ADR",
+    "test_scenarios": [
+      "dashscope 正常 → 走 dashscope · ai_usage_log.provider='dashscope'",
+      "dashscope 超时 → fallback openai · 写两行 ai_usage_log",
+      "两家皆超时 → AllProvidersFailedException → status=9 + 写 ai_usage_log（标记 fallback）",
+      "Nacos feature.llm-provider=openai → ProviderRouter.currentChat 返回 openai"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L20-22 (Q5-R2) + L126 (A4) + §7 ADR 0011"
+  },
+  {
+    "id": "BR-06",
+    "title": "Pending 仅管理员手动重试",
+    "layer": "controller+service",
+    "rule": "status=9 (pending_analysis) 后无自动 scheduler；仅 POST /analysis/{itemId}/retry 由管理员调用 · admin gate 必须校验 · version+1 重新入主路径",
+    "violation_behavior": "禁止本 Phase 引入 @Scheduled 自动重试 · 该能力延到 S10 可观察性 Phase",
+    "test_scenarios": [
+      "POST /retry as admin → 202 + 新建 version+1 的 analysis 行",
+      "POST /retry as non-admin → 403",
+      "POST /retry on item without prior pending → 业务校验：取 max version + 1 仍走主路径",
+      "无定时任务自动扫 status=9（grep @Scheduled 不应出现 ai_retry 关键字）"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L17-19 (Q4-R1) + L162-165"
+  },
+  {
+    "id": "BR-07",
+    "title": "Prompt 升级不回溯",
+    "layer": "service",
+    "rule": "新增错题按当前 PROMPT_VERSION_CODE 写入；status=0 的历史记录不自动重跑；批量重跑走独立 ADR + S10 job",
+    "violation_behavior": "禁止本 Phase 添加扫描历史记录的回溯逻辑",
+    "test_scenarios": [
+      "升级 prompt-v1.1（version_code=2）后 · 新错题 version=2",
+      "已有 version=1 status=0 记录保持不变",
+      "管理员 /retry 用当前 PROMPT_VERSION_CODE（即 2）写新行 · 不修改 version=1 旧行"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L23-25 (Q6-R2) + L170-172"
+  },
+  {
+    "id": "BR-08",
+    "title": "事务边界 · 分析 + embedding + usage log 同事务",
+    "layer": "service",
+    "rule": "AnalysisService.analyze 主路径在单个 @Transactional 内：INSERT wrong_item_analysis + UPDATE wrong_item.embedding + INSERT ai_usage_log；任一失败则全部回滚；MQ ack 在事务提交后",
+    "violation_behavior": "禁止 @Async 写 ai_usage_log；禁止 embedding 异步回填",
+    "test_scenarios": [
+      "正常路径 → 三表同事务提交",
+      "embedding 写入失败 → analysis 回滚 · 消息 NACK 重试",
+      "ai_usage_log 写入失败 → 回滚 · 消息 NACK"
+    ],
+    "source": "design/arch/s4-ai-analysis.md §3.1 L329-334 + INV-06"
+  },
+  {
+    "id": "BR-09",
+    "title": "Embedding 维度 1024 锁死",
+    "layer": "service+llm",
+    "rule": "EmbedClient 输出 float[1024]；dashscope text-embedding-v2 原生 1024；openai text-embedding-3-small 截断到 1024；写回 wrong_item.embedding（pgvector vector(1024)）",
+    "violation_behavior": "维度 != 1024 → 落库 SQL 报错；Service 层 assertion 提前抛 IllegalStateException",
+    "test_scenarios": [
+      "dashscope embed → length=1024 ✓",
+      "openai embed → 截断后 length=1024 ✓",
+      "Mock 返回 length=512 → IllegalStateException"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L133 (A11) + INV-05"
+  },
+  {
+    "id": "BR-10",
+    "title": "相似题阈值 distance ≤ 1.5",
+    "layer": "service",
+    "rule": "GET /analysis/{itemId}/similar · k default=3 max=10 · 用 pgvector cosine（1 - (embedding <=> target)）· distance > 1.5 视为不够相似 · 不返回该项；同时排除 itemId 自身和 embedding IS NULL",
+    "violation_behavior": "返回与请求 itemId 相同的项 → IT 失败；返回 distance > 1.5 项 → IT 失败",
+    "test_scenarios": [
+      "查询有 5 个相似项 distance ∈ [0.2, 1.4] · k=3 → 返回前 3",
+      "查询有 2 个项 distance=0.3, 1.8 · k=3 → 返回 1 项（distance=0.3）",
+      "请求 itemId 的 embedding IS NULL → 404 提示先 /retry"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L134 (A12) + §3.3"
+  },
+  {
+    "id": "BR-11",
+    "title": "Sentinel 熔断 + 流控规则",
+    "layer": "llm",
+    "rule": "Sentinel @SentinelResource 包装 ProviderRouter.chat 与 embed · 熔断规则 failureRatio>50% 滑窗 10s 最小调用 5；流控规则 QPS=10 / provider；blockHandler 触发 fallback provider 切换",
+    "violation_behavior": "本 Phase 引入 Resilience4j → 违反约束；规则配置必须经 Nacos file-ds 持久化",
+    "test_scenarios": [
+      "WireMock 返回 5xx 连续 5 次 → 熔断打开 · 后续请求直接走 fallback",
+      "QPS 突增到 15 → Sentinel 限流（部分请求被 block）· consumer 端等待重试",
+      "熔断恢复后 → halfOpen → 单次请求成功 → close"
+    ],
+    "source": "design/arch/s4-ai-analysis.md §5.3 L478-481 + §6"
+  },
+  {
+    "id": "BR-12",
+    "title": "成本上限 · 日 cost_cents < 10000",
+    "layer": "service+llm",
+    "rule": "ai_usage_log 每次调用一行；日累计 cost_cents > 10000 → Sentinel 降级保 embedding 舍 chat（前端 status=fallback_to_manual）",
+    "violation_behavior": "ai_usage_log 不记 stemText 原文（INV 隐含）；超限后仍调用 chat → 违反预算约束",
+    "test_scenarios": [
+      "正常调用 → ai_usage_log INSERT 一行（含 tokens_in/out/cost_cents）",
+      "Mock 当日累计 cost=10500 → 下次只跑 embed · chat 跳过 · status=1",
+      "ai_usage_log 不出现 stemText 字段"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L128 (A6) + §5.2 + §5.4"
+  },
+  {
+    "id": "BR-13",
+    "title": "JSON Schema 校验失败 → fallback",
+    "layer": "service",
+    "rule": "LLM 返回的 JSON 必须通过 prompt 模板 front matter 中 output_schema 校验（required: explain, causeTag, autoTags）；失败则 status=1，原始 raw_json 仍持久化以便审计",
+    "violation_behavior": "schema 通过却字段缺失 → IT 抓到；raw_json 缺失 → 违反审计要求",
+    "test_scenarios": [
+      "LLM 返回 {explain:..., causeTag:'CONCEPT', autoTags:['因式分解']} → 通过 · status=0",
+      "LLM 返回缺 causeTag → schema 失败 · status=1 · raw_json 完整保留",
+      "causeTag='UNKNOWN' 不在枚举 → schema 失败"
+    ],
+    "source": "design/arch/s4-ai-analysis.md §4.3 L424-443"
+  },
+  {
+    "id": "BR-14",
+    "title": "WireMock IT 桩仅 test scope",
+    "layer": "test",
+    "rule": "WireMock 桩与 StubProvider 仅 @Profile('test') · 不可被生产 classpath 引入；本地 IT 全走桩 · 真实 LLM 调用留生产/staging（Q3-R1 决议）",
+    "violation_behavior": "main scope 引入 WireMock 依赖 → 构建失败；StubProvider 在 prod profile 加载 → 启动失败",
+    "test_scenarios": [
+      "本地 ./gradlew :ai-analysis-service:test 全绿 · 不需 AI_API_KEY",
+      "prod profile 启动 · StubProvider 不在 ApplicationContext",
+      "WireMock 在 test runtime classpath · 不在 main classpath"
+    ],
+    "source": "design/arch/s4-ai-analysis.md L14-16 (Q3-R1) + L129 (A7)"
+  },
+  {
+    "id": "BR-15",
+    "title": "API Key 不入源码",
+    "layer": "config",
+    "rule": "AI_DASHSCOPE_KEY / AI_OPENAI_KEY 仅来自环境变量（K8s External Secrets / 本地 .env）· 不出现在任何 src/ 或 application*.yml 文件中",
+    "violation_behavior": "grep 'sk-' 或 'AI_API_KEY=<value>' 命中 · CI 红 · block merge",
+    "test_scenarios": [
+      "grep -rE '(sk-[A-Za-z0-9]{20,}|AI_(DASHSCOPE|OPENAI)_KEY=[^$])' src/ → 0 命中",
+      "application.yml 仅 ${AI_DASHSCOPE_KEY:} 占位符",
+      "secret-detection-action 在 CI pre-merge 跑过"
+    ],
+    "source": "design/arch/s4-ai-analysis.md INV-07 + §6 External Secrets"
+  },
+  {
+    "id": "BR-16",
+    "title": "SSE 端点仅做已存数据流式回放（G-01 决议）",
+    "layer": "controller+service",
+    "rule": "GET /analysis/{itemId}/stream 仅从 wrong_item_analysis 读取已存数据并分块推送，不旁路 MQ 触发即时分析（避免与 consumer 路径竞态写入同一 (item_id, version)）；status=0 推送 error_reason 文本块，末帧 done:true；status=1/9 或未存返回单条提示 chunk + done:true（HTTP 仍 200）",
+    "violation_behavior": "controller 内调用 ProviderRouter.chat 触发 LLM → 违反约束；SSE 中途返回 HTTP 4xx/5xx → 浏览器 EventSource.onerror 体验差",
+    "test_scenarios": [
+      "status=0 · error_reason='这道题考查因式分解。' → 至少 2 帧 chunk + 末帧 done:true",
+      "status=1 → 单帧 chunk='当前题目暂未生成解析，请稍后重试' + done:true · 不调 LLM",
+      "status=9 → 单帧 chunk='正在分析中，请稍后查看' + done:true",
+      "未分析（无 wrong_item_analysis 行）→ 单帧 chunk='尚未分析' + done:true · HTTP 200",
+      "并发：同一 itemId 两个 SSE 连接 · 不应触发任何 INSERT wrong_item_analysis"
+    ],
+    "source": "design/tasks/preflight/s4-contract-gaps.md · G-01 决议方案 (c) 双端点并存"
+  },
+  {
+    "id": "BR-17",
+    "title": "SimilarItem 字段对齐前端（G-02 决议）",
+    "layer": "service+controller",
+    "rule": "GET /analysis/{itemId}/similar 返回 { items: SimilarItem[] }，每项必须包含且仅包含字段：id (string · Snowflake-Long → String.valueOf), stem_text (string), subject (string), distance (number)；distance > 1.5 在 Service 层 .filter() 掉，不在 SQL ORDER BY 后加 WHERE（避免索引失效）；排除 itemId 自身和 embedding IS NULL；deleted_at IS NULL",
+    "violation_behavior": "返回字段为 {itemId:long, distance} → 前端类型不兼容；distance > 1.5 项漏过 → IT 失败",
+    "test_scenarios": [
+      "k=3 + 5 个候选 distance ∈ [0.2, 1.4] → 返回 3 项 · 字段完整",
+      "k=3 + 候选 distance=[0.3, 0.8, 1.8, 1.9] → 返回 2 项（distance≤1.5 过滤）",
+      "目标 itemId 自身在数据库中 distance=0 → 必须排除",
+      "id 字段断言为 String 类型（jsonPath '$.items[0].id' 是字符串非数字）",
+      "返回 stem_text 是 wrong_item.stem_text 原文（未脱敏）"
+    ],
+    "source": "design/tasks/preflight/s4-contract-gaps.md · G-02 决议方案 (a) 后端跟前端字段"
+  }
+]

@@ -3,6 +3,8 @@ package com.longfeng.aianalysis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -183,17 +185,78 @@ class AnalysisE2EIT extends AiAnalysisIntegrationTestBase {
   }
 
   @Test
-  @DisplayName("admin /retry bumps version · new analysis row")
+  @DisplayName("admin /retry bumps version · new analysis row · X-Admin gate enforced")
   void adminRetryBumpsVersion() throws Exception {
     consumer.onMessage(
         om.writeValueAsString(new ItemChangedEvent(ITEM_ID, "created", 0L, Instant.now())));
-    mvc.perform(post("/analysis/" + ITEM_ID + "/retry")).andExpect(status().isAccepted());
+    mvc.perform(post("/analysis/" + ITEM_ID + "/retry").header("X-Admin", "true"))
+        .andExpect(status().isAccepted());
     Integer cnt =
         jdbc.queryForObject(
             "SELECT count(*) FROM wrong_item_analysis WHERE wrong_item_id = ?",
             Integer.class,
             ITEM_ID);
     assertThat(cnt).isEqualTo(2);
+  }
+
+  @Test
+  @DisplayName("/retry without X-Admin → 403 Forbidden (admin gate)")
+  void retryWithoutAdminHeaderForbidden() throws Exception {
+    mvc.perform(post("/analysis/" + ITEM_ID + "/retry")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("GET /analysis/{itemId} · returns AnalysisVO with snake_case + string id")
+  void latestReturnsSnakeCaseVO() throws Exception {
+    consumer.onMessage(
+        om.writeValueAsString(new ItemChangedEvent(ITEM_ID, "created", 0L, Instant.now())));
+    mvc.perform(get("/analysis/" + ITEM_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.wrong_item_id").value(String.valueOf(ITEM_ID)))
+        .andExpect(jsonPath("$.id").isString())
+        .andExpect(jsonPath("$.status").value("success"))
+        .andExpect(jsonPath("$.model_provider").value("dashscope"))
+        .andExpect(jsonPath("$.auto_tags").isArray());
+  }
+
+  @Test
+  @DisplayName("GET /analysis/{itemId} · 404 when no analysis row exists")
+  void latestReturns404WhenMissing() throws Exception {
+    mvc.perform(get("/analysis/" + ITEM_ID)).andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /analysis/{itemId}/stream · SSE replays explain chunks · text/event-stream")
+  void streamSseReplaysChunks() throws Exception {
+    consumer.onMessage(
+        om.writeValueAsString(new ItemChangedEvent(ITEM_ID, "created", 0L, Instant.now())));
+    MvcResult res =
+        mvc.perform(get("/analysis/" + ITEM_ID + "/stream"))
+            .andExpect(status().isOk())
+            .andExpect(
+                header().string("Content-Type", org.hamcrest.Matchers.startsWith("text/event-stream")))
+            .andReturn();
+    String body =
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch(res))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    assertThat(body).contains("data:").contains("\"chunk\"").contains("\"done\":true");
+  }
+
+  @Test
+  @DisplayName("GET /analysis/{itemId}/stream · terminal chunk when not analyzed (no 4xx)")
+  void streamSseTerminalChunkWhenMissing() throws Exception {
+    MvcResult res =
+        mvc.perform(get("/analysis/" + ITEM_ID + "/stream")).andExpect(status().isOk()).andReturn();
+    String body =
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch(res))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    assertThat(body).contains("\"done\":true").contains("尚未分析");
   }
 
   /** Swaps out the Config beans with controllable stubs. */

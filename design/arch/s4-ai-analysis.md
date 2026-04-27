@@ -376,18 +376,39 @@ sequenceDiagram
 
 ## 4. 事件与契约（Events & Contracts）
 
-### 4.1 HTTP API · 4 端点 OpenAPI 3.0 片段
+### 4.1 HTTP API · 5 端点 OpenAPI 3.0 片段
+
+> **修订记录** · 2026-04-27 · @allenthinking 决议（contract-gaps G-01 / G-02）：
+> - G-01：新增 `GET /analysis/{itemId}/stream` SSE 端点 · 与 REST JSON 端点并存
+> - G-02：`SimilarItem` schema 字段对齐前端 api-contracts（`{id:string, stem_text, subject, distance}`）
 
 ```yaml
 paths:
   /analysis/{itemId}:
     get:
-      summary: 取单个错题的最新分析（max version）
+      summary: 取单个错题的最新分析（max version）· REST JSON
       parameters:
         - { in: path, name: itemId, required: true, schema: { type: integer } }
       responses:
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AnalysisVO' } } } }
-        '404': { description: Not analyzed yet }
+        '404': { description: Not analyzed yet (无记录或仅 status=9 pending) }
+  /analysis/{itemId}/stream:
+    get:
+      summary: 流式回放讲解文本（SSE · 仅读已存数据，不旁路 MQ 触发分析）
+      description: |
+        Server-Sent Events 端点 · Content-Type: text/event-stream
+        · status=0 → 分块推送 wrong_item_analysis.error_reason · 末帧 done:true
+        · status=1 → 单帧 chunk='当前题目暂未生成解析，请稍后重试' + done:true
+        · status=9 → 单帧 chunk='正在分析中，请稍后查看' + done:true
+        · 未存（无记录）→ 单帧 chunk='尚未分析' + done:true · HTTP 仍 200（SSE 不应中途 4xx）
+      parameters:
+        - { in: path, name: itemId, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: SSE 流 · 每帧 data 为 ExplainChunk JSON
+          content:
+            text/event-stream:
+              schema: { $ref: '#/components/schemas/ExplainChunk' }
   /analysis/{itemId}/retry:
     post:
       summary: 管理员重放（绕过幂等 · version+1）
@@ -411,8 +432,35 @@ paths:
         '404': { description: embedding 未生成 · 建议先 /retry }
 components:
   schemas:
-    AnalysisVO:    { type: object }
-    SimilarItem:   { type: object, properties: { itemId: {type: integer}, distance: {type: number} } }
+    AnalysisVO:
+      type: object
+      required: [id, wrong_item_id, version, model_provider, status]
+      properties:
+        id:             { type: string,  description: "Snowflake-Long → string" }
+        wrong_item_id:  { type: string }
+        version:        { type: integer, description: "PROMPT_VERSION_CODE" }
+        model_provider: { type: string, enum: [dashscope, openai, stub] }
+        model_name:     { type: string }
+        status:         { type: string, enum: [success, fallback, pending], description: "由 SMALLINT 0/1/9 序列化映射" }
+        explain:        { type: string, description: "讲解文本 · DB 字段 error_reason（漂移 DD 决议）" }
+        cause_tag:      { type: string, enum: [CONCEPT, CALCULATION, COMPREHENSION, HANDWRITING, OTHER] }
+        auto_tags:      { type: array, items: { type: string }, description: "DB 字段 knowledge_points（漂移 DE 决议）" }
+        solution_steps: { type: object, description: "JSONB 透传" }
+        finished_at:    { type: string, format: date-time }
+    SimilarItem:
+      type: object
+      required: [id, stem_text, subject, distance]
+      properties:
+        id:        { type: string,  description: "Snowflake-Long → string · 与 S3 WrongItemVO.id 风格一致" }
+        stem_text: { type: string,  description: "题干原文（用于前端列表项直渲，避免 N+1）" }
+        subject:   { type: string,  description: "math/physics/chemistry/english/chinese" }
+        distance:  { type: number,  description: "1 - cosine_similarity · 范围 [0, 2] · 仅返回 ≤ 1.5 项" }
+    ExplainChunk:
+      type: object
+      required: [chunk]
+      properties:
+        chunk:     { type: string,  description: "一段 explain 文本" }
+        done:      { type: boolean, description: "末帧 true · 触发前端 es.close()" }
 ```
 
 ### 4.2 RocketMQ Topic
@@ -532,8 +580,9 @@ IT 的 `PIIRedactorAssertion` 断言 LLM 请求 body 含占位符且不含原 PI
 
 **Test 支撑**：`AiAnalysisIntegrationTestBase` · `AnalysisE2EIT` · `MockMvcSmokeIT` · `PIIRedactorTest` · `TestStubs` · `StubHandle` · `Endpoint` · `ChatResponse` · `EmbedResponse` · `CapturedMessage` · `BodyBuilder` · `ChatParser` · `EmbedParser`
 
-**REST paths** (4 domain + 2 probe)：
-- `GET /analysis/{itemId}`
+**REST paths** (5 domain + 2 probe · 2026-04-27 修订加入 /stream SSE)：
+- `GET /analysis/{itemId}` · REST JSON
+- `GET /analysis/{itemId}/stream` · SSE · text/event-stream
 - `POST /analysis/{itemId}/retry`
 - `GET /analysis/provider`
 - `GET /analysis/{itemId}/similar`
