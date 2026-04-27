@@ -13,7 +13,11 @@ import com.longfeng.aianalysis.prompt.PromptTemplates;
 import com.longfeng.aianalysis.repo.AiUsageLogRepository;
 import com.longfeng.aianalysis.repo.WrongItemAnalysisRepository;
 import com.longfeng.aianalysis.service.dto.AnalysisVO;
+import com.longfeng.aianalysis.service.dto.ExplainChunk;
+import com.longfeng.aianalysis.service.dto.SimilarItemVO;
 import com.longfeng.aianalysis.support.SnowflakeIdGenerator;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +43,16 @@ public class AnalysisService {
   /** Embedding vector dimension locked by INV-05 / BR-09 (pgvector vector(1024)). */
   static final int EMBEDDING_DIM = 1024;
 
+  /**
+   * Cosine-distance ceiling for similar-item recall (BR-10 / BR-17). Items whose pgvector
+   * {@code <=>} score exceeds this are dropped <em>after</em> the SQL ORDER BY so the index
+   * scan is preserved.
+   */
+  static final double SIMILAR_DISTANCE_CEILING = 1.5d;
+
+  /** Max characters per SSE chunk frame · prevents huge frames when error_reason is a wall of text. */
+  static final int CHUNK_CHAR_LIMIT = 80;
+
   private final WrongItemAnalysisRepository analysisRepo;
   private final AiUsageLogRepository usageRepo;
   private final ProviderRouter router;
@@ -46,6 +60,9 @@ public class AnalysisService {
   private final SnowflakeIdGenerator ids;
   private final JdbcTemplate jdbc;
   private final ObjectMapper om;
+
+  /** EntityManager for native pgvector queries (orm.allowed: nativeQuery=true · BR-10). */
+  @PersistenceContext private EntityManager em;
 
   public AnalysisService(
       WrongItemAnalysisRepository analysisRepo,
@@ -169,6 +186,153 @@ public class AnalysisService {
    */
   public int retry(Long itemId) {
     return analyze(itemId, true);
+  }
+
+  /**
+   * pgvector 召回相似题（BR-10 / BR-17）· 用 EntityManager native query 走
+   * arch-constraints.orm.allowed 的 "@Query nativeQuery=true（仅 pgvector）" 通道。
+   *
+   * <p>service-layer 过滤 distance > 1.5 的尾部项 · 排序由 pgvector cosine 索引在 SQL 层完成。
+   * 当目标 itemId 自身的 embedding 尚未生成时返回空列表（前端展示 "暂无相似题"）。
+   *
+   * @param itemId 目标错题 id
+   * @param k 期望返回条数 · 入参 ≤ 0 抛 IllegalArgumentException · > 10 截断到 10（spec max=10）
+   */
+  @Transactional(readOnly = true)
+  public List<SimilarItemVO> findSimilar(Long itemId, int k) {
+    if (k <= 0) {
+      throw new IllegalArgumentException("k must be > 0 · got=" + k);
+    }
+    int limit = Math.min(k, 10);
+
+    // probe 向量来自 wrong_item.embedding（INV-05 唯一写入位）· 该题尚无 embedding → 空召回。
+    String probe;
+    try {
+      probe =
+          jdbc.queryForObject(
+              "SELECT embedding::text FROM wrong_item WHERE id = ? AND embedding IS NOT NULL AND deleted_at IS NULL",
+              String.class,
+              itemId);
+    } catch (org.springframework.dao.EmptyResultDataAccessException notFound) {
+      return Collections.emptyList();
+    }
+    if (probe == null) {
+      return Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    List<Object[]> rows =
+        em.createNativeQuery(
+                "SELECT id, stem_text, subject, 1 - (embedding <=> CAST(:probe AS vector)) AS distance "
+                    + "FROM wrong_item "
+                    + "WHERE embedding IS NOT NULL "
+                    + "  AND id <> :itemId "
+                    + "  AND deleted_at IS NULL "
+                    + "ORDER BY embedding <=> CAST(:probe AS vector) "
+                    + "LIMIT :k")
+            .setParameter("probe", probe)
+            .setParameter("itemId", itemId)
+            .setParameter("k", limit)
+            .getResultList();
+
+    List<SimilarItemVO> out = new ArrayList<>(rows.size());
+    for (Object[] r : rows) {
+      double distance = ((Number) r[3]).doubleValue();
+      // BR-10 service-layer ceiling · spec: distance > 1.5 dropped（保留 ≤ 1.5）
+      if (distance > SIMILAR_DISTANCE_CEILING) {
+        continue;
+      }
+      String id = String.valueOf(((Number) r[0]).longValue());
+      String stemText = (String) r[1];
+      String subject = (String) r[2];
+      out.add(new SimilarItemVO(id, stemText, subject, distance));
+    }
+    return out;
+  }
+
+  /**
+   * SSE 流式回放已存解析（BR-16）· 仅读 wrong_item_analysis 当前最新版本 · 不旁路 MQ · 不调 LLM。
+   *
+   * <p>决策树（sse_protocol.behavior_rules）：
+   *
+   * <ul>
+   *   <li>未找到 → 单帧 "尚未分析" + done:true
+   *   <li>status=1 (FALLBACK) → 单帧 "当前题目暂未生成解析，请稍后重试" + done:true
+   *   <li>status=9 (PENDING) → 单帧 "正在分析中，请稍后查看" + done:true
+   *   <li>status=0 (SUCCESS) → 按句号 / 80 字符切块 · 末帧 done:true
+   * </ul>
+   */
+  @Transactional(readOnly = true)
+  public List<ExplainChunk> streamExplain(Long itemId) {
+    Optional<WrongItemAnalysis> found = analysisRepo.findTopByWrongItemIdOrderByVersionDesc(itemId);
+    if (found.isEmpty()) {
+      return List.of(ExplainChunk.terminal("尚未分析"));
+    }
+    WrongItemAnalysis a = found.get();
+    Short status = a.getStatus();
+    if (status != null && status == WrongItemAnalysis.STATUS_FALLBACK) {
+      return List.of(ExplainChunk.terminal("当前题目暂未生成解析，请稍后重试"));
+    }
+    if (status != null && status == WrongItemAnalysis.STATUS_PENDING) {
+      return List.of(ExplainChunk.terminal("正在分析中，请稍后查看"));
+    }
+    // status == STATUS_SUCCESS（0）→ 回放 explain 文本
+    String explain = a.getErrorReason();
+    if (explain == null || explain.isBlank()) {
+      return List.of(ExplainChunk.terminal("尚未分析"));
+    }
+    List<String> pieces = splitForChunks(explain);
+    if (pieces.size() == 1) {
+      return List.of(ExplainChunk.terminal(pieces.get(0)));
+    }
+    List<ExplainChunk> out = new ArrayList<>(pieces.size());
+    for (int i = 0; i < pieces.size(); i++) {
+      String piece = pieces.get(i);
+      if (i == pieces.size() - 1) {
+        out.add(ExplainChunk.terminal(piece));
+      } else {
+        out.add(ExplainChunk.of(piece));
+      }
+    }
+    return out;
+  }
+
+  /**
+   * 切分 explain 文本：① 先按中文句号 '。' 或英文 '.' 切（保留句号）；② 单段超过 {@link #CHUNK_CHAR_LIMIT}
+   * 再按 80 字符硬切；③ 过滤空段。返回顺序保留。
+   */
+  private List<String> splitForChunks(String text) {
+    List<String> sentences = new ArrayList<>();
+    StringBuilder buf = new StringBuilder();
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      buf.append(c);
+      if (c == '。' || c == '.') {
+        String s = buf.toString().trim();
+        if (!s.isEmpty()) {
+          sentences.add(s);
+        }
+        buf.setLength(0);
+      }
+    }
+    String tail = buf.toString().trim();
+    if (!tail.isEmpty()) {
+      sentences.add(tail);
+    }
+
+    List<String> out = new ArrayList<>(sentences.size());
+    for (String s : sentences) {
+      if (s.length() <= CHUNK_CHAR_LIMIT) {
+        out.add(s);
+        continue;
+      }
+      // 二次硬切 · 80 字符为单位
+      for (int start = 0; start < s.length(); start += CHUNK_CHAR_LIMIT) {
+        int end = Math.min(start + CHUNK_CHAR_LIMIT, s.length());
+        out.add(s.substring(start, end));
+      }
+    }
+    return out;
   }
 
   private AnalysisVO toVO(WrongItemAnalysis a) {
