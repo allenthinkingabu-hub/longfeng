@@ -210,6 +210,104 @@ Playwright 可以同时渲染两个页面做截图对比：
 
 ---
 
+### 阶段三补充：验收后修复回路（Repair Loop）
+
+Acceptance Agent 发现问题后，修复路径按问题类型分三类：
+
+#### M 类 · 机械修复（Mechanical）
+
+**触发条件**：设计系统合规检查失败（硬编码色值、缺失 testid、使用旧 iOS 变量等）。
+
+```
+路径：
+  Acceptance Agent 报告合规失败
+       ↓
+  fe-builder 定向修复（只改失败区块）
+       ↓
+  re-run check-compliance.sh（全页面四门禁）
+       ↓
+  全部通过 → commit → 结束
+  仍失败   → 重试（上限 3 次）→ 超限 → 升级 User
+```
+
+特点：无需人工判断，AI 可以自主完成整个修复 → 验证 → commit 循环。
+
+---
+
+#### V 类 · 视觉修复（Visual）
+
+**触发条件**：Playwright pixel diff 超过阈值（列表页 >8%，富交互页 >15%，相机页 >20%）。
+
+```
+路径：
+  Acceptance Agent 报告偏差超阈值 + 输出 diff 截图
+       ↓
+  User 查看 diff 截图 → 决策分支：
+    ├── 接受偏差（字体渲染差异等不可避免因素）→ 标注"已知偏差"→ 通过
+    └── 不接受 → 指定区块 + 描述期望 → 打回 fe-builder
+           ↓
+       fe-builder 定向重写（最多 3 次）
+           ↓
+       每次修复后重跑 pixel diff
+           ↓
+       在阈值内 → commit → 结束
+       3 次后仍超阈值 → 升级 User（需人工干预或接受偏差）
+```
+
+特点：**V 类问题 AI 不能自主决定"接受"**。偏差是否可接受属于视觉审美判断，必须由人决定。AI 的职责是提供 diff 证据，执行 User 指定的修复方向。
+
+---
+
+#### B 类 · 业务修复（Business）
+
+**触发条件**：AC 验收失败（testid 不存在、交互路径不可达、状态变化未发生）。
+
+```
+路径：
+  Acceptance Agent 报告 AC 失败
+       ↓
+  自动归因三连判：
+    ① testid 在 DOM 中是否存在？
+    ② 对应 API 请求是否发送？
+    ③ 后端是否响应（HTTP 状态码）？
+       ↓
+  归因结果：
+    ├── 前端 bug（testid 缺失 / 路由错误 / 状态未更新）
+    │     → fe-builder 定向修复 TSX（最多 3 次）
+    │     → 修复后重跑 AC 验证
+    │     → 通过 → commit
+    │
+    └── 后端 bug（API 500 / 字段缺失 / 业务逻辑错误）
+          → 创建后端 issue（标注 AC + 失败现象）
+          → 退出前端修复流程（不在前端兜底后端问题）
+```
+
+特点：归因正确是 B 类修复的关键。前端 bug AI 可以修，后端 bug 必须创建 issue 交后端处理，**禁止在前端加 fallback 掩盖后端问题**。
+
+---
+
+#### 修复回路全局守则
+
+1. **最多重试 3 次**：任何类型的修复，同一区块累计 3 次仍不过 → 强制升级 User，不再自动重试。
+2. **每次修复后全页回归**：不只验改动区块，必须重跑全页面 check-compliance.sh（防止修 A 破 B）。
+3. **修复结果记录到 gap report**：每次重试在 gap report 追加记录，形成可追溯的修复历史。
+4. **V 类和 B 类超限后不自动合并**：未经 User 明确接受的视觉/业务问题，不进入主分支。
+
+---
+
+#### fe-repair Skill（规划）
+
+未来可将上述流程封装为 `/fe-repair <page> <issue-type> <block-id>` skill：
+
+| 参数 | 说明 |
+|---|---|
+| `issue-type` | `m`（机械）/ `v`（视觉）/ `b`（业务） |
+| `block-id` | 来自 gap report 的区块 ID |
+
+M 类自主执行，V 类等待 User 决策后执行，B 类先归因再决定是修前端还是开 issue。
+
+---
+
 ## 整体流程
 
 ```
@@ -230,26 +328,141 @@ Playwright 可以同时渲染两个页面做截图对比：
   gap report（视觉 diff + 合规评分 + AC 矩阵）
           ↓
   User 决策：接受 or 打回修复
+          ↓（打回时）
+  Repair Loop（按 M / V / B 分类修复）
+    M 类 → AI 自主修复 → re-run 合规 → commit
+    V 类 → User 确认方向 → fe-builder 重写 → re-run pixel diff
+    B 类 → 归因 → 前端 bug: fe-builder 修 / 后端 bug: 开 issue
+          ↓
+  全页回归（check-compliance.sh 全四门禁）
+          ↓
+  通过 → 合并 · 不通过且超 3 次 → 升级 User
 ```
 
 ---
 
-## Skill 结构（规划）
+## Skill 一览
 
-三段式 skill，每段独立可调用：
+六个 skill 全部可用，按阶段分布：
 
-| Skill 命令 | 阶段 | 输入 | 输出 |
-|---|---|---|---|
-| `/pre-flight <page>` | 阶段一 | mockup 路径 + tokens.css + ui-kit 组件列表 | `build-spec.json` + `token-mapping-review.md` |
-| `/build-block <page> <block-id>` | 阶段二 | `build-spec.json` 对应区块 | TSX 区块代码 + grep 验证 pass + commit |
-| `/accept <page>` | 阶段三 | 实现代码 + mockup + business-analysis.yml | gap report（视觉 + 合规 + AC） |
+| Skill | 阶段 | 输入 | 输出 | 状态 |
+|---|---|---|---|---|
+| `/fe-preflight <page>` | 阶段一 | mockup HTML + tokens.css + ui-kit 组件列表 | `build-spec.json` + `token-mapping-review.md` | ✅ 可用 |
+| `/fe-builder <page> [block-id]` | 阶段二 | `build-spec.json` 对应区块 | TSX + CSS + grep 验证通过 + commit | ✅ 可用 |
+| `/fe-accept-diff <page>` | 阶段三 C 轨 | Vite dev server（无 MSW） | `<page>-diff-report.md`（视觉偏差 %） | ✅ 可用 |
+| `/fe-accept-mock <page>` | 阶段三 B 轨 | MSW handlers + Vite dev server | `<page>-gap-report.md`（视觉 + 合规 + AC） | ✅ 可用 |
+| `/fe-accept-e2e <page>` | 阶段三 A 轨 | 真实后端（gateway:8080） | `<page>-e2e-report.md`（完整 AC 矩阵） | ✅ 可用 |
+| `/fe-repair <page> [m\|v\|b] [block-id]` | 修复回路 | gap report（Markdown） | 定向修复 + 全页回归 + commit | ✅ 可用 |
 
 ---
 
-## 优先级建议
+## 如何使用这些 Skill
 
-1. **最高**：Pre-flight Agent（解决"AI 不知道用哪个组件/token"的根本问题）
-2. **次高**：Acceptance Agent 的设计系统合规扫描（grep 可立即执行，成本最低）
-3. **次高**：Acceptance Agent 的 Playwright 截图 pixel diff（需要 mockup 可在浏览器渲染）
-4. **中**：Builder 区块循环（需要 build-spec.json 先存在）
-5. **低**：Verifier AI 业务完整性（business-analysis.yml 已有，可作为最后一步）
+### 场景一：开发一个全新页面（完整三段式）
+
+```
+Step 1 · Pre-flight
+  /fe-preflight <page>
+  → 生成 build-spec.json + token-mapping-review.md
+  → 审阅 token-mapping-review.md 中的"近似处理"条目，确认后继续
+
+Step 2 · Builder（区块循环）
+  /fe-builder <page>
+  → 按 build-spec.json 的 blocks 顺序逐块实现
+  → 每块完成后自动运行 check-compliance.sh，通过后 commit
+
+Step 3 · 快速视觉验证（可选，开发中随时跑）
+  /fe-accept-diff <page>
+  → 无需 MSW，30 秒出结果
+  → 查看 diff-report.md，偏差超阈值则回 fe-builder 修
+
+Step 4 · PR 前完整验收（B 轨）
+  /fe-accept-mock <page>
+  → MSW 驱动数据渲染，pixel diff + testid + 交互路径
+  → 审阅 gap-report.md，决策：接受 or 打回
+
+Step 5 · 打回修复
+  /fe-repair <page>
+  → 自动读取 gap-report.md
+  → M 类（合规失败）→ AI 全自主修复
+  → V 类（视觉偏差）→ 等你看 diff 截图后指令修复
+  → B 类（AC 失败） → 归因后修前端 or 开后端 issue
+
+Step 6 · Sprint 联调验收（A 轨，需后端已启动）
+  /fe-accept-e2e <page>
+  → 真实 OCR / SSE / 持久化 / 分页全验
+  → 审阅 e2e-report.md，不通过的后端问题开 issue
+```
+
+---
+
+### 场景二：修改已有页面（验证改动没破坏现有功能）
+
+```
+改完代码后：
+
+  /fe-accept-diff <page>          ← 最快，30 秒，先排查明显视觉问题
+  （如有问题）→ /fe-repair <page> m   ← 优先修合规失败（M 类）
+
+  提 PR 前：
+  /fe-accept-mock <page>          ← 完整 B 轨，生成 gap report
+  （如有问题）→ /fe-repair <page>     ← 按 M/V/B 分类处理
+```
+
+---
+
+### 场景三：只想快速检查视觉有没有明显偏差
+
+```
+/fe-accept-diff <page>
+→ 查看 design/tasks/acceptance/<page>/diff.png
+→ 看 diff-report.md 里的偏差 %
+→ 在阈值内（ListPage ≤8%，DetailPage ≤15%，CapturePage ≤20%）→ OK
+→ 超阈值 → /fe-repair <page> v
+```
+
+---
+
+### 场景四：Sprint 结束，完整业务验收
+
+```
+确认后端已启动（gateway:8080 + wrongbook-service:8081）：
+
+  /fe-accept-e2e <page>
+  → 自动检查 gateway 健康，未就绪则 HALT 并提示启动步骤
+  → 跑 OCR / SSE / 持久化 / 分页全套
+  → 审阅 e2e-report.md：
+      前端问题 → /fe-repair <page> b
+      后端问题 → e2e report 中自动创建 issue 文件
+```
+
+---
+
+### 各 Skill 的触发语（自然语言）
+
+不用记命令，这些描述都能触发对应 skill：
+
+| 说这些 | 触发 skill |
+|---|---|
+| "开始开发 ListPage" / "做 S7 列表页" | `fe-preflight` → `fe-builder` |
+| "快速截图对比" / "跑 C 轨" / "只验视觉" | `fe-accept-diff` |
+| "跑 B 轨验收" / "生成 gap report" / "PR 前验收" | `fe-accept-mock` |
+| "跑 A 轨" / "联调验收" / "跑 e2e" | `fe-accept-e2e` |
+| "修复 gap report 问题" / "修合规失败" / "修视觉偏差" | `fe-repair` |
+
+---
+
+### Skill 之间的数据流
+
+```
+fe-preflight
+  └─ 输出 → build-spec.json
+               └─ 消费 → fe-builder
+                           └─ 输出 → 实现代码（TSX + CSS）
+                                       ├─ 消费 → fe-accept-diff   → diff-report.md
+                                       ├─ 消费 → fe-accept-mock   → gap-report.md
+                                       └─ 消费 → fe-accept-e2e    → e2e-report.md
+                                                     ↓（有问题）
+                                                 fe-repair（读 Markdown report）
+                                                     └─ 输出 → 修复 commit + 更新 report
+```

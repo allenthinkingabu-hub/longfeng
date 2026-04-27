@@ -1,0 +1,66 @@
+{
+  "listResponse": {
+    "items": [
+      {
+        "id": "item-001",
+        "subject": "math",
+        "stem_text": "设函数 f(x) = x² - 2x + 3，求 f(x) 在 [0, 3] 上的最大值和最小值。",
+        "tags": ["二次函数", "最值"],
+        "status": "completed",
+        "mastery": 25,
+        "image_url": null,
+        "created_at": "2026-04-20T10:00:00Z",
+        "version": 1
+      },
+      {
+        "id": "item-002",
+        "subject": "physics",
+        "stem_text": "一个质量为 2kg 的物体在水平面上做匀速直线运动，摩擦系数为 0.3，求所需的水平推力。",
+        "tags": ["牛顿定律", "摩擦力"],
+        "status": "completed",
+        "mastery": 55,
+        "image_url": null,
+        "created_at": "2026-04-21T09:30:00Z",
+        "version": 1
+      },
+      {
+        "id": "item-003",
+        "subject": "chemistry",
+        "stem_text": "写出氢氧化钠与盐酸反应的离子方程式，并说明该反应的类型。",
+        "tags": ["离子方程式", "中和反应"],
+        "status": "completed",
+        "mastery": 80,
+        "image_url": null,
+        "created_at": "2026-04-22T14:15:00Z",
+        "version": 2
+      },
+      {
+        "id": "item-004",
+        "subject": "english",
+        "stem_text": "Complete the sentence: She has been working here ___ 2019. (since / for)",
+        "tags": ["现在完成时", "介词"],
+        "status": "completed",
+        "mastery": 30,
+        "image_url": null,
+        "created_at": "2026-04-23T16:00:00Z",
+        "version": 1
+      },
+      {
+        "id": "item-005",
+        "subject": "math",
+        "stem_text": "已知等差数列 {aₙ} 的前三项为 2, 5, 8，求该数列的通项公式和前 n 项和。",
+        "tags": ["等差数列", "通项公式"],
+        "status": "completed",
+        "mastery": 15,
+        "image_url": null,
+        "created_at": "2026-04-24T11:00:00Z",
+        "version": 1
+      }
+    ],
+    "has_more": true,
+    "next_cursor": "cursor-page-2"
+  },
+  "tagsResponse": {
+    "tags": ["二次函数", "最值", "牛顿定律", "摩擦力", "离子方程式", "中和反应", "现在完成时", "介词", "等差数列", "通项公式"]
+  }
+}

@@ -1,0 +1,285 @@
+{
+  "phase": "s3",
+  "arch_source": "design/arch/s3-wrongbook.md",
+  "api_contracts_source": "frontend/packages/api-contracts/src/clients/wrongbook.ts",
+  "business_analysis": "design/arch/s3-wrongbook.md (front matter special_requirements)",
+  "generated_at": "2026-04-27T00:00:00Z",
+
+  "_api_contracts": {
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/wrongbook/items",
+        "request_dto": "CreateWrongItemReq",
+        "response_dto": "WrongItemVO",
+        "idempotency": "X-Request-Id header (required, 400 if missing)",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:23",
+        "frontend_type": "WrongItemCreate { subject, stem_text, tags?, image_id? }",
+        "gap_note": "G-05: frontend snake_case (stem_text) → backend camelCase (stemText); jackson mapping needed"
+      },
+      {
+        "method": "GET",
+        "path": "/wrongbook/items",
+        "request_dto": "WrongItemListParams",
+        "response_dto": "WrongItemListResponse",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:11",
+        "frontend_params": "cursor?, status?('active'|'mastered'), subject?, tags[]?, difficulty?, limit?",
+        "arch_params": "cursor?, status(integer), subject?, tagCode?, limit?",
+        "gap_note": "G-08: frontend status is 'active'|'mastered' string; backend status is integer; controller must translate"
+      },
+      {
+        "method": "GET",
+        "path": "/wrongbook/items/{id}",
+        "request_dto": null,
+        "response_dto": "WrongItemVO",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:15",
+        "gap_note": "G-07: frontend expects image_url (pre-signed URL) in VO; arch VO schema is incomplete"
+      },
+      {
+        "method": "PATCH",
+        "path": "/wrongbook/items/{id}/tags",
+        "request_dto": "TagUpdatePayload",
+        "response_dto": "void",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:27",
+        "frontend_body": "tags: string[] (bulk replace)",
+        "frontend_header": "If-Match: version",
+        "arch_definition": "POST /items/{id}/tags (add one) + DELETE /items/{id}/tags/{tagCode} (remove one)",
+        "gap_note": "G-01 BLOCKER: semantic mismatch — frontend does bulk replace via PATCH; arch uses individual POST/DELETE"
+      },
+      {
+        "method": "GET",
+        "path": "/wrongbook/tags",
+        "request_dto": null,
+        "response_dto": "{ tags: string[] }",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:31",
+        "arch_definition": "NOT DEFINED IN ARCH",
+        "gap_note": "G-02 BLOCKER: endpoint called by frontend but not defined in s3-wrongbook.md §4.1"
+      },
+      {
+        "method": "DELETE",
+        "path": "/wrongbook/items/{id}",
+        "request_dto": null,
+        "response_dto": "void (204)",
+        "frontend_file": "frontend/packages/api-contracts/src/clients/wrongbook.ts:35",
+        "gap_note": "no gap — exact match"
+      }
+    ],
+    "status_type": {
+      "frontend_values": ["pending", "analyzing", "completed", "error"],
+      "arch_values_numeric": [0, 1, 2, 3, 8, 9],
+      "arch_values_semantic": ["draft", "analyzed", "scheduled", "reviewed", "mastered", "archived"],
+      "mapping_required": true,
+      "mapping_note": "G-03 BLOCKER: frontend has 'error' state; arch has no 'error' state (6 states vs 4 strings); 'pending'→draft(0), 'analyzing'→analyzed(1), 'completed'→scheduled/reviewed/mastered(2/3/8), 'error'→no mapping. WrongItemVO must serialize backend SMALLINT to frontend string — requires explicit mapping decision.",
+      "suggested_mapping": {
+        "0_draft": "pending",
+        "1_analyzed": "analyzing",
+        "2_scheduled": "completed",
+        "3_reviewed": "completed",
+        "8_mastered": "completed",
+        "9_archived": "completed",
+        "error_note": "frontend 'error' state has no backend counterpart — may need a new status or a separate field"
+      }
+    },
+    "vo_fields": {
+      "frontend_expects": ["id(string)", "subject(string)", "stem_text(string)", "tags(string[])", "status(WrongItemStatus)", "mastery(number 0..100)", "image_url?(string)", "created_at(string ISO8601)", "version(number)"],
+      "arch_dto_schema": "WrongItemVO: { type: object } — incomplete in §4.1",
+      "gap_note": "G-07: arch VO must include all frontend-expected fields with jackson snake_case serialization"
+    }
+  },
+
+  "_business_rules": {
+    "state_machine": {
+      "states": [
+        { "name": "draft", "numeric": 0, "trigger": "POST /wrongbook/items 录入" },
+        { "name": "analyzed", "numeric": 1, "trigger": "S4 embedding + knowledge tags 回填" },
+        { "name": "scheduled", "numeric": 2, "trigger": "S5 review_plan 生成" },
+        { "name": "reviewed", "numeric": 3, "trigger": "学生提交作答 POST /items/{id}/attempts" },
+        { "name": "mastered", "numeric": 8, "trigger": "SM-2 连续 N 次 quality≥4" },
+        { "name": "archived", "numeric": 9, "trigger": "90 天归档 job（S10）" }
+      ],
+      "transitions": [
+        { "from": "draft", "to": "analyzed", "trigger": "S4 事件消费（外部）" },
+        { "from": "analyzed", "to": "scheduled", "trigger": "S5 排期（外部）" },
+        { "from": "scheduled", "to": "reviewed", "trigger": "POST /items/{id}/attempts" },
+        { "from": "reviewed", "to": "scheduled", "trigger": "SM-2 下一轮到达" },
+        { "from": "reviewed", "to": "mastered", "trigger": "SM-2 连续 N 次 quality≥4" },
+        { "from": "mastered", "to": "scheduled", "trigger": "SM-2 quality<3 复发回退" },
+        { "from": "mastered", "to": "archived", "trigger": "90 天归档 job（S10）" },
+        { "from": "scheduled", "to": "archived", "trigger": "软删 90 天后（S10）" }
+      ],
+      "invariants": [
+        "INV-01: WrongItem.status 迁移仅允许预定义边（Service 层守卫）",
+        "INV-02: WrongItem.version 单调递增（JPA @Version 管理，业务代码禁手动 +1）",
+        "INV-03: 每 WrongItem 至多 1 张 role='ORIGIN' 图（DB 唯一索引 uq_wii_item_origin）",
+        "INV-04: WrongItemTag (wrong_item_id, tag_code) 唯一（DB 唯一索引 uq_wit_item_tag）",
+        "INV-05: deleted_at IS NOT NULL 时禁止任何更新（400）",
+        "INV-06: WrongAttempt append-only（无 PATCH/DELETE）",
+        "INV-07: difficulty 仅 1..5 或 NULL；mastery 仅 0..2",
+        "INV-08: WrongItemTag.tag_code 必须存在于 tag_taxonomy.code"
+      ],
+      "source": "design/arch/s3-wrongbook.md §2.2 §2.3"
+    },
+    "idempotency": {
+      "scope": "POST /wrongbook/items only",
+      "header": "X-Request-Id (required, 400 if missing or blank)",
+      "redis_key": "idem:wb:{requestId}",
+      "ttl_seconds": 600,
+      "hit_behavior": "return 200 + original WrongItemVO (NOT 201)",
+      "miss_behavior": "INSERT + SET Redis + return 201",
+      "fallback": "DB unique index on idem_key table (S1 V1.0.052)",
+      "source": "design/arch/s3-wrongbook.md §1.2 A9 + §3.1 sequenceDiagram"
+    },
+    "soft_delete": {
+      "column": "deleted_at TIMESTAMPTZ",
+      "hibernate_sql_delete": "UPDATE wrong_item SET deleted_at=now() WHERE id=?",
+      "hibernate_where": "deleted_at IS NULL",
+      "post_delete_get": "404 Not Found",
+      "audit_log": "同事务 INSERT audit_log(action='delete', target_type='wrong_item', target_id=?, request_id=?)",
+      "source": "design/arch/s3-wrongbook.md §2.1 A4 + §3.3 sequenceDiagram"
+    },
+    "optimistic_lock": {
+      "column": "version BIGINT NOT NULL DEFAULT 0",
+      "migration": "V1.0.020__wrong_item_version.sql",
+      "jpa_annotation": "@Version Long version",
+      "request_body": "PATCH /items/{id} body 必须携带 version 字段",
+      "conflict_http_status": 409,
+      "conflict_error": "ApiResult.error('CONFLICT', 'version mismatch')",
+      "source": "design/arch/s3-wrongbook.md §1.3 D1 + §3.2 sequenceDiagram"
+    },
+    "mq_outbox": {
+      "topic": "wrongbook.item.changed",
+      "producer_group": "wrongbook-producer",
+      "tags": ["created", "updated", "deleted"],
+      "payload": { "itemId": "int64", "action": "created|updated|deleted", "version": "int64", "occurredAt": "date-time" },
+      "primary": "RocketMQ syncSend 事务消息",
+      "fallback": "catch → INSERT wrong_item_outbox(PENDING) · S10 scheduler 补发",
+      "source": "design/arch/s3-wrongbook.md §4.2 + §3.1 sequenceDiagram"
+    }
+  },
+
+  "_arch_constraints": {
+    "orm": { "allowed": ["JPA", "QueryDSL"], "forbidden": ["MyBatis", "Mapper XML", "JDBC Template（除 migration）"] },
+    "messaging": {
+      "allowed": ["RocketMQ 5.x syncSend"],
+      "forbidden": ["Seata", "DTM", "直接 INSERT outbox 跳过 syncSend 尝试"]
+    },
+    "id_strategy": { "allowed": ["Snowflake（应用层生成）"], "forbidden": ["BIGSERIAL", "UUID", "random Long"] },
+    "state_machine": { "allowed": ["手写枚举 + Service 守卫"], "forbidden": ["Spring Statemachine 库"] },
+    "transaction": {
+      "rule": "@Transactional 作用域内同步 INSERT audit_log",
+      "forbidden": ["@Async audit_log", "事后单独写审计"]
+    },
+    "soft_delete": {
+      "column": "deleted_at TIMESTAMPTZ",
+      "required_annotations": ["@SQLDelete", "@Where(clause='deleted_at IS NULL')"],
+      "forbidden": ["deleted boolean 字段", "status=9 代替软删"]
+    },
+    "adr_bindings": [
+      "ADR 0002: Outbox over Seata（硬绑定）",
+      "ADR 0006: JPA + QueryDSL over MyBatis（硬绑定）",
+      "ADR 0010: 手写枚举状态机（本 Phase 新立）",
+      "ADR 0011: version 列乐观锁（Q1-R1 决议）",
+      "ADR 0012: difficulty SMALLINT 1..5（Q2-R1 决议）",
+      "ADR 0013: RocketMQ 5.1.4 → 5.3.1 drift（兼容）",
+      "ADR 0014: WrongAttempt 独立聚合根（Q4-R1 决议）"
+    ],
+    "source": "design/arch/s3-wrongbook.md §7 ADR 候选"
+  },
+
+  "layers": [
+    {
+      "id": "entity",
+      "label": "实体层（Entity / Domain Model）",
+      "symbols": ["WrongItem", "WrongItemTag", "WrongItemImage", "TagTaxonomy", "WrongAttempt", "WrongItemOutbox", "AuditLog"],
+      "key_rules": [
+        "WrongItem 唯一聚合根（@AggregateRoot 语义）",
+        "@SQLDelete(sql='UPDATE wrong_item SET deleted_at=now() WHERE id=?') + @Where(clause='deleted_at IS NULL')",
+        "@Version Long version（JPA 管理，业务代码禁手动 +1）",
+        "主键：@GeneratedValue 替换为 Snowflake 自定义 IdGenerator",
+        "subject 9 学科枚举（S1 DDL 权威，非计划的 5 学科）",
+        "status SMALLINT（0/1/2/3/8/9），transitionStatus() 守卫非法迁移",
+        "WrongAttempt 为独立聚合根（Q4-R1 决议，ADR 0014）"
+      ],
+      "migrations_required": [
+        "V1.0.019__wrong_item_outbox.sql",
+        "V1.0.020__wrong_item_version.sql (ADD COLUMN version BIGINT NOT NULL DEFAULT 0)",
+        "V1.0.021__wrong_item_difficulty.sql (ADD COLUMN difficulty SMALLINT CHECK 1..5 OR NULL)",
+        "V1.0.022__wrong_attempt.sql"
+      ],
+      "files_to_create": [
+        "src/main/java/com/longfeng/wrongbook/domain/WrongItem.java",
+        "src/main/java/com/longfeng/wrongbook/domain/WrongItemTag.java",
+        "src/main/java/com/longfeng/wrongbook/domain/WrongItemImage.java",
+        "src/main/java/com/longfeng/wrongbook/domain/TagTaxonomy.java",
+        "src/main/java/com/longfeng/wrongbook/domain/WrongAttempt.java",
+        "src/main/java/com/longfeng/wrongbook/domain/WrongItemOutbox.java",
+        "src/main/java/com/longfeng/wrongbook/domain/WrongItemStatus.java"
+      ],
+      "source": "design/arch/s3-wrongbook.md §2.1 §4.4"
+    },
+    {
+      "id": "repository",
+      "label": "仓储层（Repository）",
+      "symbols": ["WrongItemRepository", "WrongItemTagRepository", "WrongItemImageRepository", "TagTaxonomyRepository", "WrongAttemptRepository", "WrongItemOutboxRepository", "AuditLogRepository"],
+      "key_rules": [
+        "继承 JpaRepository<Entity, Long>",
+        "复杂列表查询（subject/tagCode/status/cursor 过滤）用 QueryDSL Predicate",
+        "软删 @Where 在 Entity 层已处理，Repository 无需额外 filter",
+        "cursor 分页：按 id DESC，cursor = base64(id)"
+      ],
+      "source": "design/arch/s3-wrongbook.md §8 符号清单"
+    },
+    {
+      "id": "service",
+      "label": "业务层（Service）",
+      "symbols": ["WrongItemService", "WrongAttemptService", "IdempotencyService", "WrongItemProducer", "NotFoundException"],
+      "key_rules": [
+        "状态迁移守卫：transitionStatus(target) 校验合法边，非法抛 400",
+        "幂等：POST /items 先 Redis GET idem:wb:{requestId}，命中返回 200+原VO",
+        "@Transactional 内同步 INSERT audit_log（强一致）",
+        "MQ syncSend 失败 catch → INSERT wrong_item_outbox(PENDING)",
+        "WrongItemVO.status 序列化为前端 string（'pending'/'analyzing'/'completed'/'error'）—— G-03 解决方案待 User 确认",
+        "PATCH tags：G-01 解决方案待 User 确认（bulk replace vs 逐条 diff）"
+      ],
+      "source": "design/arch/s3-wrongbook.md §1.2 §2.3 §3.1"
+    },
+    {
+      "id": "controller",
+      "label": "控制层（Controller + DTO）",
+      "symbols": ["WrongItemController", "WrongAttemptController", "WrongbookExceptionHandler"],
+      "key_rules": [
+        "路径前缀 /wrongbook（无 /api/v1/，gateway 统一加）",
+        "409 由 ObjectOptimisticLockingFailureException → WrongbookExceptionHandler 处理",
+        "X-Request-Id 在 POST /items 强制校验（@RequestHeader + 400 if missing）",
+        "响应字段 snake_case（Jackson @JsonProperty 或 spring.jackson.property-naming-strategy=SNAKE_CASE）",
+        "GET /wrongbook/tags：G-02 新增端点，返回 tag_taxonomy 活跃标签列表"
+      ],
+      "source": "design/arch/s3-wrongbook.md §4.1 §8"
+    },
+    {
+      "id": "openapi",
+      "label": "OpenAPI 规格（springdoc）",
+      "symbols": ["OpenApiConfig"],
+      "key_rules": [
+        "11 个端点全部有 @Operation(summary=...) 注解",
+        "所有 DTO @Schema 注解",
+        "WrongItemVO 字段需与前端 types.ts 对齐（snake_case + 正确类型）"
+      ],
+      "source": "design/arch/s3-wrongbook.md §4.1"
+    }
+  ],
+
+  "has_blocking_gaps": false,
+  "blocking_gaps_summary": "",
+  "resolved_gaps": {
+    "G-01": "arch 补 PATCH /wrongbook/items/{id}/tags (BulkTagReq · bulk replace · If-Match version header)",
+    "G-02": "arch 补 GET /wrongbook/tags (tag_taxonomy active 标签列表)",
+    "G-03": "WrongItemVO.status 序列化为 string (0→pending, 1→analyzing, 2/3/8/9→completed); error 态延至 S4",
+    "G-04": "studentId 从 JWT auth context 注入，CreateWrongItemReq 移除 studentId 字段",
+    "G-05": "snake_case 全局 Jackson 配置",
+    "G-06": "mastery 返回原值 0..2",
+    "G-07": "image_url 本 Phase 返回 null",
+    "G-08": "GET /items?status=active/mastered，Controller 层转换 SMALLINT predicate",
+    "resolved_at": "2026-04-27"
+  }
+}

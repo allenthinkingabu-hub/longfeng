@@ -419,6 +419,12 @@ sequenceDiagram
 
 ### 4.1 HTTP API · OpenAPI 3.0 paths 片段（共 **11** 个端点 · 含 Attempt）
 
+> **G-01 决议（2026-04-27）**：标签管理改为 `PATCH /items/{id}/tags` bulk replace（frontend api-contracts 对齐）；原 `POST /items/{id}/tags` + `DELETE /items/{id}/tags/{tagCode}` 移除。端点总数不变（11）。
+>
+> **G-02 决议（2026-04-27）**：新增 `GET /wrongbook/tags` 端点，返回 tag_taxonomy 活跃标签列表。
+>
+> **G-03 决议（2026-04-27）**：`WrongItemVO.status` 序列化为 frontend string（`0→pending`, `1→analyzing`, `2/3/8→completed`, `9→completed`）；`error` 态由 S4 Phase 定义，本 Phase 不出现。`studentId` 从 JWT auth context 注入，不由 frontend 传 body。`GET /items` status 参数接受 `active` / `mastered` 字符串，Controller 层转换为数值 predicate。
+
 ```yaml
 openapi: 3.0.3
 info:
@@ -446,7 +452,7 @@ paths:
       parameters:
         - { in: query, name: subject,   schema: { type: string } }
         - { in: query, name: tagCode,   schema: { type: string } }
-        - { in: query, name: status,    schema: { type: integer } }
+        - { in: query, name: status,    schema: { type: string, enum: [active, mastered] }, description: "'active'=[0,1,2,3] 'mastered'=[8]，Controller 转 SMALLINT predicate" }
         - { in: query, name: cursor,    schema: { type: string } }
         - { in: query, name: limit,     schema: { type: integer, default: 20, maximum: 100 } }
       responses:
@@ -455,7 +461,7 @@ paths:
     get:
       summary: 取详情
       responses:
-        '200': { description: OK }
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/WrongItemVO' } } } }
         '404': { description: Not Found }
     patch:
       summary: 部分更新（乐观锁 · body 必带 version）
@@ -465,7 +471,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/UpdateWrongItemReq' }
       responses:
-        '200': { description: OK }
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/WrongItemVO' } } } }
         '400': { description: ValidationError }
         '404': { description: Not Found }
         '409': { description: Conflict · version mismatch }
@@ -475,21 +481,37 @@ paths:
         '204': { description: No Content }
         '404': { description: Not Found }
   /wrongbook/items/{id}/tags:
-    post:
-      summary: 打标签
+    patch:
+      summary: 批量替换标签（全量 replace · If-Match 乐观锁 · G-01 决议）
+      parameters:
+        - in: header
+          name: If-Match
+          required: true
+          description: "当前 version 值，用于乐观锁冲突检测"
+          schema: { type: string }
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AddTagReq' }
+            schema: { $ref: '#/components/schemas/BulkTagReq' }
       responses:
         '200': { description: OK }
         '404': { description: item or tag not found }
-  /wrongbook/items/{id}/tags/{tagCode}:
-    delete:
-      summary: 去标签
+        '409': { description: Conflict · version mismatch }
+  /wrongbook/tags:
+    get:
+      summary: 获取活跃标签列表（来自 tag_taxonomy · G-02 决议）
+      parameters:
+        - { in: query, name: subject, schema: { type: string }, description: "可选 · 按学科过滤" }
       responses:
-        '204': { description: No Content }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags: { type: array, items: { type: string } }
   /wrongbook/items/{id}/images:
     post:
       summary: 图片确认（OSS key 登记 · 与 S6 预签名回调解耦）
@@ -534,14 +556,32 @@ paths:
 
 components:
   schemas:
-    CreateWrongItemReq: { type: object, required: [studentId, subject, stemText], properties: { studentId: {type: integer}, subject: {type: string}, gradeCode: {type: string}, sourceType: {type: integer}, stemText: {type: string}, ocrText: {type: string}, originImageKey: {type: string} } }
-    UpdateWrongItemReq: { type: object, required: [version], properties: { version: {type: integer}, stemText: {type: string}, status: {type: integer}, mastery: {type: integer} } }
-    AddTagReq:          { type: object, required: [tagCode], properties: { tagCode: {type: string}, weight: {type: number} } }
+    # G-03 决议：studentId 从 JWT auth context 注入，不由 frontend 传 body
+    CreateWrongItemReq: { type: object, required: [subject, stem_text], properties: { subject: {type: string}, stem_text: {type: string}, tags: {type: array, items: {type: string}}, image_id: {type: string, description: "S6 fileKey"} } }
+    UpdateWrongItemReq: { type: object, required: [version], properties: { version: {type: integer}, stem_text: {type: string}, status: {type: integer}, mastery: {type: integer} } }
+    # G-01 决议：BulkTagReq 替换原 AddTagReq
+    BulkTagReq:         { type: object, required: [tags], properties: { tags: {type: array, items: {type: string}, description: "全量替换，传空数组=清空所有标签"} } }
     ConfirmImageReq:    { type: object, required: [objectKey, role], properties: { objectKey: {type: string}, role: {type: string, enum: [ORIGIN, PROCESSED, CROP, WATERMARK] }, widthPx: {type: integer}, heightPx: {type: integer}, byteSize: {type: integer}, contentType: {type: string} } }
     SetDifficultyReq:   { type: object, required: [level], properties: { level: {type: integer, minimum: 1, maximum: 5} } }
-    CreateAttemptReq:   { type: object, required: [studentId, answerText, isCorrect], properties: { studentId: {type: integer}, answerText: {type: string}, isCorrect: {type: boolean}, durationSec: {type: integer}, clientSource: {type: string} } }
-    WrongItemVO:        { type: object }
-    WrongItemPageVO:    { type: object, properties: { list: {type: array}, nextCursor: {type: string} } }
+    CreateAttemptReq:   { type: object, required: [answerText, isCorrect], properties: { answerText: {type: string}, isCorrect: {type: boolean}, durationSec: {type: integer}, clientSource: {type: string} } }
+    # G-03 决议：WrongItemVO.status 序列化为 string；snake_case 字段；image_url 本 Phase 为 null（S6 后补）
+    WrongItemVO:
+      type: object
+      properties:
+        id:         { type: string }
+        subject:    { type: string }
+        stem_text:  { type: string }
+        tags:       { type: array, items: {type: string} }
+        status:     { type: string, enum: [pending, analyzing, completed], description: "0→pending, 1→analyzing, 2/3/8/9→completed; error 态由 S4 定义" }
+        mastery:    { type: integer, minimum: 0, maximum: 2, description: "0..2，前端 types.ts 注释 0..100 为历史遗留，以此为准" }
+        image_url:  { type: string, nullable: true, description: "S6 预签名 URL，本 Phase 返回 null" }
+        created_at: { type: string, format: date-time }
+        version:    { type: integer }
+    WrongItemPageVO:
+      type: object
+      properties:
+        items:       { type: array, items: { $ref: '#/components/schemas/WrongItemVO' } }
+        next_cursor: { type: string, nullable: true }
 ```
 
 ### 4.2 RocketMQ Topic · `wrongbook.item.changed`
@@ -671,18 +711,20 @@ CREATE INDEX idx_wrong_item_outbox_status ON wrong_item_outbox(status, created_a
 
 **Application**：`Application`
 
-**DTO**：`CreateWrongItemReq` · `UpdateWrongItemReq` · `AddTagReq` · `ConfirmImageReq` · `SetDifficultyReq` · `CreateAttemptReq` · `WrongItemVO` · `WrongItemTagVO` · `WrongItemImageVO` · `WrongItemPageVO` · `WrongAttemptVO`
+**DTO**：`CreateWrongItemReq` · `UpdateWrongItemReq` · `BulkTagReq` · `ConfirmImageReq` · `SetDifficultyReq` · `CreateAttemptReq` · `WrongItemVO` · `WrongItemTagVO` · `WrongItemImageVO` · `WrongItemPageVO` · `WrongAttemptVO`
+
+> `AddTagReq` 已移除（G-01 决议，由 `BulkTagReq` 替代）
 
 **Test 支撑**：`WrongbookIntegrationTestBase` · `TestMqConfig` · `RecordingRocketMQTemplate` · `WrongItemIT` · `WrongItemApiContractIT` · `MockMvcSmokeIT`
 
-**REST paths**（7 URL 模板 · 11 操作）：
+**REST paths**（8 URL 模板 · 11 操作 · G-01/G-02 决议更新）：
 - `POST /wrongbook/items`
 - `GET /wrongbook/items`
 - `GET /wrongbook/items/{id}`
 - `PATCH /wrongbook/items/{id}`
 - `DELETE /wrongbook/items/{id}`
-- `POST /wrongbook/items/{id}/tags`
-- `DELETE /wrongbook/items/{id}/tags/{tagCode}`
+- `PATCH /wrongbook/items/{id}/tags`  ← G-01：bulk replace（替换原 POST/DELETE 个体接口）
+- `GET /wrongbook/tags`               ← G-02：标签列表
 - `POST /wrongbook/items/{id}/images`
 - `POST /wrongbook/items/{id}/difficulty`
 - `POST /wrongbook/items/{id}/attempts`

@@ -17,14 +17,23 @@ const queryClient = new QueryClient({
   },
 });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </I18nextProvider>
-  </React.StrictMode>,
-);
+async function bootstrap() {
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./__mocks__/browser');
+    await worker.start({ onUnhandledRequest: 'bypass' });
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <I18nextProvider i18n={i18n}>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </I18nextProvider>
+    </React.StrictMode>,
+  );
+}
+
+bootstrap();

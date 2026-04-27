@@ -5,7 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { wrongbookClient, WrongItemVO, WrongItemListResponse } from '@longfeng/api-contracts';
 import { TEST_IDS } from '@longfeng/testids';
-import { Button } from '@longfeng/ui-kit';
+import { Button, Sheet } from '@longfeng/ui-kit';
 import s from './List.module.css';
 
 type StatusTab = 'active' | 'mastered';
@@ -55,6 +55,7 @@ export const ListPage: React.FC = () => {
   const [status] = useState<StatusTab>('active');
   const [subject, setSubject] = useState<string>('all');
   const [masteryFilter, setMasteryFilter] = useState<Mastery>('low');
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const query = useInfiniteQuery<WrongItemListResponse, Error, { pages: WrongItemListResponse[] }, readonly unknown[], string | null>({
     queryKey: ['wrongbook', status, { subject, masteryFilter }] as const,
@@ -98,7 +99,7 @@ export const ListPage: React.FC = () => {
         <div className={s.navRow}>
           <h1 className={s.navTitle}>{t('wrongbook_list.title')}</h1>
           <div className={s.navRight}>
-            <button className={s.navIconBtn} aria-label="筛选" data-testid="wrongbook.list.filter-toggle">
+            <button className={s.navIconBtn} aria-label="筛选" data-testid="wrongbook.list.filter-toggle" onClick={() => setFilterOpen(true)}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 7h16M6 12h12M9 17h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
@@ -256,6 +257,25 @@ export const ListPage: React.FC = () => {
           <span>我的</span>
         </button>
       </nav>
+
+      <Sheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        title="筛选"
+        testIdPrefix="wrongbook.list.filter"
+      >
+        <div data-testid={TEST_IDS.wrongbookList['filter-subject']} style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {SUBJECT_OPTS.map((o) => (
+            <button
+              key={o.value}
+              className={`${s.sc} ${subject === o.value ? s.scOn : ''}`}
+              onClick={() => { setSubject(o.value); setFilterOpen(false); }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </Sheet>
     </div>
   );
 };

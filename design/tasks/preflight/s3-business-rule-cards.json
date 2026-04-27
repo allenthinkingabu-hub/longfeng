@@ -1,0 +1,116 @@
+[
+  {
+    "id": "BR-01",
+    "title": "状态迁移守卫",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §2.2 §2.3 INV-01",
+    "rule": "WrongItem.status 迁移仅允许预定义边：draft(0)→analyzed(1)→scheduled(2)→reviewed(3)→mastered(8)↔scheduled(2)。mastered→archived(9) 和 scheduled→archived(9) 由 S10 归档 job 触发，本 Phase 不实现。",
+    "violation_behavior": "非法迁移抛 400 BadRequest，message: 'invalid status transition: X → Y'",
+    "test_scenarios": [
+      "draft(0) → analyzed(1) OK",
+      "analyzed(1) → scheduled(2) OK",
+      "scheduled(2) → reviewed(3) OK（作答提交）",
+      "reviewed(3) → mastered(8) OK（SM-2 连续达标）",
+      "mastered(8) → scheduled(2) OK（SM-2 复发回退）",
+      "draft(0) → mastered(8) FAIL 400",
+      "analyzed(1) → reviewed(3) FAIL 400（跳 scheduled）",
+      "mastered(8) → draft(0) FAIL 400"
+    ]
+  },
+  {
+    "id": "BR-02",
+    "title": "POST /wrongbook/items 幂等键",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §1.2 A9 + §3.1 sequenceDiagram",
+    "rule": "POST /wrongbook/items 必须携带 X-Request-Id header（非空，max 64 chars）。Redis key = idem:wb:{requestId}，TTL = 600s（10min）。Redis 命中 → 返回 200 + 原 WrongItemVO（不重新插入）。Redis 未命中 → INSERT + syncSend + SET Redis → 201。",
+    "violation_behavior": "缺 X-Request-Id header → 400；幂等命中 → 200（非 201）",
+    "test_scenarios": [
+      "首次请求携带 X-Request-Id → 201 Created + Location header",
+      "相同 X-Request-Id 重试 → 200 OK + 原 WrongItemVO（itemId 相同）",
+      "缺 X-Request-Id header → 400 BadRequest",
+      "空字符串 X-Request-Id → 400",
+      "超 64 字符 X-Request-Id → 400"
+    ]
+  },
+  {
+    "id": "BR-03",
+    "title": "乐观锁冲突 409",
+    "layer": "service/controller",
+    "source": "design/arch/s3-wrongbook.md §1.3 D1 + §3.2 sequenceDiagram + special_requirements Q1-R1",
+    "rule": "PATCH /wrongbook/items/{id} 请求体必须携带 version 字段（当前版本号）。JPA @Version 管理，UPDATE WHERE version=? 命中 0 行时抛 ObjectOptimisticLockingFailureException → WrongbookExceptionHandler 拦截返回 409 CONFLICT。",
+    "violation_behavior": "version 不匹配 → 409 {code:'CONFLICT', message:'version mismatch'}；缺 version 字段 → 400",
+    "test_scenarios": [
+      "PATCH 携带正确 version → 200 OK，响应 version+1",
+      "并发两个 PATCH 相同 version → 先到者 200，后到者 409",
+      "PATCH 缺 version 字段 → 400",
+      "PATCH version=0 而实际 version=5 → 409"
+    ]
+  },
+  {
+    "id": "BR-04",
+    "title": "软删除 + 审计同事务",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §2.1 A4 + §3.3 sequenceDiagram + special_requirements Q7-R2",
+    "rule": "@SQLDelete 执行 UPDATE wrong_item SET deleted_at=now() WHERE id=?。同一 @Transactional 内 INSERT audit_log(actor_type='USER', action='delete', target_type='wrong_item', target_id=?, request_id=?, ip_hash=SHA256, ua_sha=SHA256)。DELETE 后 GET → 404（@Where 过滤已删除行）。",
+    "violation_behavior": "已软删 item 的 PATCH 请求 → 400（INV-05: deleted_at IS NOT NULL 禁更新）",
+    "test_scenarios": [
+      "DELETE /items/{id} → 204 No Content",
+      "DELETE 后 GET /items/{id} → 404",
+      "DELETE 后 PATCH /items/{id} → 400 (item deleted)",
+      "audit_log 记录随软删同事务写入（rollback 时 audit_log 也回滚）"
+    ]
+  },
+  {
+    "id": "BR-05",
+    "title": "RocketMQ Outbox 降级",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §1.2 A7 + §3.1 sequenceDiagram + ADR 0002",
+    "rule": "POST/PATCH/DELETE 写入后，Service 层调用 WrongItemProducer.syncSend(topic='wrongbook.item.changed', tag=created/updated/deleted, payload=thin{itemId,action,version,occurredAt})。syncSend 成功 → COMMIT。syncSend 失败（超时/网络异常）→ catch → 同一 @Transactional 内 INSERT wrong_item_outbox(status='PENDING') → COMMIT。S10 scheduler 异步补发（本 Phase 不实现 scheduler）。",
+    "violation_behavior": "禁止直接 INSERT outbox 跳过 syncSend 尝试（违反 ADR 0002）",
+    "test_scenarios": [
+      "MQ 正常 → syncSend 成功 → outbox 无记录",
+      "MQ 超时 → catch → outbox 插入 PENDING 记录",
+      "syncSend 失败时 DB 事务提交（item 写入成功，outbox 写入成功）",
+      "MQ 失败不影响 API 响应（降级透明）"
+    ]
+  },
+  {
+    "id": "BR-06",
+    "title": "标签唯一性幂等",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §1.5 + §2.3 INV-04 + INV-08",
+    "rule": "WrongItemTag (wrong_item_id, tag_code) 唯一索引（uq_wit_item_tag）。重复打同一标签 → 幂等处理（不报错，返回 200）。tag_code 必须存在于 tag_taxonomy.code（Service 层校验 + DB 逻辑 FK）。",
+    "violation_behavior": "tag_code 不存在 → 404 {message:'tag not found: {tagCode}'}；重复打标签 → 200（幂等）",
+    "test_scenarios": [
+      "打合法 tag_code → 200",
+      "重复打同一 tag_code → 200（幂等）",
+      "打不存在 tag_code → 404",
+      "每 item ORIGIN 图至多 1 张（uq_wii_item_origin）"
+    ]
+  },
+  {
+    "id": "BR-07",
+    "title": "mastered 状态可双向迁移",
+    "layer": "service",
+    "source": "design/arch/s3-wrongbook.md §2.2 状态机 + special_requirements Q6-R2",
+    "rule": "mastered(8) ↔ scheduled(2) 可双向迁移。mastered → scheduled 由 SM-2 quality<3 触发（复发）。反向路径合法，Service 守卫必须允许此边。",
+    "violation_behavior": "mastered → scheduled 被错误拒绝 → 业务 bug（SM-2 复习不可达）",
+    "test_scenarios": [
+      "mastered(8) → scheduled(2) OK（复发）",
+      "scheduled(2) → mastered(8) 不可直接跳（需经 reviewed(3)）"
+    ]
+  },
+  {
+    "id": "BR-08",
+    "title": "WrongAttempt append-only",
+    "layer": "service/controller",
+    "source": "design/arch/s3-wrongbook.md §2.3 INV-06 + special_requirements Q4-R1",
+    "rule": "POST /wrongbook/items/{id}/attempts 提交作答，每次作答不可变（append-only）。无 PATCH /attempts/{id} 和 DELETE /attempts/{id} 端点。作答提交后同步触发状态迁移（reviewed）。",
+    "violation_behavior": "重复提交同一作答非幂等（不同于错题录入），每次 POST 均创建新记录",
+    "test_scenarios": [
+      "POST /items/{id}/attempts → 201 Created",
+      "连续多次 POST attempts → 每次均创建新记录",
+      "无 PATCH/DELETE attempts 端点（405 Method Not Allowed）"
+    ]
+  }
+]

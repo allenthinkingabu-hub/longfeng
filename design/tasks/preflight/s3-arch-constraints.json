@@ -1,0 +1,98 @@
+{
+  "phase": "s3",
+  "source": "design/arch/s3-wrongbook.md §7 ADR 候选 + special_requirements Q1-Q8",
+
+  "orm": {
+    "allowed": ["JPA (Spring Data JPA)", "QueryDSL (JPAQueryFactory for complex queries)"],
+    "forbidden": ["MyBatis", "Mapper XML", "MybatisPlus", "JDBC Template（除 Flyway migration 外）"],
+    "adr": "ADR 0006: JPA + QueryDSL over MyBatis（硬绑定）"
+  },
+
+  "messaging": {
+    "allowed": ["RocketMQ 5.x syncSend 事务消息"],
+    "forbidden": [
+      "Seata 分布式事务",
+      "DTM",
+      "直接 INSERT wrong_item_outbox 跳过 syncSend 尝试（违反 ADR 0002 降级顺序）",
+      "Spring ApplicationEventPublisher 出域事件（仅 RocketMQ 出域）"
+    ],
+    "adr": "ADR 0002: Outbox over Seata（硬绑定）",
+    "version_drift": "ADR 0013: 计划 5.1.4 vs 本地 5.3.1，两版本 client 协议兼容，IT 以本地 5.3.1 为准"
+  },
+
+  "id_generation": {
+    "allowed": ["Snowflake（应用层生成，SnowflakeIdGenerator bean）"],
+    "forbidden": ["BIGSERIAL（DB 自增）", "UUID（any form）", "random Long", "@GeneratedValue(strategy=IDENTITY)"],
+    "source": "design/arch/s3-wrongbook.md §1.2 A13（S1 DDL 权威）"
+  },
+
+  "state_machine": {
+    "allowed": ["手写枚举 WrongItemStatus + Service 层 transitionStatus() 守卫"],
+    "forbidden": ["Spring Statemachine 库"],
+    "adr": "ADR 0010: 手写枚举（6 态简单，Spring Statemachine 依赖 2.3MB，团队熟悉度低）"
+  },
+
+  "transaction": {
+    "rule": "@Transactional 作用域内同步 INSERT audit_log（强一致，Q7-R2 决议）",
+    "forbidden": ["@Async audit_log", "事后单独 INSERT 审计（非同事务）"],
+    "source": "design/arch/s3-wrongbook.md special_requirements Q7-R2"
+  },
+
+  "soft_delete": {
+    "column": "deleted_at TIMESTAMPTZ（S1 DDL 权威，覆盖计划 §7.1 A4 的 deleted boolean）",
+    "required_annotations": [
+      "@SQLDelete(sql=\"UPDATE wrong_item SET deleted_at=now() WHERE id=?\")",
+      "@Where(clause=\"deleted_at IS NULL\")"
+    ],
+    "forbidden": ["deleted boolean 字段", "status=9 代替软删"],
+    "adr_note": "D4 drift: 计划 §7.1 A4 写 deleted boolean，S1 DDL 实际是 deleted_at TIMESTAMPTZ，以 S1 为准"
+  },
+
+  "optimistic_lock": {
+    "column": "version BIGINT NOT NULL DEFAULT 0（V1.0.020 migration 补加）",
+    "annotation": "@Version Long version（JPA 管理）",
+    "forbidden": ["业务代码手动 version++", "复用 updated_at 作 @Version"],
+    "adr": "ADR 0011: version 列乐观锁（Q1-R1 决议，覆盖 S1 DDL drift D1）"
+  },
+
+  "persistence": {
+    "db": "PostgreSQL 16 + pgvector 0.6",
+    "connection_pool": "HikariCP（min=5, max=20，慢查询 >1s 告警）",
+    "migration_tool": "Flyway（V1.0.019..022 本 Phase 新增）",
+    "embedding_field": "wrong_item.embedding vector(1024)，本 Phase 保留 NULL，S4 回填"
+  },
+
+  "infra": {
+    "service_discovery": "Nacos 2.3（降级读本地 bootstrap.yml）",
+    "rate_limit": "Sentinel 2023.0.1.0（QPS 500/实例，熔断 failureRatio>50%）",
+    "cache": "Redis 7.2（连接失败 → DB idem_key 表兜底，S1 V1.0.052）",
+    "timeout": {
+      "db_connection": "30s",
+      "db_query": "10s",
+      "mq_producer": "3s",
+      "redis": "200ms"
+    }
+  },
+
+  "subject_enum": {
+    "note": "9 学科（S1 DDL 权威，覆盖计划 §7.1 A5 的 5 学科）",
+    "values": ["math", "physics", "chinese", "english", "biology", "chemistry", "history", "geography", "politics"],
+    "adr_note": "D5 drift: 以 S1 DDL CHECK 约束为准"
+  },
+
+  "api_path_prefix": {
+    "rule": "所有端点路径前缀 /wrongbook（无 /api/v1/），由 gateway 统一加路由前缀",
+    "source": "design/arch/s3-wrongbook.md §4.1 + §8 REST paths"
+  },
+
+  "test_coverage": {
+    "minimum_line_coverage": "70%（Q8-R2 决议：覆盖率硬红线，交付让步，V-S3-07 不降阈）",
+    "required_it_classes": ["WrongItemIT", "WrongItemApiContractIT", "MockMvcSmokeIT"],
+    "source": "design/arch/s3-wrongbook.md special_requirements Q8-R2"
+  },
+
+  "symbol_registry": {
+    "note": "新增符号必须在 design/arch/s3-wrongbook.md §8 符号清单中登记（check-arch-consistency.sh 校验）",
+    "source": "design/arch/s3-wrongbook.md §8"
+  }
+}
