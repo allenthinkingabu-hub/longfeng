@@ -1,87 +1,59 @@
 openapi: 3.0.1
 info:
   title: ai-analysis-service
+  description: AI 错题分析服务 · S4 · springdoc-openapi 2.x
   version: 1.0.0
 servers:
 - url: http://localhost:8082
-  description: Generated server url
+  description: Local dev
+tags:
+- name: analysis
+  description: AI 错题分析 · S4 域端点
+- name: health
+  description: 探针
 paths:
-  /analysis/{itemId}/retry:
-    post:
-      tags:
-      - analysis-controller
-      operationId: retry
-      parameters:
-      - name: itemId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-  /ready:
-    get:
-      tags:
-      - health-controller
-      operationId: ready
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ApiResultString'
-  /live:
-    get:
-      tags:
-      - health-controller
-      operationId: live
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ApiResultString'
   /analysis/{itemId}:
     get:
       tags:
-      - analysis-controller
+      - analysis
+      summary: 获取最新分析结果
+      description: 返回 wrong_item 的最新一版 AnalysisVO · 404 when none
       operationId: latest
       parameters:
       - name: itemId
         in: path
+        description: wrong_item ID
         required: true
         schema:
           type: integer
           format: int64
       responses:
         "200":
-          description: OK
+          description: 分析结果 AnalysisVO
           content:
-            '*/*':
+            application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/AnalysisVO'
+        "404":
+          description: 尚无分析记录
   /analysis/{itemId}/similar:
     get:
       tags:
-      - analysis-controller
+      - analysis
+      summary: 相似题召回
+      description: pgvector cosine 召回 · distance ≤ 1.5 · 返回 { items SimilarItem[] }
       operationId: similar
       parameters:
       - name: itemId
         in: path
+        description: wrong_item ID
         required: true
         schema:
           type: integer
           format: int64
       - name: k
         in: query
+        description: 召回数量 · default 3 · max 10
         required: false
         schema:
           type: integer
@@ -89,27 +61,204 @@ paths:
           default: 3
       responses:
         "200":
-          description: OK
+          description: 相似题列表 SimilarResponse
           content:
-            '*/*':
+            application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/SimilarResponse'
+  /analysis/{itemId}/stream:
+    get:
+      tags:
+      - analysis
+      summary: 流式解析回放 (SSE)
+      description: "text/event-stream · 回放已存 explain 文本 · 终帧 done:true · 无分析时返回单帧 notice"
+      operationId: stream
+      parameters:
+      - name: itemId
+        in: path
+        description: wrong_item ID
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: SSE 事件流 · ExplainChunk 序列
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ExplainChunk'
+  /analysis/{itemId}/retry:
+    post:
+      tags:
+      - analysis
+      summary: 管理员重试分析
+      description: admin only · 需 X-Admin true header · 返回 202 Accepted
+      operationId: retry
+      parameters:
+      - name: itemId
+        in: path
+        description: wrong_item ID
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: X-Admin
+        in: header
+        description: 管理员标识 · 必须为 'true'
+        required: false
+        schema:
+          type: string
+      responses:
+        "202":
+          description: 重试已接受
+        "403":
+          description: 非管理员
+        "404":
+          description: wrong_item 不存在
   /analysis/provider:
     get:
       tags:
-      - analysis-controller
+      - analysis
+      summary: 当前 LLM 提供方
+      description: 反查 ProviderRouter 当前激活的 feature flag
       operationId: provider
       responses:
         "200":
-          description: OK
+          description: "{ provider: string }"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                    example: dashscope
+  /health:
+    get:
+      tags:
+      - health
+      summary: 域探针
+      description: "返回 { status: 'UP', provider: <name> }"
+      operationId: health
+      responses:
+        "200":
+          description: 服务健康
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  provider:
+                    type: string
+                    example: dashscope
+  /ready:
+    get:
+      tags:
+      - health
+      summary: Readiness probe
+      operationId: ready
+      responses:
+        "200":
+          description: READY
           content:
             '*/*':
               schema:
-                type: object
-                additionalProperties:
-                  type: string
+                $ref: '#/components/schemas/ApiResultString'
+  /live:
+    get:
+      tags:
+      - health
+      summary: Liveness probe
+      operationId: live
+      responses:
+        "200":
+          description: LIVE
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultString'
 components:
   schemas:
+    AnalysisVO:
+      type: object
+      description: AI 分析结果 VO
+      properties:
+        id:
+          type: string
+          description: Snowflake ID (string to avoid JS precision loss)
+        wrong_item_id:
+          type: string
+          description: wrong_item ID (string)
+        version:
+          type: integer
+          format: int32
+          description: 提示词版本号 PROMPT_VERSION_CODE
+        model_provider:
+          type: string
+          description: "LLM 提供方 · dashscope | openai | stub"
+        model_name:
+          type: string
+          description: 模型名称
+        status:
+          type: string
+          enum: [success, fallback, pending]
+          description: "分析状态 · 0→success / 1→fallback / 9→pending"
+        explain:
+          type: string
+          description: 解题解析 (来自 error_reason 字段)
+        cause_tag:
+          type: string
+          description: "错因标签 · CONCEPT | CALCULATION | COMPREHENSION | HANDWRITING | OTHER"
+        auto_tags:
+          type: array
+          items:
+            type: string
+          description: 知识点标签数组 (来自 knowledge_points)
+        solution_steps:
+          type: object
+          description: 解题步骤 JSONB 透传
+        finished_at:
+          type: string
+          description: 完成时间 ISO-8601
+    SimilarItem:
+      type: object
+      description: 相似题 VO
+      properties:
+        id:
+          type: string
+          description: wrong_item ID (string)
+        stem_text:
+          type: string
+          description: 题干原文
+        subject:
+          type: string
+          description: "科目 · math | physics | chemistry | english | chinese"
+        distance:
+          type: number
+          format: double
+          description: "pgvector cosine distance ∈ [0,2] · ≤1.5 才返回"
+    SimilarResponse:
+      type: object
+      description: 相似题列表响应
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimilarItem'
+    ExplainChunk:
+      type: object
+      description: SSE 帧 payload
+      properties:
+        chunk:
+          type: string
+          description: 文本片段
+        done:
+          type: boolean
+          description: 终帧标识 · true 时前端应关闭 EventSource · 中间帧省略此字段
     ApiResultString:
       type: object
       properties:

@@ -1,6 +1,7 @@
 package com.longfeng.aianalysis.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * REST view-object for {@code GET /analysis/{itemId}/similar} (G-02 decision · be-build-spec
@@ -14,8 +15,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *       (filter executed in service layer to keep ORDER BY index-only · BR-10 / BR-17)
  * </ul>
  */
+@Schema(description = "相似题 VO · GET /analysis/{itemId}/similar")
 public record SimilarItemVO(
-    @JsonProperty("id") String id,
-    @JsonProperty("stem_text") String stemText,
-    @JsonProperty("subject") String subject,
-    @JsonProperty("distance") double distance) {}
+    @Schema(description = "wrong_item ID (string)") @JsonProperty("id") String id,
+    @Schema(description = "题干原文") @JsonProperty("stem_text") String stemText,
+    @Schema(description = "科目 · math | physics | chemistry | english | chinese") @JsonProperty("subject") String subject,
+    @Schema(description = "pgvector cosine distance ∈ [0,2] · ≤1.5 才返回") @JsonProperty("distance") double distance) {}

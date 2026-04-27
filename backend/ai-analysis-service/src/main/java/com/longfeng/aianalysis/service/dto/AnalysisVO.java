@@ -3,6 +3,7 @@ package com.longfeng.aianalysis.service.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -22,19 +23,20 @@ import java.util.List;
  * <p>This DTO carries no business logic — pure transport shape, so the controller layer can
  * serialize it without leaking JPA internals.
  */
+@Schema(description = "AI 分析结果 VO · GET /analysis/{itemId}")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AnalysisVO(
-    @JsonProperty("id") String id,
-    @JsonProperty("wrong_item_id") String wrongItemId,
-    @JsonProperty("version") int version,
-    @JsonProperty("model_provider") String modelProvider,
-    @JsonProperty("model_name") String modelName,
-    @JsonProperty("status") String status,
-    @JsonProperty("explain") String explain,
-    @JsonProperty("cause_tag") String causeTag,
-    @JsonProperty("auto_tags") List<String> autoTags,
-    @JsonProperty("solution_steps") JsonNode solutionSteps,
-    @JsonProperty("finished_at") String finishedAt) {
+    @Schema(description = "Snowflake ID (string to avoid JS precision loss)") @JsonProperty("id") String id,
+    @Schema(description = "wrong_item ID (string)") @JsonProperty("wrong_item_id") String wrongItemId,
+    @Schema(description = "提示词版本号 PROMPT_VERSION_CODE") @JsonProperty("version") int version,
+    @Schema(description = "LLM 提供方 · dashscope | openai | stub") @JsonProperty("model_provider") String modelProvider,
+    @Schema(description = "模型名称") @JsonProperty("model_name") String modelName,
+    @Schema(description = "分析状态 · success | fallback | pending") @JsonProperty("status") String status,
+    @Schema(description = "解题解析 (来自 error_reason 字段)") @JsonProperty("explain") String explain,
+    @Schema(description = "错因标签 · CONCEPT | CALCULATION | COMPREHENSION | HANDWRITING | OTHER") @JsonProperty("cause_tag") String causeTag,
+    @Schema(description = "知识点标签数组 (来自 knowledge_points)") @JsonProperty("auto_tags") List<String> autoTags,
+    @Schema(description = "解题步骤 JSONB 透传") @JsonProperty("solution_steps") JsonNode solutionSteps,
+    @Schema(description = "完成时间 ISO-8601") @JsonProperty("finished_at") String finishedAt) {
 
   public static final String STATUS_SUCCESS = "success";
   public static final String STATUS_FALLBACK = "fallback";

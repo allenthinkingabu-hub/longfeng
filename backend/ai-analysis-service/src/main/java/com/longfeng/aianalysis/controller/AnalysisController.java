@@ -5,6 +5,10 @@ import com.longfeng.aianalysis.service.AnalysisService;
 import com.longfeng.aianalysis.service.dto.AnalysisVO;
 import com.longfeng.aianalysis.service.dto.ExplainChunk;
 import com.longfeng.aianalysis.service.dto.SimilarItemVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * logic stays in {@link AnalysisService}. {@link ResponseStatusException} is used inline for
  * 4xx mapping; {@link ProviderRouter.NoProviderException} maps to 503 via the local handler.
  */
+@Tag(name = "analysis", description = "AI 错题分析 · S4 域端点")
 @RestController
 @RequestMapping("/analysis")
 public class AnalysisController {
@@ -54,31 +59,30 @@ public class AnalysisController {
     this.router = router;
   }
 
-  /** GET /analysis/{itemId} · returns the latest persisted AnalysisVO · 404 when none. */
+  @Operation(summary = "获取最新分析结果", description = "返回 wrong_item 的最新一版 AnalysisVO · 404 when none")
+  @ApiResponse(responseCode = "200", description = "分析结果 AnalysisVO")
+  @ApiResponse(responseCode = "404", description = "尚无分析记录")
   @GetMapping(value = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public AnalysisVO latest(@PathVariable Long itemId) {
+  public AnalysisVO latest(@Parameter(description = "wrong_item ID") @PathVariable Long itemId) {
     return service
         .findLatest(itemId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "analysis not found"));
   }
 
-  /** GET /analysis/{itemId}/similar?k=3 · pgvector recall · service-layer clamps k & filters. */
+  @Operation(summary = "相似题召回", description = "pgvector cosine 召回 · distance ≤ 1.5 · 返回 { items: SimilarItem[] }")
+  @ApiResponse(responseCode = "200", description = "相似题列表 SimilarResponse")
   @GetMapping(value = "/{itemId}/similar", produces = MediaType.APPLICATION_JSON_VALUE)
   public Map<String, List<SimilarItemVO>> similar(
-      @PathVariable Long itemId, @RequestParam(defaultValue = "3") int k) {
+      @Parameter(description = "wrong_item ID") @PathVariable Long itemId,
+      @Parameter(description = "召回数量 · default 3 · max 10") @RequestParam(defaultValue = "3") int k) {
     List<SimilarItemVO> items = service.findSimilar(itemId, k);
     return Map.of("items", items);
   }
 
-  /**
-   * GET /analysis/{itemId}/stream · SSE replay of persisted explain text (BR-16).
-   *
-   * <p>Service guarantees a non-empty {@link ExplainChunk} list (worst case: a single terminal
-   * notice frame), so the controller never needs a 4xx branch here — sse_protocol.behavior_rules
-   * mandates "SSE 不应中途 4xx".
-   */
+  @Operation(summary = "流式解析回放 (SSE)", description = "text/event-stream · 回放已存 explain 文本 · 终帧 done:true · 无分析时返回单帧 notice")
+  @ApiResponse(responseCode = "200", description = "SSE 事件流 · ExplainChunk 序列")
   @GetMapping(value = "/{itemId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public SseEmitter stream(@PathVariable Long itemId) {
+  public SseEmitter stream(@Parameter(description = "wrong_item ID") @PathVariable Long itemId) {
     SseEmitter emitter = new SseEmitter(0L); // 0 = no timeout · short replay never blocks
     try {
       List<ExplainChunk> chunks = service.streamExplain(itemId);
@@ -93,11 +97,14 @@ public class AnalysisController {
     return emitter;
   }
 
-  /** POST /analysis/{itemId}/retry · admin gate via X-Admin header (G-03). */
+  @Operation(summary = "管理员重试分析", description = "admin only · 需 X-Admin: true header · 返回 202 Accepted")
+  @ApiResponse(responseCode = "202", description = "重试已接受")
+  @ApiResponse(responseCode = "403", description = "非管理员")
+  @ApiResponse(responseCode = "404", description = "wrong_item 不存在")
   @PostMapping("/{itemId}/retry")
   public ResponseEntity<Void> retry(
-      @PathVariable Long itemId,
-      @RequestHeader(value = "X-Admin", required = false) String admin) {
+      @Parameter(description = "wrong_item ID") @PathVariable Long itemId,
+      @Parameter(description = "管理员标识 · 必须为 'true'") @RequestHeader(value = "X-Admin", required = false) String admin) {
     if (!"true".equalsIgnoreCase(admin)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "admin only");
     }
@@ -108,7 +115,8 @@ public class AnalysisController {
     return ResponseEntity.accepted().build();
   }
 
-  /** GET /analysis/provider · reflects the active ProviderRouter selection. */
+  @Operation(summary = "当前 LLM 提供方", description = "反查 ProviderRouter 当前激活的 feature flag · 返回 { provider: 'dashscope' | 'openai' | 'stub' }")
+  @ApiResponse(responseCode = "200", description = "{ provider: string }")
   @GetMapping(value = "/provider", produces = MediaType.APPLICATION_JSON_VALUE)
   public Map<String, String> provider() {
     return Map.of("provider", router.currentProviderName());

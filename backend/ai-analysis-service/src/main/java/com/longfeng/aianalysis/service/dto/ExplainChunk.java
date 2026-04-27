@@ -2,6 +2,7 @@ package com.longfeng.aianalysis.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * SSE frame payload for {@code GET /analysis/{itemId}/stream} (G-01 decision · be-build-spec
@@ -16,10 +17,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>This DTO is service-layer transport only — the controller wraps a list of these into
  * SseEmitter writes (BR-16: no MQ side-channel, only replay of already-persisted analysis).
  */
+@Schema(description = "SSE 帧 payload · GET /analysis/{itemId}/stream")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ExplainChunk(
-    @JsonProperty("chunk") String chunk,
-    @JsonProperty("done") Boolean done) {
+    @Schema(description = "文本片段") @JsonProperty("chunk") String chunk,
+    @Schema(description = "终帧标识 · true 时前端应关闭 EventSource · 中间帧省略此字段") @JsonProperty("done") Boolean done) {
 
   /** Convenience factory for an intermediate (non-terminal) frame. */
   public static ExplainChunk of(String chunk) {
