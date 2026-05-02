@@ -23,6 +23,7 @@ CREATE TABLE wrongbook.wb_analysis_result (
   raw_json         JSONB        NOT NULL,                    -- 模型原始输出（保真）
   status           SMALLINT     NOT NULL,                    -- 0 RUNNING 1 OK 2 LOW_CONFIDENCE 9 FAILED
   finished_at      TIMESTAMPTZ,
+  tenant_id        BIGINT       NOT NULL,                    -- 多租户隔离 (plan §5.S1 出口门禁)
   created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),      -- C9
   CONSTRAINT uq_analysis_qid_version UNIQUE (question_id, version)
 );

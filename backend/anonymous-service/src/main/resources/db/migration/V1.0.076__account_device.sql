@@ -6,6 +6,7 @@
 CREATE TABLE anon.account_device (
   id            BIGINT       PRIMARY KEY,                  -- Snowflake
   student_id    BIGINT       NOT NULL,
+  tenant_id     BIGINT       NOT NULL,                     -- 多租户隔离 (plan §5.S1 出口门禁)
   device_fp     VARCHAR(128) NOT NULL,                     -- 5来源组合指纹: Canvas+WebGL+AudioContext+UA+Accept-Language
   platform      VARCHAR(16),                               -- H5 / MINIP / IOS / ANDROID
   first_seen_at TIMESTAMPTZ  NOT NULL DEFAULT now(),       -- C9

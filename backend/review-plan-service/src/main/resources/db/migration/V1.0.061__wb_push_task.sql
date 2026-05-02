@@ -15,6 +15,7 @@ CREATE TABLE review.wb_push_task (
   last_error      TEXT,
   idempotency_key VARCHAR(64)  NOT NULL,                     -- C6: md5(node_id + ':' + scheduled_at::text)
   version         INT          NOT NULL DEFAULT 0,           -- 乐观锁 · XXL-Job CAS 抢占
+  tenant_id       BIGINT       NOT NULL,                     -- 多租户隔离 (plan §5.S1 出口门禁)
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),       -- C9 审计字段
   CONSTRAINT uq_push_idem UNIQUE (idempotency_key)
 );

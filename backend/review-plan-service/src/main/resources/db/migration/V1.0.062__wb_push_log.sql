@@ -11,6 +11,7 @@ CREATE TABLE review.wb_push_log (
   error_code   VARCHAR(32),
   error_msg    TEXT,
   delivered_at TIMESTAMPTZ,                                 -- C9 · 实际投递确认时间
+  tenant_id    BIGINT       NOT NULL,                       -- 多租户隔离 (plan §5.S1 出口门禁)
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()          -- C9
 );
 

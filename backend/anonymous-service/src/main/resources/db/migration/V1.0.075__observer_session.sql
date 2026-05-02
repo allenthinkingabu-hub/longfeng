@@ -11,6 +11,7 @@ CREATE TABLE anon.observer_session (
   role                  VARCHAR(16)  NOT NULL,             -- PARENT / TEACHER
   device_fp             VARCHAR(128),                      -- 观察方设备指纹（optional）
   status                SMALLINT     NOT NULL DEFAULT 1,   -- 1 ACTIVE 2 EXPIRED 3 REVOKED_BY_STUDENT
+  version               INT          NOT NULL DEFAULT 0,   -- 状态机 CAS (D-State · 防 revoke/expire 并发竞态)
   issued_at             TIMESTAMPTZ  NOT NULL DEFAULT now(), -- C9
   last_seen_at          TIMESTAMPTZ  NOT NULL DEFAULT now(), -- C9 · 每次请求更新
   expires_at            TIMESTAMPTZ  NOT NULL,             -- C9 · PARENT: +30d / TEACHER: +90d

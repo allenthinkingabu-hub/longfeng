@@ -18,6 +18,7 @@ CREATE TABLE anon.guest_session (
   consent_at            TIMESTAMPTZ,                         -- C9
   consent_type          SMALLINT,                            -- 1 ADULT 2 MINOR_WITH_GUARDIAN 3 MINOR_NO_GUARDIAN
   status                SMALLINT     NOT NULL DEFAULT 0,     -- 0 CREATED 1 ANALYZING 2 RESULT_READY 3 FAILED 4 CLAIMED 9 EXPIRED
+  version               INT          NOT NULL DEFAULT 0,     -- 状态机 CAS (D-State · 防 expire/claim 并发竞态)
   claimed_by_student_id BIGINT,                              -- 认领后填 · 软指针到 user_account（跨仓）
   claimed_question_id   BIGINT,                              -- 认领后填 · 软指针到 wb_question（跨 schema）
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(), -- C9

@@ -16,6 +16,7 @@ CREATE TABLE review.wb_review_record (
   self_rating     SMALLINT,                                  -- 1 掌握 2 部分 3 未掌握 (D-Q-Self-Rate)
   ai_rating       SMALLINT,                                  -- 可选 AI 评估
   notes           TEXT,
+  tenant_id       BIGINT       NOT NULL,                     -- 多租户隔离 (plan §5.S1 出口门禁)
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()        -- C9
 );
 

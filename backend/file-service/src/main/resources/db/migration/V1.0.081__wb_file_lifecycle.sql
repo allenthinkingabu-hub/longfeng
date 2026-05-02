@@ -6,6 +6,7 @@
 
 CREATE TABLE file.wb_file_lifecycle (
   file_id    BIGINT       PRIMARY KEY REFERENCES file.wb_file(id) ON DELETE CASCADE,
+  tenant_id  BIGINT       NOT NULL,    -- 多租户隔离 (plan §5.S1 出口门禁) · sweep job 按 tenant 分桶
   promote_at TIMESTAMPTZ,               -- C9 · 30d 后转 IA · FileTtlSweepJob 触发
   archive_at TIMESTAMPTZ,               -- C9 · 180d 后转 ARCHIVE
   delete_at  TIMESTAMPTZ                -- C9 · 学生主动续期可推迟 · NULL = 不自动删除
