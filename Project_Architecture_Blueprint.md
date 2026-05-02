@@ -1,9 +1,11 @@
 # Project Architecture Blueprint — Longfeng AI 错题本
 
-> **Generated**: 2026-04-27  
-> **Detection**: Auto-detect — Java + Spring Cloud Microservices (Backend) · React + TypeScript Monorepo (Frontend)  
+> **Generated**: 2026-04-28 (updated from 2026-04-27)  
+> **Detection**: Auto-detect — Java + Spring Cloud Microservices (Backend) · React + TypeScript Monorepo (Frontend) · WeChat Mini-program  
 > **Pattern**: Microservices + Layered Architecture (per service) + Event-Driven (Outbox/RocketMQ)  
-> **Detail Level**: Comprehensive + Implementation-Ready
+> **Detail Level**: Comprehensive + Implementation-Ready  
+> **Current Branch**: feature/s7-frontend-core  
+> **Phase Status**: S7 A轨 4/5 AC ✅ · S8 设计阶段 ✅ · S5 DTO 契约补全 ✅
 
 ---
 
@@ -21,6 +23,7 @@
 | **合规红线** | AI 调用前 PII 脱敏 · 图片仅存 object_key · audit_log 同事务写入 |
 | **可观测性内置** | 每服务 Micrometer+OTEL · 结构化 JSON 日志 · traceId 全链路透传 |
 | **AI 辅助开发** | 三段式（Pre-flight → Builder → Acceptance）工作流驱动各 Phase 实现 |
+| **权限分级** | Gateway JWT scope 解析 · scope=READ JWT 守门家长视图（S8 ADR 0018） |
 
 ---
 
@@ -38,9 +41,9 @@
 │                           └────────────┬─────────────────────┘  │
 │  ┌──────────┐    观察     │            │ HTTPS                  │
 │  │  家长     │ ──────────▶ │            ▼                        │
-│  └──────────┘             │  ┌──────────────────────────────┐   │
-│                           │  │  API Gateway (SCG 4.1)       │   │
-│                           │  │  JWT验证 · 限流 · TraceId注入  │   │
+│  └──────────┘  邀请码兑换  │  ┌──────────────────────────────┐   │
+│                (S8 stub)  │  │  API Gateway (SCG 4.1)       │   │
+│                           │  │  JWT验证+scope解析 · 限流      │   │
 │                           │  └──────────┬───────────────────┘   │
 │                           │             │ HTTP/OpenFeign         │
 │                           │  ┌──────────┴───────────────────┐   │
@@ -60,12 +63,13 @@
         ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │  Spring Cloud Gateway (:8080)                                          │
-│  JwtAuthFilter → RateLimitFilter(Resilience4j) → TraceIdFilter         │
+│  JwtAuthFilter → scope解析(READ/WRITE) → RateLimitFilter → TraceIdFilter│
 │  路由: /api/v1/wrongbook/** → :8081                                     │
 │        /api/v1/ai/**       → :8082                                     │
 │        /api/v1/review/**   → :8083                                     │
 │        /api/v1/file/**     → :8084                                     │
 │        /api/v1/anon/**     → :8085                                     │
+│  写接口守门: scope=READ JWT → 403 SCOPE_INSUFFICIENT (ADR 0018)         │
 └──────┬────────┬────────────┬────────────┬────────────┬─────────────────┘
        │        │            │            │            │
        ▼        ▼            ▼            ▼            ▼
@@ -124,6 +128,31 @@ review-plan-service
   └── 回调 wrongbook-service 更新 status=scheduled
 ```
 
+### 2.4 数据流图 — S8 复习执行主路径
+
+```
+用户进 /review/today
+  │
+  ▼ GET /review-plans?date=today (staleTime=30s · refetchOnWindowFocus=true)
+review-plan-service → [ReviewPlanDto × N] → 前端时段分组(now/morning/afternoon/evening)
+  │
+用户点卡片 plan id=P1
+  │
+  ▼ GET /review-plans/P1
+review-plan-service → ReviewItemDetail (stemText + answerStandard + steps[])
+  │
+用户点"揭示答案" → 点评分(0|3|5 → ADR 0016: 未掌握/部分/已掌握)
+  │
+  ▼ POST /review-plans/P1/complete {quality: 0|3|5}
+review-plan-service
+  ├── SM2Algorithm.compute(quality) → UPDATE review_plan
+  ├── INSERT review_outcome
+  ├── 乐观锁 dispatch_version
+  └── 200 CompleteReviewResp {plan_id, next_review_at, ease_factor_after, mastered}
+  │
+前端 invalidate ['review-plans','today'] → navigate(/review/done)
+```
+
 ---
 
 ## 3. 后端架构组件
@@ -149,13 +178,15 @@ review-plan-service
 **定位**: 系统唯一入口，处理横切关注点。
 
 ```
-JwtAuthFilter          — 验证 RSA JWT，提取 userId 注入 Header
+JwtAuthFilter          — 验证 RSA JWT，提取 userId + scope 注入 Header
 RateLimitFilter        — Resilience4j 限流 (20 req/s default)
 TraceIdFilter          — 生成/透传 X-Request-Id
+JWT Scope Guard        — scope=READ JWT 调写接口 → 403 SCOPE_INSUFFICIENT (ADR 0018)
 路由表 (application.yml) — Path 匹配 → 后端服务 URI
 ```
 
-**关键设计**: 响应式模式（`web-application-type: reactive`），非阻塞 IO。
+**关键设计**: 响应式模式（`web-application-type: reactive`），非阻塞 IO。  
+**S8 新增**: scope=READ 家长 JWT 的写接口拦截层（SC-14 三重防御之网关层）。
 
 ### 3.3 wrongbook-service (错题主域)
 
@@ -180,7 +211,8 @@ draft(0) → analyzed(1) → scheduled(2) ⇄ reviewed(3) → mastered(8)
                                                       ↘ archived(9)
 ```
 
-**幂等保护**: Redis Key `idem:wb:{requestId}` TTL 24h，防止重复提交。
+**幂等保护**: Redis Key `idem:wb:{requestId}` TTL 24h，防止重复提交。  
+**S8 扩展**: `GET /wrongbook/items?ownerId={studentId}` 加 ownerId 参数供家长视图使用（ADR 0018）。
 
 ### 3.4 ai-analysis-service (AI 解析)
 
@@ -200,6 +232,7 @@ interface HttpLlmProvider {
 原始文本 → PIIRedactor.redact() → 脱敏文本 → LLM API
 ```
 
+**AI 解析输出**: `stemText + answerStandard + steps[]` — 由 review-plan-service 透传给前端，S8 直接消费。  
 **Token 成本埋点**: `ChatResponseMetadata.usage()` → 写入 `ai_usage_log`。
 
 ### 3.5 review-plan-service (复习计划)
@@ -219,9 +252,27 @@ interface HttpLlmProvider {
   连续3次 ease≥2.8 → mastered (软删7行 + 发 review.mastered)
 ```
 
-**外部依赖**: OpenFeign 调用 calendar-service（获取日历节点）· notification-service（发送提醒）。
+**5 个 API 端点** (已实现 · S7 E2E 4/5 AC 通过):
 
-**定时任务**: XXL-Job 驱动 `ReviewDueJob`，扫描 `next_review_at ≤ now()` 的计划。
+| 端点 | SC | 状态 |
+|---|---|---|
+| `GET /review-plans?date=` | SC-07 · SC-10 | ✅ 实现 · DayViewResp |
+| `GET /review-plans/{id}` | SC-08.AC-2 | ✅ 实现 · ReviewPlanDto |
+| `POST /review-plans/{id}/complete` | SC-08.AC-3 | ✅ 实现 · CompleteReviewResp |
+| `GET /review-stats` | SC-09 | ✅ 实现 · ReviewStatsResp |
+| `POST /review-plans/batch-reset` (admin) | — | ✅ 实现 |
+
+**新增 DTO（S7 验收后 · 契约补全 G-01~G-06）**:
+
+| DTO | 字段 | 说明 |
+|---|---|---|
+| `ReviewPlanDto` | id, wrong_item_id, user_id, node_index, next_due_at, mastery, ease_factor, interval, status | 补全 next_due_at/user_id/mastery/interval 四缺失字段 |
+| `DayViewResp` | items, calendarNodes, source | 日视图 + calendar-platform 节点聚合 |
+| `CompleteReviewResp` | plan_id, next_review_at, ease_factor_after, mastered | complete 响应 snake_case 合规 |
+
+**外部依赖**: OpenFeign 调用 calendar-service（获取日历节点）· notification-service（发送提醒）。  
+**定时任务**: XXL-Job 驱动 `ReviewDueJob`，扫描 `next_review_at ≤ now()` 的计划。  
+**S8 扩展（待 s5-v2）**: `GET /review-stats` v2 扩展 `subjectBreakdown[] + ebbinghaus[]` 字段（ADR 0017 · 阻塞 SC-09.AC-2/AC-3）。
 
 ### 3.6 file-service (文件存储)
 
@@ -243,7 +294,8 @@ interface StorageProvider {
 
 ### 3.7 anonymous-service (匿名访问)
 
-**定位**: 游客模式入口，管理 guest_session/consent/quota，当前实现为最小骨架。
+**定位**: 游客模式入口，管理 guest_session/consent/quota，当前实现为最小骨架。  
+**S8 扩展(stub)**: `POST /v1/parent/redeem-invite` — S8 阶段返回 mock JWT scope=READ，S11 接管真实 invite_code 表 + JWT 颁发。
 
 ---
 
@@ -292,7 +344,21 @@ apps/miniapp     → packages/i18n, testids
 
 packages/api-contracts → packages/testids (类型引用)
 packages/ui-kit        → 无内部依赖（纯 design tokens + 组件）
+packages/telemetry     → @sentry/react (H5), @sentry/minapp (小程序) ADR 0015
 ```
+
+### 4.4 前端页面路由（S7 + S8）
+
+| 路由 | 页面 | Phase | 状态 |
+|---|---|---|---|
+| `/items` | 错题列表 | S7 | ✅ done |
+| `/items/new` | 录入错题 | S7 | ✅ done |
+| `/items/:id` | 错题详情 | S7 | ✅ done |
+| `/review/today` | P-REVIEW-TODAY | S8 | 设计中 |
+| `/review/exec/:planId` | P-REVIEW-EXEC | S8 | 设计中 |
+| `/review/done` | P-REVIEW-DONE | S8 | 设计中 |
+| `/insight` | P-INSIGHT | S8 | 设计中 |
+| `/observer/:studentId` | P-OBSERVER | S8 | 设计中 |
 
 ---
 
@@ -313,12 +379,14 @@ wrong_item (核心聚合根)
 └── wrong_attempt (作答记录)
 
 review_plan (复习计划聚合根)
-├── item_id, user_id, node_index (0-6)
-├── ease_factor, interval_days, next_review_at
-├── quality (最近 quality 评分), status
+├── id (Snowflake), wrong_item_id, student_id (user_id), node_index (0-6)
+├── ease_factor (BigDecimal), interval_index (0..6)
+├── next_due_at (timestamptz UTC)
+├── consecutive_good_count (mastery 0..3), status (active=0 · mastered=1)
+├── dispatch_version (乐观锁)
 └── review_plan_outbox (review.completed 事件)
 
-review_outcome — 每次复习结果快照
+review_outcome — 每次复习结果快照 {quality, ease_factor_before/after, interval_before/after}
 
 tag_taxonomy — 知识点层级树 (is_active 软控制)
 
@@ -355,7 +423,12 @@ idem_key  — 幂等 Key 表（X-Request-Id → 响应缓存）
 Gateway JwtAuthFilter:
   → 验证 RSA 公钥签名 (jwt.public-key-path)
   → 提取 userId 注入 X-User-Id Header
+  → 提取 scope (READ/WRITE 默认) 注入 X-Jwt-Scope Header
   → 下游服务信任 Header（内网不再验 JWT）
+
+Gateway Scope Guard (ADR 0018 · S8 新增):
+  → scope=READ JWT + 写接口 (POST/PATCH/DELETE) → 403 SCOPE_INSUFFICIENT
+  → scope=READ + ownerId 不在 JWT.parentOf → 403 OWNER_MISMATCH
 
 Gateway RateLimitFilter:
   → Resilience4j RateLimiter (20 req/s, 0ms timeout)
@@ -368,12 +441,13 @@ Gateway RateLimitFilter:
 GlobalExceptionHandler (common):
   BizException(ErrorCode) → HTTP 4xx + ApiResult.error(code, message)
   ConstraintViolationException → 400
-  OptimisticLockException → 409 (version 冲突)
+  OptimisticLockException → 409 (dispatch_version 冲突)
   其他 → 500 + log.error (含 traceId)
 
 服务级异常:
   file-service: OversizeException, VirusDetectedException, MimeNotAllowedException
-  review-plan-service: PlanNotFoundException
+  review-plan-service: PlanNotFoundException, PlanAlreadyMasteredException (→ 410)
+  gateway: ScopeInsufficientException (→ 403 · ADR 0018)
 ```
 
 ### 6.3 日志与可观测性
@@ -389,6 +463,10 @@ Tracing (OTEL → Tempo):
   traceId 全链路透传 (Gateway → Service → RocketMQ Consumer)
 
 Error Tracking: Sentry (前后端共用 DSN)
+  前端 H5: @sentry/react + web-vitals + @sentry/vite-plugin (ADR 0015)
+  前端小程序: @sentry/minapp (ADR 0015)
+  Sentry tag 规则: ac=SC-XX.AC-Y · critical=true · phase=sN
+
 Grafana Dashboards: ops/grafana/ 目录
 ```
 
@@ -401,6 +479,7 @@ Entity 层: JPA 约束 (@NotNull, @Size, @Check)
 
 difficulty: CHECK (difficulty IS NULL OR difficulty BETWEEN 1 AND 5)
 status: CHECK IN (0,1,2,3,8,9)
+quality (前端发送): 0|3|5 (ADR 0016 · 3档映射 · 禁止 1/2/4)
 ```
 
 ### 6.5 配置管理
@@ -410,8 +489,12 @@ application.yml 分层:
   硬编码默认值 (本地开发)
   ${ENV_VAR:default} 环境变量覆盖 (生产)
 
-Nacos 2.3: 动态配置（Feature Flag 切换 LLM Provider）
+Nacos 2.3: 动态配置（Feature Flag 切换 LLM Provider · observer.real_jwt 开关）
 Kubernetes Secrets: DB_PASSWORD, JWT_PUBLIC_KEY_PATH 等敏感值
+
+Feature Flags (关键):
+  ai.provider: dashscope|openai|stub  — LLM Provider 切换
+  observer.real_jwt: false(dev/staging) | true(prod) — S8 stub vs S11 真实链路
 ```
 
 ---
@@ -423,7 +506,7 @@ Kubernetes Secrets: DB_PASSWORD, JWT_PUBLIC_KEY_PATH 等敏感值
 ```
 外部: HTTPS → Gateway → HTTP (内网)
 服务间: Spring Cloud OpenFeign
-  review-plan-service → CalendarFeignClient
+  review-plan-service → CalendarFeignClient (Sentinel熔断 + Caffeine 10min cache)
   review-plan-service → NotificationFeignClient
 ```
 
@@ -445,6 +528,15 @@ Kubernetes Secrets: DB_PASSWORD, JWT_PUBLIC_KEY_PATH 等敏感值
 
 **消息格式**: Thin payload `{itemId, action, version, occurredAt}`（防 PII 透传）。  
 **顺序保证**: orderly consumer，同 key 入同队列。
+
+### 7.3 前端轮询模式（S8 ADR 0018 · 替代 WebSocket）
+
+```
+review.due 实时唤起:
+  React Query staleTime=30s · refetchOnWindowFocus=true
+  POST complete 后手动 invalidate ['review-plans','today'] → 重 fetch
+  不引入 WebSocket / SSE（网关无 WS 路由 · s5 review.due 是 RocketMQ 内部事件）
+```
 
 ---
 
@@ -485,18 +577,22 @@ Kubernetes Secrets: DB_PASSWORD, JWT_PUBLIC_KEY_PATH 等敏感值
 | 框架 | React | — |
 | 构建 | Vite | H5 + prototype |
 | 包管理 | pnpm workspace | monorepo |
-| 状态/数据 | TanStack Query | `useInfiniteQuery` 游标分页 |
+| 状态/数据 | TanStack Query | `useInfiniteQuery` 游标分页 · `staleTime`/`keepPreviousData` 平滑过渡 |
 | 路由 | React Router | — |
 | 国际化 | i18next | 共享 `@longfeng/i18n` 包 |
 | 组件库 | `@longfeng/ui-kit` | 内部设计系统 |
 | API 客户端 | `@longfeng/api-contracts` | 类型安全 HTTP 客户端 |
 | 测试 ID | `@longfeng/testids` | 中心化 testid 常量 |
+| 图表(H5) | `recharts` | 2.x · tree-shake 仅引 LineChart/BarChart (ADR 0014 · S8) |
+| 图表(小程序) | `echarts-for-weixin` | bar/line/scatter · 主包贡献 ≤ 400KB |
+| 错误追踪(H5) | `@sentry/react` | 8.x · web-vitals 双写 (ADR 0015) |
+| 错误追踪(小程序) | `@sentry/minapp` | 社区 latest (ADR 0015) |
 | 单元测试 | Vitest + Testing Library | — |
 | API Mock | MSW (Mock Service Worker) | B 轨验收 |
 | E2E 测试 | Playwright | A 轨验收 |
-| 可访问性 | jest-axe | verify-a11y.sh |
+| 可访问性 | jest-axe | verify-a11y.sh · WCAG AA |
 | 设计 Token | CSS 变量 `--tkn-*` | 来自 Style Dictionary |
-| 错误追踪 | Sentry | 同后端 DSN |
+| S8 新 Token | `--tkn-chart-{1..5}` · `--tkn-subject-{math,physics,chem,eng,chi}` | S8 图表色板 |
 | 小程序 | 微信原生 WXML | miniapp 目录 |
 
 ### 8.3 基础设施
@@ -514,6 +610,7 @@ Kubernetes Secrets: DB_PASSWORD, JWT_PUBLIC_KEY_PATH 等敏感值
 | 追踪 | OpenTelemetry → Tempo | — |
 | 日志 | Loki | 结构化 JSON |
 | 错误追踪 | Sentry | — |
+| 性能审计 | lighthouse-ci | 0.13 · P-INSIGHT 硬门禁 ≥ 85 |
 
 ---
 
@@ -590,7 +687,27 @@ public class WrongItemQueryRepository {
 }
 ```
 
-### 9.4 LLM Provider 路由模式
+### 9.4 Java Record DTO 模式（S5 契约补全规范）
+
+```java
+// snake_case JSON · @JsonProperty · @Schema · static factory from(Entity)
+@Schema(description = "复习计划节点 VO")
+public record ReviewPlanDto(
+    @JsonProperty("id")            String id,
+    @JsonProperty("wrong_item_id") String wrongItemId,
+    @JsonProperty("user_id")       String userId,
+    @JsonProperty("node_index")    int nodeIndex,
+    @JsonProperty("next_due_at")   String nextDueAt,
+    @JsonProperty("mastery")       int mastery,
+    @JsonProperty("ease_factor")   BigDecimal easeFactor,
+    @JsonProperty("interval")      int interval,
+    @JsonProperty("status")        String status) {
+
+  public static ReviewPlanDto from(ReviewPlan plan) { ... }
+}
+```
+
+### 9.5 LLM Provider 路由模式
 
 ```java
 @Component
@@ -604,24 +721,53 @@ public class ProviderRouter {
 }
 ```
 
-### 9.5 前端 API 客户端模式
+### 9.6 前端 API 客户端模式
 
 ```typescript
-// packages/api-contracts/src/clients/wrongbook.ts
-export const wrongbookClient = {
-  list: (params: ListParams) =>
-    http.get<WrongItemListResponse>('/api/v1/wrongbook/items', { params }),
+// packages/api-contracts/src/clients/review.ts
+export const reviewClient = {
+  listToday: (date: string, tz: string) =>
+    http.get<DayViewResp>('/api/v1/review/review-plans', { 
+      params: { date }, 
+      headers: { 'X-User-Timezone': tz } 
+    }),
 
-  create: (req: CreateWrongItemReq) =>
-    http.post<WrongItemVO>('/api/v1/wrongbook/items', req),
+  complete: (planId: string, quality: 0 | 3 | 5) =>
+    http.post<CompleteReviewResp>(`/api/v1/review/review-plans/${planId}/complete`, { quality }),
 };
 
-// 使用 (apps/h5)
-const { data, fetchNextPage } = useInfiniteQuery({
-  queryKey: ['wrongItems', filters],
-  queryFn: ({ pageParam }) => wrongbookClient.list({ cursor: pageParam, ...filters }),
-  getNextPageParam: (last) => last.nextCursor,
+// 使用 (apps/h5/src/pages/ReviewTodayPage.tsx)
+const { data } = useQuery({
+  queryKey: ['review-plans', 'today', date, tz],
+  queryFn: () => reviewClient.listToday(date, tz),
+  staleTime: 30_000,
+  refetchOnWindowFocus: true,
 });
+```
+
+### 9.7 前端复习会话状态机（S8）
+
+```
+ReviewExecPage 状态机:
+  Loading → Thinking (GET /review-plans/{id} 200)
+  Loading → NotFound (404 · 跳回 today)
+  Thinking → Revealed (用户点 btn-reveal-answer)
+  Revealed → Submitting (用户点 rating-{forgot|partial|mastered})
+  Submitting → Done (200 · 跳 /review/done)
+  Submitting → ConflictRetry (409 · 自动重试 1 次)
+  ConflictRetry → Done (重试 200)
+  ConflictRetry → Failed (仍 409 · toast)
+  Submitting → Done via 410 (PLAN_MASTERED · 走 Done hero=已掌握)
+  Submitting → Failed (400/500 · toast + 回 Revealed)
+
+Observer 会话状态机 (SC-14):
+  Idle → Submitting (输入邀请码 + 点兑换)
+  Submitting → Active (stub 200)
+  Submitting → ErrInvalid/ErrExpired/ErrTooMany (4xx)
+  Active → Expiring (剩余 ≤ 5min)
+  Active → Revoked (学生撤销 → 401)
+  Expiring → Expired (倒计时归零)
+  Expired/Revoked → [*] (清 sessionStorage + 跳登录)
 ```
 
 ---
@@ -646,6 +792,8 @@ const { data, fetchNextPage } = useInfiniteQuery({
 | B 轨 (mock) | 每 PR | Playwright + MSW | Pixel diff · testid 可见性 · 交互路径 |
 | C 轨 (diff) | 随时 | Vite dev server + 截图 | 视觉结构 gap report |
 
+**S7 E2E 验收状态**: 4/5 AC ✅ 通过 · 后端 API 契约差异已记录 (commit e810917)  
+**S8 测试矩阵**: 9 AC × 42 行 verification_matrix（含 critical SC-08.AC-3 / SC-14.AC-1 / SC-14.AC-2）  
 **验收注解**: `@CoversAC` 链接代码到 AC 编号，确保测试覆盖追溯。
 
 ---
@@ -686,6 +834,10 @@ management:
 本地开发: application.yml 硬编码默认值 (postgres:wb, redis:localhost)
 CI:       Testcontainers 自动启动
 生产:     Kubernetes Secrets → 环境变量覆盖 ${DB_PASSWORD}
+
+Feature Flag 生产守门:
+  observer.real_jwt=true (必须 · 否则拒服务)
+  ai.provider=dashscope (主) | openai (故障切换)
 ```
 
 ---
@@ -722,11 +874,11 @@ public class MyNewProvider implements HttpLlmProvider {
 
 ### 12.4 新增前端页面
 
-1. 在 `design/specs/` 创建页面 spec 文档
+1. 在 `design/specs/` 或 `design/arch/<phase>.md` 创建页面 spec 文档
 2. 运行 `/fe-preflight <页面名>` 提取 design tokens 映射
 3. 运行 `/fe-builder <页面名>` 实现 TSX + CSS Module
 4. 运行 `/fe-accept-diff` / `/fe-accept-mock` / `/fe-accept-e2e` 验收
-5. 在 `@longfeng/testids` 注册新 testid 常量
+5. 在 `@longfeng/testids` 注册新 testid 常量（三段式 `<screen>.<region>.<element>`）
 
 ### 12.5 新增存储 Provider
 
@@ -736,7 +888,21 @@ public class MyNewProvider implements HttpLlmProvider {
 public class MyCloudProvider implements StorageProvider { ... }
 ```
 
-### 12.6 常见扩展陷阱
+### 12.6 S5-v2 子 Phase 扩展（待执行 · 阻塞 SC-09.AC-2/AC-3）
+
+```
+启动条件: s5-arch-frozen tag + 用户授权
+工作内容:
+  1. 写 design/analysis/s5-v2-business-analysis.yml
+  2. 改 design/arch/s5-review-plan.md 加 v2 增量段
+  3. 后端实现: GET /review-stats 响应增加:
+     subjectBreakdown[]: { subject, reviewCount, correctCount, masteredCount }
+     ebbinghaus[]:        { nodeIndex, expectedRetention, actualRetention, completedAt }
+  4. ownerId 参数 (ADR 0018): s3 wrongbook-service + s5 review-plan-service 同步扩参
+  5. 重打 s5-stats-v2-frozen tag → 解除 SC-09.AC-2/AC-3 fe-builder 阻塞
+```
+
+### 12.7 常见扩展陷阱
 
 | 陷阱 | 说明 | 正确做法 |
 |---|---|---|
@@ -746,28 +912,36 @@ public class MyCloudProvider implements StorageProvider { ... }
 | 前端硬编码颜色值 | 绕过 design token 体系 | 只用 `--tkn-*` CSS 变量 |
 | Controller 含业务逻辑 | 难以测试，违反分层 | 业务逻辑下沉到 Service/Domain |
 | 不写 `@CoversAC` | 测试与 AC 失去追溯 | 每个测试方法必须标注 |
+| DTO 字段用驼峰 JSON | 前端消费不一致 | 所有 DTO 用 `@JsonProperty` 强制 snake_case |
+| scope=READ JWT 写操作 | 合规红线 · 家长视图数据泄露 | 三重防御: 网关 403 + 前端 disabled + ARIA |
+| 前端直接用 WebSocket | 网关无 WS 路由 | React Query 轮询替代 (ADR D5) |
 
 ---
 
 ## 13. 架构决策记录 (ADR) 索引
 
-| ADR | 决策 | 状态 |
-|---|---|---|
-| 0001 | Monorepo 结构（backend + frontend 统一仓库） | Accepted |
-| 0002 | **Outbox + RocketMQ** 事务消息（不用 Seata）— 最终一致性 | Accepted |
-| 0003 | **Nacos 2.3**（不用 Eureka/Consul）— Alibaba 家族对齐 | Accepted |
-| 0004 | **Sentinel** 首选（Resilience4j 回退）— 限流熔断 | Accepted |
-| 0005 | **RocketMQ 5.1**（不用 Kafka）— 事务消息原生支持 | Accepted |
-| 0006 | **JPA + QueryDSL 5**（不用 MyBatis）— 类型安全 · pgvector 友好 | Accepted |
-| 0007 | **Spring Cloud Gateway**（不用 Zuul）— 响应式 · 活跃维护 | Accepted |
-| 0008 | **Spring AI 1.0.0-M1**（不用 LangChain4j）— PII Advisor 钩子 · Token 埋点 | Accepted |
-| 0009 | **Micrometer+OTEL+Sentry+Prometheus+Grafana+Loki+Tempo** 观测栈 | Accepted |
-| 0010 | 工具链漂移：JDK 25/Node 25（本地）· Java 21/Node 20（CI 基线） | Accepted |
-| 0013 | **Ebbinghaus+SM-2 混合算法**（不用纯 Ebbinghaus 固定曲线） | Accepted |
-| 0014 | review_outcome + review_plan_outbox 独立表设计 | Accepted |
-| 0015 | **XXL-Job 2.4**（不用 Quartz）— ReviewDueJob 分布式调度 | Accepted |
+| ADR | 决策 | Phase | 状态 |
+|---|---|---|---|
+| 0001 | Monorepo 结构（backend + frontend 统一仓库） | — | Accepted |
+| 0002 | **Outbox + RocketMQ** 事务消息（不用 Seata）— 最终一致性 | S1 | Accepted |
+| 0003 | **Nacos 2.3**（不用 Eureka/Consul）— Alibaba 家族对齐 | S1 | Accepted |
+| 0004 | **Sentinel** 首选（Resilience4j 回退）— 限流熔断 | S2 | Accepted |
+| 0005 | **RocketMQ 5.1**（不用 Kafka）— 事务消息原生支持 | S2 | Accepted |
+| 0006 | **JPA + QueryDSL 5**（不用 MyBatis）— 类型安全 · pgvector 友好 | S3 | Accepted |
+| 0007 | **Spring Cloud Gateway**（不用 Zuul）— 响应式 · 活跃维护 | S2 | Accepted |
+| 0008 | **Spring AI 1.0.0-M1**（不用 LangChain4j）— PII Advisor 钩子 · Token 埋点 | S4 | Accepted |
+| 0009 | **Micrometer+OTEL+Sentry+Prometheus+Grafana+Loki+Tempo** 观测栈 | S2 | Accepted |
+| 0010 | 工具链漂移：JDK 25/Node 25（本地）· Java 21/Node 20（CI 基线） | — | Accepted |
+| 0013 | **Ebbinghaus+SM-2 混合算法**（不用纯 Ebbinghaus 固定曲线） | S5 | Accepted |
+| 0014 | **双端组件对称性 + testid 三段式命名**（S7 新立） | S7 | Accepted |
+| 0015 | **Sentry 双端独立 SDK**（@sentry/react + @sentry/minapp 各自独立，不合并） | S8 | Candidate |
+| 0016 | **复习自评 3 档**（未掌握/部分/已掌握 → quality 0/3/5 · 跳过 4 · mockup 08 权威） | S8 | Candidate |
+| 0017 | **s5 GET /review-stats v2 字段扩展**（subjectBreakdown[] + ebbinghaus[]）向后兼容 | S8/s5-v2 | Candidate |
+| 0018 | **ownerId 参数 + scope=READ JWT 跨账号读契约**（s3+s5 同步扩 · 网关守门） | S8 | Candidate |
+| review_outcome + review_plan_outbox 独立表设计 | S5 | Accepted |
+| 0015(old) | **XXL-Job 2.4**（不用 Quartz）— ReviewDueJob 分布式调度 | S5 | Accepted |
 
-完整 ADR 文本见 `docs/adr/` 目录。
+> 完整 ADR 文本见 `docs/adr/` 目录。
 
 ---
 
@@ -786,6 +960,9 @@ public class MyCloudProvider implements StorageProvider { ... }
 | 可访问性 | jest-axe + verify-a11y.sh | B轨验收 |
 | API 合约一致性 | api-contracts/adapter-contract.spec.ts | CI |
 | 无 N+1 查询 | hibernate-statistics CI 断言 | 集成测试 |
+| Lighthouse Performance | lighthouse-ci | P-INSIGHT ≥ 85 · P-REVIEW-TODAY ≥ 85 |
+| Lighthouse Accessibility | lighthouse-ci | ≥ 95 |
+| observer watermark z-index | CSS 静态扫描 | B轨验收 |
 
 ### 14.2 禁止项（全局红线）
 
@@ -797,6 +974,9 @@ public class MyCloudProvider implements StorageProvider { ... }
 - 禁止绕过 Outbox 直接调 RocketMQ Producer
 - 禁止前端硬编码颜色值（必须用 `--tkn-*` CSS 变量）
 - 禁止跨服务直接访问对方数据库
+- 禁止 DTO 使用驼峰 JSON key（必须 `@JsonProperty` 强制 snake_case）
+- 禁止 scope=READ JWT 通过写接口（网关层 403 · 前端三重防御）
+- 禁止 observer.real_jwt=false 在生产环境（Feature Flag 守门）
 
 ### 14.3 架构文档维护规范
 
@@ -838,20 +1018,67 @@ Phase N 需求确认
 - [ ] Repository: Spring Data 接口 + QueryDSL 复杂查询
 - [ ] Service: 业务逻辑 + 事务边界 + Outbox 写入
 - [ ] Controller: VO 映射 + `@Operation` + `@Valid`
+- [ ] DTO: Java record + `@JsonProperty` snake_case + `@Schema` + static `from(Entity)`
 - [ ] OpenAPI YAML 同步更新
 - [ ] 单元/集成测试 + `@CoversAC` 注解
 - [ ] `api-contracts` 前端客户端同步更新
 
 ### 15.3 新前端功能清单
 
-- [ ] `design/specs/` 新增页面 spec
-- [ ] `@longfeng/testids` 注册 testid 常量
+- [ ] `design/specs/` 或 arch 文档中新增页面 spec
+- [ ] `@longfeng/testids` 注册 testid 常量（三段式命名）
 - [ ] `/fe-preflight` 生成 build-spec.json
 - [ ] 实现 TSX + CSS Module（只用 `--tkn-*` 变量）
 - [ ] MSW handlers 新增 mock 数据
+- [ ] Sentry 埋点: `ac=SC-XX.AC-Y` tag + critical AC 标 `critical=true`
 - [ ] `/fe-accept-diff` → `/fe-accept-mock` 逐轨验收
+
+### 15.4 S8 Phase 执行路线图（当前进行中）
+
+```
+已完成: 设计阶段 (0.0.5 + 0.1 + 0.2) ✅
+              ↓
+[并行启动] s5-v2 子 Phase
+  - 解冻 s5 · 扩展 GET /review-stats + GET /wrongbook/items
+  - 落地 subjectBreakdown[] + ebbinghaus[] + ownerId 参数 (ADR 0017/0018)
+  - 重打 s5-stats-v2-frozen tag
+              ↓
+[阶段 2] s8 fe-preflight (5 mockup token 映射)
+  - ReviewTodayPage / ReviewExecPage / ReviewDonePage / ObserverPage
+  - InsightPage (Sd 缺 mockup · 需补 19_insight.html)
+              ↓
+[阶段 3] s8 fe-builder (双端实施)
+  - SC-08 4 AC · SC-09.AC-1 · SC-14 2 AC 不阻塞
+  - SC-09.AC-2/AC-3 阻塞至 s5-v2 完成
+              ↓
+[阶段 4] s8 fe-accept-mock (9 AC × 42 行 matrix)
+              ↓
+[阶段 5] s8 fe-accept-e2e
+              ↓
+[阶段 6] 打 s8-done tag
+```
 
 ---
 
-*本蓝图由 `/architecture-blueprint-generator` skill 于 2026-04-27 生成。*  
-*建议在每个重镇 Phase（S3/S4/S5/S7/S8/S11）完成后更新 §3、§5、§12 相关章节。*
+## 16. Phase 完成状态总览
+
+| Phase | 描述 | 状态 | 关键标签 |
+|---|---|---|---|
+| S0 | 项目引导 + 环境 | ✅ | s0-done |
+| S1 | 数据模型 + Flyway | ✅ | s1-done |
+| S2 | 平台基础设施 | ✅ | s2-done |
+| S3 | wrongbook-service | ✅ | s3-done |
+| S4 | ai-analysis-service | ✅ | s4-done |
+| S5 | review-plan-service | ✅ + DTO补全 | s5-done · s5-arch-frozen |
+| S5.5 | α' 6/9 chain 集成测试 | ✅ | s5.5-done |
+| S6 | file-service | ✅ | s6-done |
+| S7 | 前端错题主循环 | ✅ A轨 4/5 AC | s7-done (e810917) |
+| S8 | 复习执行 + 学情 + 家长视图 | 🔄 设计完成 · 建设中 | s8-arch-frozen (待打) |
+| S9 | E2E 全量 | ⏸ 待 S8 | — |
+| S11 | 匿名域 + 真实邀请码链路 | ⏸ 待 S8 | — |
+
+---
+
+*本蓝图由 `/architecture-blueprint-generator` skill 于 2026-04-28 更新生成。*  
+*增量变更 (vs 2026-04-27 版): §2.4 S8数据流 · §3.3/3.5 S7E2E状态+新DTO · §3.7 S8 stub · §4.4 S8路由 · §6.1 scope守门 · §9.4 Record DTO模式 · §9.7 S8状态机 · §12.6 s5-v2路线 · §13 ADR 0015-0018 · §15.4 S8执行路线 · §16 Phase总览。*  
+*建议更新触发点: S8 fe-builder 完成后更新 §15/§16 · s5-v2 解冻后更新 §3.5 · S8 验收完成后更新 §16。*

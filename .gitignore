@@ -53,3 +53,4 @@ kubeconfig
 
 # Local tmp
 tmp/
+.gstack/

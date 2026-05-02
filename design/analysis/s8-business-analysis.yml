@@ -1,0 +1,850 @@
+# 落地计划 §12.0.5 · S8 Phase 复习执行 + 学情分析（前端闭环）· Business Analysis YAML
+# schema_version 1.1 · A 级 Phase · v1.8 AC 分行硬约束 · 含 critical + verification_matrix 五类
+# 入口阶段（_stage=entry）· dev_anchor / qa_anchor 由后续 fe-builder / fe-accept 阶段回填
+#
+# G-Biz 流程（§1.7 规则 A'）：
+#   - 范围决策（SC 漂移修正）+ 4 主问题 + 2 AI 工程决策 → 镜像 s7 路径 A 写法
+#   - User 签字（biz_gate=in_review → approved）后方可进入 0.1 业务理解 + 业务架构图（写入 arch.md 第 0 节）
+#
+# 上游冻结依赖：
+#   - s5-arch-frozen（已 done）· 提供 GET /review-plans?date= / POST /review-plans/{id}/complete / GET /review-stats 三契约
+#   - s7-done（已 done）· 提供 @longfeng/ui-kit / api-contracts / testids / i18n 共享包 + h5 / miniapp 真应用骨架
+#
+# 下游解冻依赖（路径 B · 用户 2026-04-27 决策）：
+#   - s5-stats-v2-frozen（待启动 · 独立子 Phase）· 扩展 GET /review-stats 加 subject 维度 + ebbinghaus overlay 字段
+#   - 阻塞 SC-09.AC-2 / SC-09.AC-3 的 fe-builder 阶段 · 不阻塞 0.0.5/0.1/0.2 设计阶段
+#
+# 漂移修正（drift_resolution · 主文档 §12.0.5 多处过时 · 详见下方）：
+#   - SC 范围 6→3 · GET /insights → GET /review-stats · 凌晨批算 → 实时聚合 · canvas 自绘 → echarts-for-weixin · WebSocket → 轮询
+#
+# AI 工程决策（ambiguities_resolved · 调研中发现 mockup 与文字版冲突 · 待 User 一并签）：
+#   - 自评档数 3 档（mockup 08 权威 · 非主文档 4 档）
+#   - mockup 17 归 s11 匿名域（设备指纹场景）· s8 不做唤起页
+
+schema_version: 1.1
+
+phase_id: s8
+phase_level: A                           # AC 分行硬约束 = 必（§1.5 通用约束 #13）· 6 SC → 修正后 3 SC 仍按 A 级走（与 s5/s7 持平）
+_stage: entry                            # dev_anchor / qa_anchor 后续阶段回填后 → exit
+biz_gate: approved
+signed_by: "@allen"
+approved_at: "2026-04-27T13:45:00+08:00"
+approval_method: "in-conversation-delegation · 用户授权 AI 代签 · 2026-04-27T13:42 · 原话：'你签吧，只要按照业务和高保证设计来就行'"
+
+# ============================================================
+# 1. SC 覆盖与权威源对齐（§1.5 通用约束 #11）
+# ============================================================
+
+sc_covered:
+  - SC-08                                # 复习任务执行与打分 · phase_owner=s8（s5 提供后端 POST complete + GET /review-plans）
+  - SC-09                                # 学情分析卡片（TopN 薄弱项）· phase_owner=s8（s5 提供后端 GET /review-stats · 路径 B 解冻 v2 扩接口）
+  - SC-14                                # 家长监督视图（家庭组）· phase_owner=[s8, s5, s3]（s8 出 UI · s5 数据源 · s11 短链/邀请码 JWT）
+
+ownership_verification:
+  source: design/sc-phase-mapping.yml
+  rule: "sc_covered 必须 = sc-phase-mapping.yml 中 owner_phases 含 s8 的 SC 集合"
+  verified_against:
+    - "SC-08 owner_phases: [s8, s5] · s8 = 主"
+    - "SC-09 owner_phases: [s8, s5] · s8 = 主"
+    - "SC-14 owner_phases: [s8, s5, s3] · s8 = 主"
+
+# ============================================================
+# 2. 漂移修正登记（drift_resolution · 主文档 §12.0.5/§12.1/§12.3 与权威源对照）
+# ============================================================
+
+drift_resolution:
+  date: "2026-04-27T13:30:00+08:00"
+  precedent: "s7 α-realistic 修正（design/analysis/s7-business-analysis.yml.drift_resolution · 2026-04-24）"
+  user_decision: "路径 A · 按 sc-phase-mapping.yml 权威 · 不照搬主文档 §12 过时段落"
+  drifts:
+    - id: D1
+      kind: sc_scope
+      where: "落地计划 §12.0.5 行 5532 / §12.1 / DoR 行 5745"
+      stated: "sc_covered = [SC-04, SC-05, SC-06, SC-09, SC-10, SC-14]（6 SC）"
+      authoritative: "sc-phase-mapping.yml · s8 owner_phases = [SC-08, SC-09, SC-14]（3 SC）"
+      resolution: "采纳 mapping 权威 · sc_covered = [SC-08, SC-09, SC-14] · 多出的 SC-04/05/06/10 已由 s7/s4/s5 完成（done tag 在）· 不重做"
+    - id: D2
+      kind: api_contract
+      where: "落地计划 §12.1 / §12.3 / §12.0.5 ux_anchor"
+      stated: "GET /insights?userId=&range=week|month|quarter"
+      authoritative: "design/arch/s5-review-plan.md §3.1 OpenAPI · s5-arch-frozen tag"
+      resolution: "采纳 s5 实际契约 · GET /review-stats?range={week|month|quarter}&subject={opt} header X-User-Timezone · 删除 /insights 提法"
+    - id: D3
+      kind: data_strategy
+      where: "落地计划 §12.1 A5 · §12.3 学情数据模型"
+      stated: "后端 XXL-Job 凌晨 02:00 批算 · learning_insight 缓存表 · 前端零 reduce"
+      authoritative: "s5-business-analysis.yml SC-09.AC-1 · GET /review-stats 实时 JPA 聚合 + Caffeine TTL 5min · 无 learning_insight 表"
+      resolution: "采纳 s5 实际实现 · 实时聚合 · 前端 React Query staleTime=60s 二级缓存 · 不引入 learning_insight 表"
+    - id: D4
+      kind: chart_lib_inconsistency
+      where: "落地计划 §12.1 A4（echarts-for-weixin）vs §12.3 工具白名单（小程序 canvas type=2d 自绘）"
+      stated: "主文档自相矛盾 · §12.1 用 echarts · §12.3 用 canvas"
+      authoritative: "ADR 0004（双端选型）+ S7 期 ADR 0014（双端组件对称性）"
+      resolution: "统一选 echarts-for-weixin · 与 H5 recharts 配套 · 色板均消费 --tkn-chart-{1..5} · 不手写 canvas（避免维护成本）"
+    - id: D5
+      kind: realtime_push
+      where: "落地计划 §12.1 A10 · §12.3 ws/review-due 端点"
+      stated: "前端订阅 review.due WebSocket · 网关直连 · 心跳 30s 自动重连"
+      authoritative: "design/arch/s5-review-plan.md §3 review.due 是 RocketMQ 事件 → notification-service · 网关无 WebSocket 路由"
+      resolution: "采纳现实 · 前端 React Query 轮询 GET /review-plans?date=today（staleTime=30s · refetchOnWindowFocus=true）· 不依赖前端 WebSocket · 推送通知能力归 s6 notification-service（微信订阅消息 / H5 Web Push）"
+
+# ============================================================
+# 3. 4 主问题 User 决策记录（§1.7 规则 A' · AskUserQuestion 替代为 Q1-Q4 in-conversation 裁决 · 2026-04-27）
+# ============================================================
+
+conflicts_resolved:
+  - code: Q1
+    kind: realtime_push
+    decision: "轮询 + React Query · 与 D5 漂移修正一致"
+    detail: |
+      用户进入 P-REVIEW-TODAY → React Query 自动 fetch GET /review-plans?date=today
+      （staleTime=30s · refetchOnWindowFocus=true · refetchOnMount=true）·
+      用户提交 POST /review-plans/{id}/complete 后手动 invalidate 该 query key 触发 refetch ·
+      不引入 WebSocket / SSE · 不破坏 s5 frozen · 不阻塞 s8 交付节奏。
+    raised_at: "2026-04-27T13:00:00+08:00"
+  - code: Q2
+    kind: parent_view_entry
+    decision: "s8 完整渲染 mockup 18 + 邀请码兑换占位 · scope=READ JWT 颁发待 s11"
+    detail: |
+      mockup 18 已含完整观察者视图 UI（学生概要 + 错题统计 + 7 天复习记录 + 禁用操作区 + JWT scope 锁说明）·
+      mockup 实际入口是「邀请码兑换」（O-A9T4-XZ7 格式 8 位短码）· 非短链 · 比落地计划简单 ·
+      s8 实现：邀请码输入框 + 兑换按钮 → 调 stub /v1/parent/redeem-invite { code } 返回 mock JWT scope=READ ·
+      s11 接管时：换为真实 invite_code 表 + JWT 颁发服务 · s8 测试用 msw mock 该端点。
+    raised_at: "2026-04-27T13:00:00+08:00"
+  - code: Q3
+    kind: insight_completeness
+    decision: "路径 B · 解冻 s5 · 4 图全做（含学科分布 + 艾宾浩斯 overlay）"
+    detail: |
+      落地计划假设 4 图（掌握度/学科分布/艾宾浩斯曲线/30 日频次）· 但 s5 GET /review-stats 当前返回字段
+      仅支持 30 日频次 + 一周正确率 + Top3 弱项 · 不含 subject 维度分组 + ebbinghaus overlay 数据 ·
+      用户决策：解冻 s5 · 走 v2 修订（独立子 Phase · 重过 G-Biz/G-Arch · 重打 s5-stats-v2-frozen tag）·
+      扩展 GET /review-stats 增字段 subjectBreakdown[] + ebbinghaus[] · 写 ADR 0017 · 阻塞 SC-09.AC-2/AC-3 fe-builder 阶段 ·
+      不阻塞 s8 0.0.5/0.1/0.2 设计阶段 · 设计阶段并行启动 s5-v2 工作流。
+    raised_at: "2026-04-27T13:00:00+08:00"
+    blocks: ["SC-09.AC-2.fe-builder", "SC-09.AC-3.fe-builder"]
+    blocking_tag: "s5-stats-v2-frozen"
+  - code: Q4
+    kind: dual_platform
+    decision: "H5 + 小程序双端同时做 · 与 s7 对称"
+    detail: |
+      继承 s7 双端选型（H5 React + Konsta · miniapp 微信原生 + Vant Weapp）·
+      P-REVIEW-TODAY / P-REVIEW-EXEC / P-REVIEW-DONE / P-INSIGHT / P-OBSERVER 五页面双端实现 ·
+      ADR 0014 testid + route name 对齐继续生效 · 测试覆盖：H5 Vitest + 小程序 jest-miniprogram + Playwright + miniprogram-automator 双 e2e 烟雾。
+    raised_at: "2026-04-27T13:00:00+08:00"
+
+# ============================================================
+# 4. AI 工程决策（ambiguities_resolved · 调研中暴露 · 待 User 一并签）
+# ============================================================
+
+ambiguities_resolved:
+  - id: A1
+    text: "复习自评档数（3 vs 4）"
+    ai_decision: "3 档 · 按 mockup 08 权威 · 未掌握 / 部分 / 已掌握 → SM-2 quality 0 / 3 / 5"
+    rationale: |
+      mockup 08_review_exec.html 底部 rating-bar 的设计是 3 档（forgot / partial / master）·
+      与落地计划 §12.0.5 SC-06.AC-1 的 4 档（忘记/模糊/记得/掌握 · 0/3/4/5）冲突 ·
+      mockup 是 Sd 设计验收后的产物（更晚 · 已通过设计 review）· 权威性高于落地计划文字 ·
+      后端 s5 SC-08.AC-1 已实现 quality 0-5 全档兼容（前端任意映射）· 改 3 档不破坏后端契约 ·
+      映射规则：未掌握=0 · 部分=3（quality<3 reset 到 ease=2.5/interval=1d 路径）· 已掌握=5（顶板加速）·
+      跳过 quality=4（"记得"）· 因 mockup 用户认知中 4 档过细 · 实际只用 3 档心智模型即可。
+    user_decision_required: true
+    decision_default_if_skip: "采纳 AI 决策（3 档）"
+  - id: A2
+    text: "mockup 17 归属 Phase（s8 vs s11）"
+    ai_decision: "归 s11 · s8 不做 P-WELCOMEBACK"
+    rationale: |
+      mockup 17_welcomeback.html 内容含「设备指纹 FP · a4c9…7e21」+「通过设备指纹发现你是账户主人」+「FP 一键回登」·
+      这是匿名域（SC-12 device_fp 无账号试用 + SC-13 匿名升级正式账号）的回归唤起场景 · 不是登录态用户的提醒 ·
+      原落地计划 §12.0.5 把 P-WELCOMEBACK 归 SC-04 是错的（SC-04 已是软删除 · 已归 s7 done）·
+      正确归属：mockup 17 → s11 anonymous-service 前端 · SC-12/13 范围 · s8 不做。
+    user_decision_required: true
+    decision_default_if_skip: "采纳 AI 决策（17 归 s11）"
+
+# ============================================================
+# 5. DoR 静态检查（§12.6 · entry stage 快照 · exit stage 重跑）
+# ============================================================
+
+dor_static_check:
+  - check: "s3-done tag"
+    status: PASS
+  - check: "s4-done tag"
+    status: PASS
+  - check: "s5-done tag"
+    status: PASS
+    note: "s5-arch-frozen + s5-done 双 tag 在 · 提供 GET /review-plans / POST complete / GET /review-stats 三契约"
+  - check: "s5.5-done tag"
+    status: PASS
+    note: "α' 6/9 chain 绿 · 含 chain-05 review-insight-event 跨服务事件链断言"
+  - check: "s7-done tag"
+    status: PASS
+    note: "@longfeng/ui-kit / api-contracts typed client / testids / i18n 共享包齐 · h5/miniapp 真应用骨架在"
+  - check: "sd-done tag"
+    status: PASS
+  - check: "@longfeng/api-contracts typed client"
+    status: PASS
+    note: "s7 期落地（先前 skeleton）· 本 Phase 直接消费"
+  - check: "@longfeng/testids 常量包"
+    status: PASS
+    note: "s7 期新产出 · 本 Phase 新增 review.* / insight.* / observer.* 三套 testid 命名空间"
+  - check: "testid-convention.md"
+    status: PASS
+  - check: "h5 / miniapp 双端骨架"
+    status: PASS
+    note: "继承 s7 路由 / 状态管理 / API client / Sentry init 位置"
+  - check: "Oracle SC-08/09/14 @allen 签"
+    status: PARTIAL
+    note: "需在 design/acceptance-criteria-signed.yml 补 SC-08/09/14 三 SC 的 acceptance[] · AI 拟稿后 User 签 signed_by + signed_at"
+  - check: "s5-stats-v2-frozen tag（路径 B 解冻）"
+    status: PENDING
+    note: "Q3 决策 · 独立子 Phase 工作流 · 0.0.5/0.1/0.2 设计阶段不阻塞 · fe-builder 阶段阻塞 SC-09.AC-2/AC-3 直至此 tag 在"
+  - check: "Sentry @sentry/react + @sentry/minapp 双 SDK"
+    status: PENDING
+    note: "本 Phase 新引入 · ADR 0015（Sentry 双端独立 SDK）待立 · 落地计划 §12.4 工具白名单已预留"
+
+# ============================================================
+# 6. 业务说理（narrative · 200-500 字 · 散文 · 答"做什么 + 为什么"）
+# ============================================================
+
+narrative: |
+  S8 是 AI 错题本"用户留下来的理由" —— 艾宾浩斯复习闭环的前端用户侧。在 s5（review-plan-service T0-T6 引擎）+ s7（错题主循环前端骨架）
+  之上，落地 4 张 Sd 高保真 mockup（07 今日复习 / 08 全屏答题 / 09 完成总结 / 18 家长视图）的双端实现（H5 React+Konsta · 微信原生+Vant
+  Weapp）· 范围严格收口 3 SC（按 mapping 权威修正主文档 §12.0.5 漂移）。
+
+  【SC-08 复习答题打分】4 AC 闭环：① 用户进入 P-REVIEW-TODAY 拉 GET /review-plans?date=today 拿当日 due 节点（按时间分组 · 现在/上午/下午）；
+  ② 点卡片进 P-REVIEW-EXEC 全屏作答 → 工作区手写/键盘/公式三工具 → 点"揭示答案"显示 AI 标准解答 + 分步骤；③ 底部 3 档自评（未掌握/部分/已掌握 →
+  SM-2 quality 0/3/5）触发 POST /review-plans/{id}/complete 同事务返回 nextReviewAt + easeFactorAfter；④ 跳 P-REVIEW-DONE 庆祝页 ·
+  显示节点推进（T2→T3）+ 今日战绩 + 知识点掌握变化 + 下次复习时间卡（"添加日历"按钮调用日历 API）。
+
+  【SC-09 学情卡片】3 AC + 路径 B 解冻 s5：顶部周/月/季 tab 切换 → 一次 GET /review-stats?range=X 拿数据 → 4 图并列：① 30 日复习频次柱
+  状图（s5 已有 data[].reviewCount 支持）② 一周正确率趋势线 + Top3 弱项卡片（s5 已有 data[].correctRate + topWeak[]）③ 学科分布柱状图
+  （依赖 s5-v2 扩展 subjectBreakdown[] 字段 · 阻塞 fe-builder）④ 艾宾浩斯曲线 overlay 折线图（依赖 s5-v2 扩展 ebbinghaus[] · 阻塞
+  fe-builder）。Lighthouse Performance ≥ 85（比 s7 提 5 分）· 4 图懒加载 + 骨架屏。
+
+  【SC-14 家长监督视图】2 AC：① 家长拿邀请码 O-XXXX-XXX 在 H5 / 小程序"我的"页输入兑换 → 后端颁发 scope=READ JWT（s8 阶段调用 stub ·
+  s11 接管真实链路）→ 跳 P-OBSERVER 只读视图；② P-OBSERVER 完整呈现学生身份卡 / 会话剩余 / 错题统计 / 7 天复习记录 / 禁用操作区
+  （编辑/重做/归档/分享四按钮 grayed out + lock-note 文案"JWT scope=READ 网关层 403 拒"）· 学生可在"我的→观察者→撤销"秒级失效。
+
+  本 Phase 不负责：SM-2 算法（s5）· 后端学情聚合扩展（s5-v2 子 Phase · 阻塞 SC-09.AC-2/AC-3 fe-builder）· 短链 / 邀请码生成 / scope=READ
+  JWT 真实颁发（s11）· P-WELCOMEBACK 设备指纹回归（s11 SC-12/13）· E2E 全量（s9）。
+
+# ============================================================
+# 7. AC 详尽切片（ac_coverage · 9 AC · 3 critical · 入口阶段 dev/qa 锚点空）
+# ============================================================
+
+ac_coverage:
+  # ============ SC-08 · 复习任务执行与打分（s8 主 · 4 AC）============
+  - ac_id: "SC-08.AC-1"
+    title: "P-REVIEW-TODAY · 今日复习列表 · 时间分组 + Hero 进度卡 + 复习卡列表（mockup 07）"
+    statement: |
+      用户进入复习 Tab → 路由 /review/today → React Query fetch GET /review-plans?date=today header X-User-Timezone ·
+      响应按 next_review_at 时段分组（现在/上午/下午/晚上）· Hero 卡显示总数（"8 题待复习 · 预计 25 分钟"）+ 3 stat 卡（已完成/进行中/未开始）+ 进度条 + 掌握度 ·
+      列表项含时间 + 节点 chip（T1-T6）+ 学科 chip + 题干 stem（line-clamp 2）+ 标签 + 倒计时 chip · 点卡片跳 /review/exec/{planId} ·
+      底部 CTA "全部开始 · N 题 · X min" 进入连续复习模式（自动按列表顺序串接）· 空态显示 review.today.empty「今日已完成所有复习任务」。
+      staleTime 30s · refetchOnWindowFocus true · 提交完成后手动 invalidate 触发 refetch（与 D5 漂移决策一致）。
+    source: "mockup 07_review_today.html · 落地计划 §12.0.5 修正后 · D2/D5 漂移修正"
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewPlanVO, ReviewTodayPageState, TimeBucket]
+    user_journey: "P-REVIEW-TODAY → React Query 拉 GET /review-plans?date=today → 时段分组 → 用户点卡片 → 跳 P-REVIEW-EXEC 单题或 CTA 全部开始连串模式"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-plans?date=YYYY-MM-DD header X-User-Timezone · 返回当日 due 节点列表（含 nodeIndex / nextReviewAt / wrongItem 信息）" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-08.AC-1 · §1 ReviewToday 路由 · §2 时段分组算法 · React Query 缓存 30s"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup design/mockups/wrongbook/07_review_today.html · baseline/P-REVIEW-TODAY.png ·
+        testid: review.today.root / review.today.hero / review.today.hero-progress-bar / review.today.stats-done / review.today.stats-progress / review.today.stats-pending /
+        review.today.slot-now / review.today.slot-afternoon / review.today.slot-evening /
+        review.today.item-card / review.today.item-countdown / review.today.empty / review.today.cta-start-all / review.today.tabbar-review-badge
+      observable_behavior_anchor: ""
+    risks:
+      - "时段分组阈值（现在/上午/下午/晚上）跨日界 → 用 X-User-Timezone 解析后按本地小时切桶 · 不在客户端硬编码 +08:00"
+      - "倒计时 chip refetch 触发频率 · React Query 不重 fetch 由 setInterval 驱动 chip 显示（前端独立计算 nextReviewAt - now）"
+      - "空态 / 网络 error 双 fallback · review.today.empty 与 review.today.error 并存"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "已登录用户 · 当日有 8 个 active 节点 · X-User-Timezone=Asia/Shanghai"
+          when: "进入 P-REVIEW-TODAY"
+          then: "渲染 Hero 卡（8 题）+ 3 stat 卡 + 时段分组列表（现在 2 / 上午 0 / 下午 4 / 晚上 2）+ tabbar review badge=8"
+      error_paths:
+        - id: "error_paths.0"
+          given: "GET /review-plans 返回 500"
+          when: "首屏加载"
+          then: "显示 review.today.error 重试按钮 · React Query retry=1 · Sentry 上报"
+      boundary:
+        - id: "boundary.0"
+          given: "当日 0 个 active 节点"
+          when: "进入页面"
+          then: "渲染 review.today.empty 空态卡 · 文案'今日已完成所有复习任务' · CTA-start-all 隐藏"
+        - id: "boundary.1"
+          given: "时区 X-User-Timezone=America/New_York"
+          when: "请求 + 渲染"
+          then: "data 按 NY 当地 today 切日 · 时段分桶用 NY 本地小时（不是 UTC 不是 +08:00）"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 P-REVIEW-TODAY 1440×900 · seed 数据 8 节点"
+          when: "vs design/mockups/wrongbook/07_review_today.html baseline"
+          then: "pixel diff ≤ 3% · Hero 卡 + 时段分组 + 卡片列表 + tabbar 全区块对齐"
+
+  - ac_id: "SC-08.AC-2"
+    title: "P-REVIEW-EXEC · 全屏答题 + 工作区 + 揭示答案 + 节点时间线（mockup 08 上半 + 中段）"
+    statement: |
+      用户从 P-REVIEW-TODAY 点卡片或 CTA 进入 → 路由 /review/exec/{planId} → React Query fetch GET /review-plans/{id}（s5 已有契约）拉单题详情 ·
+      顶部 nav 显 "复习执行 · 第 N 题" + "X / Y · 剩余 M 题" + 进度条 · Meta chips 行：T 节点 + 学科 + 难度 ·
+      题干卡显原题 stem + 知识点 + 难度 stars · 工作区 paper：手写区 + 工具栏（手写/键盘/公式面板）· 用户作答（s8 阶段不持久化用户笔迹 · stub 仅 UI 演示）·
+      "揭示答案"按钮点后展开 reveal 块：标准解答 + 分步骤 1/2/3 · 节点时间线 inline：T1 done · T2 now · T3-T6 pending（高亮当前节点）·
+      底部 rating-bar 留白等待 SC-08.AC-3 处理。close 按钮（review.exec.btn-close）退回 P-REVIEW-TODAY 不提交。
+    source: "mockup 08_review_exec.html · 落地计划 §12.0.5 SC-06.AC-1 修正"
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewSessionVO, ReviewItemDetail, NodeTimeline]
+    user_journey: "进入 → 拉详情 → 浏览题干 → 工作区作答（UI 演示）→ 点揭示答案 → 看标准解答与分步骤 → 底部 rating（A-3 处理）"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-plans/{id} · 单节点详情 · 返回 wrongItem.stemText + answerStandard + steps[] + nodeIndex + easeFactor + intervalDays" }
+      - { from_phase: s4, api: "（既有）AI 解答 / 步骤拆解由 s4 ai-analysis 在 wrong_item 入库时已生成 · s5 透传 · 无需 s8 调 s4" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-08.AC-2 · §3 ReviewSession 状态机 thinking → revealed 单向 · §1 ReviewSessionVO classDiagram"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup design/mockups/wrongbook/08_review_exec.html · baseline/P-REVIEW-EXEC-thinking.png + baseline/P-REVIEW-EXEC-revealed.png ·
+        testid: review.exec.root / review.exec.nav-progress / review.exec.btn-close /
+        review.exec.meta-node / review.exec.meta-subject / review.exec.meta-difficulty /
+        review.exec.question-stem / review.exec.work-paper / review.exec.tool-handwrite / review.exec.tool-keyboard / review.exec.tool-formula /
+        review.exec.btn-reveal-answer / review.exec.reveal-block / review.exec.reveal-step-1 / review.exec.reveal-step-2 / review.exec.reveal-step-3 /
+        review.exec.node-timeline / review.exec.node-dot-T1 ... node-dot-T6
+      observable_behavior_anchor: ""
+    risks:
+      - "工作区 s8 阶段不做持久化（用户笔迹 / 输入内容刷新即丢）· 仅 UI 演示 · 持久化挪 s11 或后续 Phase · 需在 ux_anchor 文案明示"
+      - "节点时间线 6 dot 在小程序 canvas 兼容性 · 用 view+border 实现避免 canvas"
+      - "公式面板 KaTeX H5 OK · 小程序需 wxml + 字体 fallback"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "用户从 P-REVIEW-TODAY 点 plan id=P1 进入"
+          when: "fetch GET /review-plans/P1 成功 + 用户点 reveal-answer"
+          then: "渲染题干 + meta chips + 工作区 + reveal 块（标准解答 + 3 步骤）+ 节点时间线（T2 now 高亮）"
+      error_paths:
+        - id: "error_paths.0"
+          given: "GET /review-plans/P1 返回 404（已 mastered 软删）"
+          when: "进入"
+          then: "Toast'此题已完成或已删除' · 跳回 P-REVIEW-TODAY · React Query retry=0"
+        - id: "error_paths.1"
+          given: "网络断开"
+          when: "fetch"
+          then: "review.exec.error 状态 + 重试按钮 · 不卡死"
+      boundary:
+        - id: "boundary.0"
+          given: "首次复习节点 T0（首次入库后 2h）"
+          when: "渲染节点时间线"
+          then: "T0 now 高亮 · T1-T6 全 pending（无 done）"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 thinking 状态（reveal-block 隐藏）"
+          when: "vs baseline/P-REVIEW-EXEC-thinking.png"
+          then: "pixel diff ≤ 3%"
+        - id: "visual.1"
+          given: "Playwright 截图 revealed 状态（reveal-block 展开）"
+          when: "vs baseline/P-REVIEW-EXEC-revealed.png"
+          then: "pixel diff ≤ 3%"
+
+  - ac_id: "SC-08.AC-3"
+    title: "3 档自评 + POST /review-plans/{id}/complete + 乐观锁 409 处理 + invalidate cache（mockup 08 底部 rating-bar）"
+    statement: |
+      P-REVIEW-EXEC 底部 rating-bar 三按钮：未掌握 forgot（quality=0 · 副标"回到 T0"）/ 部分 partial（quality=3 · 副标"原计划不变"）/
+      已掌握 master（quality=5 · 副标"加速到下一节点"）· 用户点击任一按钮 → useMutation 调 POST /review-plans/{id}/complete body {quality} ·
+      成功 → invalidate ['review-plans', 'today'] query → 跳 P-REVIEW-DONE 或连串模式下一题 · 失败 → 错误处理：
+      400 INVALID_QUALITY → Sentry 上报 · 视为前端 bug（不应发生 · quality 来自常量 0/3/5）·
+      404 → 此题已删 · Toast + 跳回 today ·
+      409 乐观锁冲突 → 自动重试一次 · 仍失败提示用户刷新 ·
+      410 PLAN_MASTERED（连续 3 次 ease≥2.8 已触发 mastered）→ 跳 P-REVIEW-DONE 显示"已掌握"hero。
+      mutation 期间 rating-bar 三按钮 disabled + loading 状态 review.exec.rating-loading。
+    source: "mockup 08_review_exec.html rating-bar · s5-business-analysis.yml SC-08.AC-1 · A1 决策（3 档映射 0/3/5）· D5 invalidate 策略"
+    critical: true
+    critical_reason: "并发 + 评分写入正确性 · 涉未成年人复习状态记录 · 乐观锁 409 / mastered 410 边界处理直接影响后续节点调度 · 前端错处理决定数据一致性"
+    domain_entities: [ReviewOutcomeVO, QualityVote, MutationState]
+    user_journey: "用户点 rating 按钮 → loading → POST complete → 200/Server 副作用（s5 写 outcome + 重算 next_review_at）→ 前端 invalidate today query → 跳 done 页"
+    upstream_contract:
+      - { from_phase: s5, api: "POST /review-plans/{id}/complete body {quality: 0|3|5} · 200 返回 {planId, nextReviewAt, easeFactorAfter, masteredCount} · 4xx/410/409 错误见 s5-business-analysis SC-08.AC-1" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-08.AC-3 · §3 mutation 状态机 + 错误恢复策略 · §4 NFR P95 ≤ 150ms round-trip"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        testid: review.exec.rating-bar / review.exec.rating-forgot / review.exec.rating-partial / review.exec.rating-mastered /
+        review.exec.rating-loading / review.exec.error-toast-409 / review.exec.error-toast-410-mastered ·
+        交互锚点：mockup 08 底部 ractions div · 3 个 rbtn · ri 图标 + rl 主标 + rs 副标
+      observable_behavior_anchor: ""
+    risks:
+      - "401（token 过期）应触发全局登出 + 暂存当前 quality 待重登后重试 · 依赖 s7 全局拦截器"
+      - "409 自动重试一次后仍失败 · 用户体验差 · 需 lock-note 文案 + Sentry 标记 critical"
+      - "用户连点 rating（双击）· mutation 必须 dedupe（useMutation 内置 isPending 防御）"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "P-REVIEW-EXEC 渲染完毕 · plan id=P1 · 用户点 rating-mastered"
+          when: "POST /review-plans/P1/complete {quality: 5} 返回 200"
+          then: "invalidate today query + 跳 P-REVIEW-DONE · rating-bar 三按钮 disabled 期间显示 loading"
+      error_paths:
+        - id: "error_paths.0"
+          given: "P-REVIEW-EXEC + POST 返回 410 PLAN_MASTERED"
+          when: "用户点 rating-mastered"
+          then: "跳 P-REVIEW-DONE · hero 显'已掌握'状态 · 不显错误 toast（410 是预期成功路径）"
+        - id: "error_paths.1"
+          given: "POST 返回 409 乐观锁冲突"
+          when: "用户点 rating-partial"
+          then: "自动重试 1 次 · 仍 409 → toast 'review.exec.error-toast-409 提示刷新' · Sentry 上报"
+        - id: "error_paths.2"
+          given: "POST 返回 400 INVALID_QUALITY（前端 bug）"
+          when: "用户点击"
+          then: "Sentry critical 上报 · 用户视角 toast 通用错误 · 不暴露内部码"
+      boundary:
+        - id: "boundary.0"
+          given: "用户连点 rating-mastered 3 次（≤ 100ms）"
+          when: "mutation isPending 守门"
+          then: "实际只发 1 次 POST · 后续点击被静默吞 · 不双写 review_outcome"
+        - id: "boundary.1"
+          given: "提交时 token 过期（401）"
+          when: "POST"
+          then: "触发 s7 全局 401 拦截器 · 跳登录页 · 当前 quality 暂存到 sessionStorage 待重登重试"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 mutation loading 中"
+          when: "vs baseline/P-REVIEW-EXEC-rating-loading.png"
+          then: "pixel diff ≤ 3% · 3 按钮 disabled 半透明 + 中央 spinner"
+
+  - ac_id: "SC-08.AC-4"
+    title: "P-REVIEW-DONE · 完成总结页 · Hero 庆祝 + 节点推进 + 今日战绩 + 下次复习卡（mockup 09）"
+    statement: |
+      A-3 mutation 成功后 → 路由 /review/done?planId=P1&nextReviewAt=... → 渲染：
+      Hero 庆祝（confetti 动画 + 绿勾 hicon + "本题已掌握" + "记忆曲线向前推进一节点 · T2 → T3" + 3 chips（+12 记忆度 / 连续 N 题 / 耗时 X）·
+      记忆曲线进度卡：题目信息 + Mastery % 大字 + 节点时间线 6 dots（T1-T6 状态）+ AI 推进文案 ·
+      下次复习卡：日期 + 时间 + "提前 30 min 提醒 · 24h 有效窗口" + "添加日历"按钮（H5 调用 ICS 文件下载 · 小程序调 wx.addPhoneCalendar）·
+      今日战绩 stats：Mastered N / Partial N / Forgot N（从 today query 缓存读 · 不重新 fetch）·
+      知识点掌握变化列表：弱项 → 优 的 percent 变化（来自 GET /review-stats?range=week 的 topWeak 反向 · s8 阶段先 mock）·
+      底部 CTA：'下一题'（连串模式继续）/ '返回今日列表'。
+    source: "mockup 09_review_done.html · 落地计划 §12.0.5 缺失部分（落地计划未单独切 SC-04 完成页 AC · 实为 SC-08 必要组件）"
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewDonePageState, NodeAdvancement, TodayStatsSnapshot]
+    user_journey: "A-3 成功 → 跳 done 页 → 庆祝动画 → 看节点推进 + 下次复习时间 + 添加日历 → CTA 下一题或返回"
+    upstream_contract:
+      - { from_phase: s5, api: "POST /review-plans/{id}/complete 200 响应已含 nextReviewAt + easeFactorAfter + masteredCount · 不需重新 fetch" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-08.AC-4 · §3 ReviewSession 状态机 submitted → done · §1 ReviewDonePageState"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup design/mockups/wrongbook/09_review_done.html · baseline/P-REVIEW-DONE.png ·
+        testid: review.done.root / review.done.hero-confetti / review.done.hero-title / review.done.hero-chip-mastery / review.done.hero-chip-streak / review.done.hero-chip-duration /
+        review.done.memory-curve-card / review.done.memory-mastery-pct / review.done.memory-node-list / review.done.memory-node-dot-T1...T6 / review.done.memory-advance-text /
+        review.done.next-card / review.done.next-add-calendar /
+        review.done.today-stats-mastered / review.done.today-stats-partial / review.done.today-stats-forgot /
+        review.done.kp-list / review.done.kp-item /
+        review.done.cta-next-question / review.done.cta-back-today
+      observable_behavior_anchor: ""
+    risks:
+      - "添加日历 H5 用 ICS 下载 · 小程序用 wx.addPhoneCalendar · 双端实现不对称（不可复用同一组件）· ADR 需登记"
+      - "Confetti 动画 H5 用 react-confetti · 小程序自实现简化版（避免 npm 体积）· 双端视觉差异 ≤ 5%"
+      - "today-stats 从缓存读 · 缓存不存在时 fallback 显 0 0 0（不阻塞页面渲染）"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "A-3 成功 + nextReviewAt=2026-04-30T20:30:00+08:00 + masteredCount=4"
+          when: "渲染 P-REVIEW-DONE"
+          then: "Hero + 节点列表 + next 卡 + 今日战绩 + KP 列表 + CTA 全显"
+      error_paths:
+        - id: "error_paths.0"
+          given: "today query 缓存丢失（用户直接 deep link 进 done）"
+          when: "渲染 today-stats"
+          then: "降级显 0 0 0 + warning chip 'today-stats-fallback' · 不阻塞主流程"
+      boundary:
+        - id: "boundary.0"
+          given: "已 mastered 状态进入（A-3 走 410 路径）"
+          when: "Hero 渲染"
+          then: "title='已掌握' · chip-mastery '+24 记忆度' · 节点列表所有 T1-T6 全 done · advance-text '此题已彻底掌握'"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 P-REVIEW-DONE"
+          when: "vs baseline/P-REVIEW-DONE.png"
+          then: "pixel diff ≤ 3% · confetti 动画用 reduce-motion 静态截图避免抖动"
+
+  # ============ SC-09 · 学情分析卡片（s8 主 · 3 AC · 路径 B 解冻 s5 · 部分 AC blocked）============
+  - ac_id: "SC-09.AC-1"
+    title: "P-INSIGHT 主体 · 范围切换（周/月/季）+ 30 日复习频次柱图 + 一周正确率趋势线 + Top3 弱项卡（s5 现有契约即可）"
+    statement: |
+      用户进 /insight Tab → 顶部范围切换 tab：本周（默认）/ 本月 / 本季 → 切换触发 GET /review-stats?range={week|month|quarter} ·
+      响应 data[].{date, correctRate, masteredCount, reviewCount} + topWeak[].{subject, totalReview, forgetCount, forgetRate} + warnings[]·
+      渲染 3 大块：① 复习频次柱状图（X 轴日期 · Y 轴 reviewCount · H5 recharts BarChart · 小程序 echarts-for-weixin bar）·
+      ② 正确率趋势线（X 轴日期 · Y 轴 correctRate 0-100% · 折线图）· ③ Top3 弱项卡片（subject 名 + forgetRate% bar + 错题数 · 点卡片下钻到错题列表）·
+      warnings 数组若含 PARTIAL_HISTORY → 顶部 warning banner '部分历史已归档' · TIMEZONE_FALLBACK → '时区识别异常 · 已使用默认 +08:00'。
+      Lighthouse Performance ≥ 85 · 4 图懒加载（IntersectionObserver）· 骨架屏占位 ≥ 200ms。
+    source: "mockup TBD（fe-preflight 阶段会有 P-INSIGHT mockup · 当前 Sd 文档无单独 INSIGHT mockup · 假设 fe-preflight 阶段补 · 风险登记）· s5-business-analysis SC-09.AC-1 · 落地计划 §12.0.5 SC-05/09/10 合并修正"
+    critical: false
+    critical_reason: ""
+    domain_entities: [LearningInsightVO, ChartSeriesVO, RangeSwitch, WarningBanner]
+    user_journey: "进 /insight → 默认 range=week 拉数据 → 渲染 3 区块 → 用户切 month/quarter → 重 fetch + 平滑过渡"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-stats?range={week|month|quarter}&subject={opt} header X-User-Timezone · 返回 {data[], topWeak[], warnings[]}（s5 已实现 · s5-arch-frozen 范围内）" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-09.AC-1 · §1 LearningInsightVO classDiagram · §3 GET /review-stats 调用 + 错误处理 · §4 NFR Lighthouse ≥ 85"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup TBD · fe-preflight 阶段补 mockup（P-INSIGHT 可参考 mockup 09 底部 today-stats + KP-list 视觉语言）·
+        testid: insight.root / insight.range-week / insight.range-month / insight.range-quarter /
+        insight.chart-frequency-30d / insight.chart-accuracy-trend / insight.weak-top3 / insight.weak-item /
+        insight.warning-banner / insight.warning-banner-partial / insight.warning-banner-tz-fallback /
+        insight.skeleton-frequency / insight.skeleton-accuracy / insight.skeleton-weak
+      observable_behavior_anchor: ""
+    risks:
+      - "P-INSIGHT mockup 当前 Sd 缺失 · fe-preflight 阶段必须补 · 否则 token 映射 + testid 命名空间无法精确锚定"
+      - "Lighthouse Perf ≥ 85 在 4 图同屏挑战 · 必须懒加载 + 骨架屏 + recharts tree-shake 仅 LineChart/BarChart"
+      - "切换 range 时 React Query 重 fetch · 旧数据可能闪烁 · 用 keepPreviousData=true 平滑过渡"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "用户进 /insight · 默认 week"
+          when: "GET /review-stats?range=week 返回 data[7] + topWeak[3] + warnings[]"
+          then: "渲染 3 区块 · range-week tab active · skeleton 在 fetch 期间 ≥ 200ms"
+      error_paths:
+        - id: "error_paths.0"
+          given: "GET 返回 200 + warnings[].code=TIMEZONE_FALLBACK"
+          when: "渲染"
+          then: "顶部 insight.warning-banner-tz-fallback 显 · 数据照常显（降级 +08:00 聚合）"
+        - id: "error_paths.1"
+          given: "GET 返回 400 INVALID_RANGE（前端 bug · range 来自常量）"
+          when: "切换"
+          then: "Sentry critical · 用户视角通用错误 toast"
+      boundary:
+        - id: "boundary.0"
+          given: "本周 0 次 complete · data 全 reviewCount=0 + correctRate=null + topWeak=[]"
+          when: "渲染"
+          then: "频次柱图显空 · 趋势线断点 · Top3 卡显 empty 状'本周暂无弱项' · 不抛错"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 P-INSIGHT range=week"
+          when: "vs baseline/P-INSIGHT-week.png（fe-preflight 阶段产出 baseline）"
+          then: "pixel diff ≤ 3%"
+
+  - ac_id: "SC-09.AC-2"
+    title: "P-INSIGHT 学科分布柱状图（依赖 s5-stats-v2-frozen · 阻塞 fe-builder）"
+    statement: |
+      P-INSIGHT 4 图之一 · 显示当前 range 下各 subject（math/physics/chemistry/english/chinese 五科）的复习量 / 正确率 / 掌握度三维条形图 ·
+      数据来源：s5 GET /review-stats v2 扩展字段 subjectBreakdown[]：{subject, reviewCount, correctCount, masteredCount}·
+      H5 用 recharts BarChart stack=false · 五条横向条形 · 颜色按 subject 映射 --tkn-subject-{math/physics/chem/eng/chi} ·
+      小程序用 echarts-for-weixin grid bar series · 双端均支持点条目下钻到错题列表（带 subject 过滤参数）。
+      路径 B 决策：s5-v2 子 Phase 完成（重打 s5-stats-v2-frozen tag）后 · fe-builder 阶段实施。
+    source: "mockup TBD（fe-preflight 阶段补）· 落地计划 §12.0.5 SC-09.AC-1 4 图之一 · Q3 路径 B 决策"
+    critical: false
+    critical_reason: ""
+    blocked_by: "s5-stats-v2-frozen"
+    domain_entities: [SubjectBreakdownVO, ChartSeriesVO]
+    user_journey: "P-INSIGHT 滚到学科分布块 → 渲染五科横向条形图 → 用户点 subject → 跳 /list?subject=math 错题列表过滤"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-stats v2 · 响应新增 subjectBreakdown[] · 字段 schema 在 s5-v2 G-Arch 阶段冻结 · ADR 0017 候选" }
+    downstream_contract:
+      - { to_phase: s7, route: "/list?subject=<name> · 错题列表按学科过滤 · s7 已支持 subject 筛选" }
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-09.AC-2 · §3 GET /review-stats v2 字段映射 · §6 ADR 候选引用"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup TBD（fe-preflight 阶段产出）·
+        testid: insight.chart-subject-bar / insight.chart-subject-bar-item-math / insight.chart-subject-bar-item-physics / insight.chart-subject-bar-item-chem / insight.chart-subject-bar-item-eng / insight.chart-subject-bar-item-chi /
+        insight.chart-subject-bar-skeleton
+      observable_behavior_anchor: ""
+    risks:
+      - "s5-v2 工作流如延期 · 阻塞本 AC fe-builder · 但 0.0.5/0.1/0.2 设计阶段不阻塞 · 可在 design 时与 s5 v2 团队并行对齐字段 schema"
+      - "学科色板 --tkn-subject-* token 当前 design-tokens 包未必包含 · 需 s5-v2 同步落地 token 扩展或 s8 fe-preflight 阶段补"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "s5-v2 已上线 · GET /review-stats?range=week 返回 subjectBreakdown[5]"
+          when: "渲染"
+          then: "五条横向条形 · 颜色按 subject token · 点 math 跳 /list?subject=math"
+      error_paths:
+        - id: "error_paths.0"
+          given: "s5-v2 未上线（响应无 subjectBreakdown 字段）"
+          when: "fe-builder 检测"
+          then: "渲染 skeleton + warning '学科分析数据待后端就绪' · 不抛错 · 不阻塞其他 3 图"
+      boundary:
+        - id: "boundary.0"
+          given: "subjectBreakdown 仅 1 科有数据"
+          when: "渲染"
+          then: "只显 1 条 · 其他 4 科隐藏（不显 0 值条）"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图（s5-v2 上线后）"
+          when: "vs baseline/P-INSIGHT-subject-bar.png"
+          then: "pixel diff ≤ 5%（图表富交互区允许更宽阈值）"
+
+  - ac_id: "SC-09.AC-3"
+    title: "P-INSIGHT 艾宾浩斯曲线 overlay 折线图（依赖 s5-stats-v2-frozen · 阻塞 fe-builder）"
+    statement: |
+      P-INSIGHT 4 图之四 · 显示理想艾宾浩斯遗忘曲线（群体平均 · 来自 design/艾宾浩斯.md 公式）vs 用户实际复习节点散点叠加 ·
+      X 轴时间（T0/T1/T2/T3/T4/T6 节点 · 偏移 [0, 2h, 1d, 2d, 4d, 7d, 14d, 30d]）· Y 轴记忆保留率 0-100% ·
+      理想曲线：参考公式 R = e^(-t/S)·100 · S=0.5 · 折线渲染 ·
+      用户实际点：来自 s5 v2 扩展字段 ebbinghaus[]: {nodeIndex, expectedRetention, actualRetention, completedAt}·
+      实际点散点叠加（绿点=已完成且高于理想 · 红点=低于理想 · 灰点=未完成）·
+      文案 inset：'此为群体平均曲线 · 个人记忆参数会因复习习惯有差异'。
+      路径 B 决策：s5-v2 子 Phase 完成后 · fe-builder 阶段实施。
+    source: "mockup TBD · 落地计划 §12.0.5 SC-10.AC-1 + design/艾宾浩斯.md · Q3 路径 B 决策"
+    critical: false
+    critical_reason: ""
+    blocked_by: "s5-stats-v2-frozen"
+    domain_entities: [EbbinghausPoint, ForgetCurveModel]
+    user_journey: "P-INSIGHT 滚到曲线块 → 渲染理想曲线 + 用户散点 overlay → 文案说明个人参数差异"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-stats v2 · 响应新增 ebbinghaus[] · ADR 0017 候选" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-09.AC-3 · §1 EbbinghausPoint classDiagram · §5 design/艾宾浩斯.md 引用"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup TBD（fe-preflight 阶段产出）· 可参考 mockup 09 memory-curve-card 视觉语言但放大 ·
+        testid: insight.chart-ebbinghaus-line / insight.chart-ebbinghaus-overlay-point / insight.chart-ebbinghaus-inset-note /
+        insight.chart-ebbinghaus-skeleton
+      observable_behavior_anchor: ""
+    risks:
+      - "理想曲线公式参数 S=0.5 是群体平均 · 个人差异大 · 文案需明示避免误导"
+      - "散点 overlay 在小程序 echarts-for-weixin 兼容性 · 需 fe-preflight 阶段验证"
+      - "节点 T0-T6 包含 7 个点 + 时间轴非线性（小时→天→月）· 视觉密度高 · 需 careful UX"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "s5-v2 已上线 · ebbinghaus[] 含 7 个 point"
+          when: "渲染"
+          then: "理想曲线 + 7 散点 + 颜色按状态分（绿/红/灰）+ inset 文案"
+      error_paths:
+        - id: "error_paths.0"
+          given: "s5-v2 未上线"
+          when: "fe-builder 检测"
+          then: "skeleton + warning · 同 AC-2"
+      boundary:
+        - id: "boundary.0"
+          given: "用户尚未完成任何节点（全 actualRetention=null）"
+          when: "渲染"
+          then: "理想曲线照画 · 散点全灰 · 文案'开始复习以查看你的记忆曲线'"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图"
+          when: "vs baseline/P-INSIGHT-ebbinghaus.png"
+          then: "pixel diff ≤ 5%"
+
+  # ============ SC-14 · 家长监督视图（s8 主 · 2 AC · 邀请码兑换占位）============
+  - ac_id: "SC-14.AC-1"
+    title: "P-OBSERVER · 家长只读视图 · scope=READ JWT + 学生概要 + 错题统计 + 7 天记录 + 禁用操作（mockup 18）"
+    statement: |
+      家长输入邀请码兑换 → A-2 颁发 scope=READ JWT → 路由 /observer/{studentId}（受 JWT scope 守门 · 非 READ scope 直接 403）→ 渲染：
+      顶部 watermark 'scope = READ · observer only'（z-index 8 · 半透明）+ 退出按钮 + 品牌 chip '观察者 · Observer' ·
+      身份卡：Parent 头像 + '您是 X 的家长' + scope=READ badge + 会话剩余 chip + 邀请码 chip + '学生可撤销 · 秒级生效'·
+      学生概要：学生头像 + 姓名 + 年级班级 + 连续打卡 + 本周题数 ·
+      统计 stats：错题总数 + 掌握率 + 待复习 ·
+      近 7 天复习记录列表（学科 chip + 节点 chip + 完成时间 / 预计时间 + 进度条）· 数据来源 GET /review-stats?range=week + GET /wrongbook/items?ownerId={studentId} ·
+      禁用操作区：编辑/重做/归档/分享 4 按钮 grayed out（disabled state · pointer-events: none）+ lock-note 文案 ·
+      会话剩余 ≤ 5min 时弹 toast 提示 · 0min 时强制跳出登录页（清除 JWT）。
+    source: "mockup 18_observer.html · Q2 决策修正（邀请码而非短链）· 落地计划 §12.0.5 SC-14.AC-1 修正"
+    critical: true
+    critical_reason: "权限 + 合规 + 未成年人数据跨账号查看 · scope=READ JWT 颁发与守门是法律边界 · 任何写接口未在网关层拦下都构成数据泄露事件"
+    domain_entities: [ObserverSessionVO, ScopeReadJwt, StudentSummaryVO, WatermarkOverlay]
+    user_journey: "已兑换 JWT → 跳 P-OBSERVER → 渲染观察者视图 → 用户浏览只读数据 → 倒计时到时强制退出"
+    upstream_contract:
+      - { from_phase: s5, api: "GET /review-stats?range=week + ownerId={studentId} · header Authorization: Bearer <scope=READ JWT> · s5 当前接口需扩 ownerId 参数（路径 B 解冻范围内或新增 ADR 0018）" }
+      - { from_phase: s3, api: "GET /wrongbook/items?ownerId={studentId} · 同上 ownerId 参数 · s3 已 done 但需扩参数支持（独立 ADR · 不在 s5-v2 范围）" }
+      - { from_phase: gateway, api: "网关 JWT scope 解析 + 写接口 403 拦截 · 已属网关基础设施 · s8 不实现" }
+    downstream_contract: []
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-14.AC-1 · §1 ObserverSessionVO classDiagram · §3 GET /review-stats + /wrongbook/items 加 ownerId 参数 · §4 NFR 会话过期处理"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        Sd mockup design/mockups/wrongbook/18_observer.html · baseline/P-OBSERVER.png ·
+        testid: observer.root / observer.watermark-read /
+        observer.identity-card / observer.identity-role / observer.identity-scope-badge / observer.identity-session-remain / observer.identity-invite-code / observer.identity-revocable /
+        observer.exit-btn /
+        observer.student-summary / observer.student-name / observer.student-grade /
+        observer.stats-total / observer.stats-mastery / observer.stats-pending /
+        observer.review-list / observer.review-item / observer.review-item-progress-bar /
+        observer.disabled-actions / observer.disabled-btn-edit / observer.disabled-btn-redo / observer.disabled-btn-archive / observer.disabled-btn-share / observer.lock-note /
+        observer.session-expiring-toast / observer.session-expired-modal
+      observable_behavior_anchor: ""
+    risks:
+      - "ownerId 参数扩展：s5 GET /review-stats 与 s3 GET /wrongbook/items 当前未支持 ownerId · 需 ADR 0018（独立于 s5-v2）· 否则家长视图取不到数据 · critical 阻塞"
+      - "网关层 scope=READ JWT 写接口 403 拦截属基础设施 · 必须 s5.5/s9 验证链路 · 测试用 Playwright 模拟写请求验证 403"
+      - "watermark 'READ' 必须 z-index 高于内容但低于 toast/modal · 不可被 CSS 覆盖隐藏（防绕过）"
+      - "禁用按钮 disabled + pointer-events:none + ARIA aria-disabled=true 三重防御"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "家长持 scope=READ JWT 进 /observer/{studentId}"
+          when: "渲染"
+          then: "全区块显 · watermark 在 · 4 按钮 disabled · 退出按钮可点"
+      error_paths:
+        - id: "error_paths.0"
+          given: "家长持 scope=READ JWT 尝试调写接口（如 POST /wrongbook/items）"
+          when: "网关层拦截"
+          then: "返回 403 + error_code=SCOPE_INSUFFICIENT · 前端 toast '观察者无写权限'"
+        - id: "error_paths.1"
+          given: "学生在另一端点'撤销'按钮点击"
+          when: "家长端下次 fetch"
+          then: "JWT 失效 401 · 前端清 token + 跳登录页 + toast '会话已被学生撤销'"
+        - id: "error_paths.2"
+          given: "JWT scope ≠ READ（异常 token · 例如学生自己的 JWT）"
+          when: "进 /observer 路由"
+          then: "前端守门跳到 403 错误页 · 不允许进入即使数据 fetch 也会被网关拒"
+      boundary:
+        - id: "boundary.0"
+          given: "会话剩余 5min"
+          when: "倒计时"
+          then: "顶部 toast 'observer.session-expiring-toast'·学生概要不影响"
+        - id: "boundary.1"
+          given: "会话剩余 0min"
+          when: "倒计时归零"
+          then: "强制跳登录页 · 清 JWT · modal 'observer.session-expired-modal' · CTA '重新输入邀请码'"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图 P-OBSERVER · 学生 Allen · 86 错题 · 73% 掌握率"
+          when: "vs baseline/P-OBSERVER.png"
+          then: "pixel diff ≤ 3% · watermark / identity-card / 学生概要 / stats / 7 天记录 / 禁用按钮全区块对齐"
+
+  - ac_id: "SC-14.AC-2"
+    title: "邀请码兑换入口 · '我的'页 → 输入邀请码 → 兑换 scope=READ JWT（s8 阶段 stub · s11 接管真实链路）"
+    statement: |
+      家长 / 学生在'我的'页找到'观察者'入口 → 输入框（review.me.observer-input · 8 位短码格式 O-XXXX-XXX）+ 兑换按钮 → 调 POST /v1/parent/redeem-invite { code }·
+      s8 阶段：该端点由 msw mock + 后端 stub controller（return mock JWT scope=READ + studentId + expiresIn=7200s）·
+      s11 阶段：换为真实 invite_code 表 + JWT 颁发服务（s11 anonymous-service 兼任）·
+      成功 → 存 JWT 到 sessionStorage（不持久化避免共用设备问题）+ 跳 /observer/{studentId} ·
+      失败码：400 INVALID_CODE / 410 CODE_EXPIRED / 429 TOO_MANY_ATTEMPTS（防爆破）。
+      mockup 18 的 identity-meta 显示当前邀请码（O-A9T4-XZ7 格式 · 学生侧'我的→观察者→生成邀请码'入口由 s11 落地）。
+    source: "mockup 18 identity-meta 'O-A9T4-XZ7' 邀请码 chip · Q2 决策（邀请码而非短链）· 占位待 s11 真实链路"
+    critical: true
+    critical_reason: "权限 + 合规 + 未成年人数据访问门 · scope JWT 颁发链路决定家长能不能进 · 422 invalid 必须严格防护防爆破"
+    blocked_by: "s11（真实 JWT 颁发链路）"
+    domain_entities: [InviteCodeRedemption, MockedJwtIssuance]
+    user_journey: "家长'我的'→输入邀请码→点兑换→stub 颁发 mock JWT→跳 P-OBSERVER · 学生'我的'→生成邀请码（s11 实现）"
+    upstream_contract:
+      - { from_phase: s11, api: "POST /v1/parent/redeem-invite { code } · s11 落地真实 invite_code + JWT 颁发 · s8 阶段 stub" }
+    downstream_contract:
+      - { to_phase: s11, api: "（s11 落地后）GET /v1/parent/invite-codes / POST /v1/parent/invite-codes 学生侧管理邀请码" }
+    four_role_slots:
+      architect_anchor: "design/arch/s8-review-insight.md ## AC: SC-14.AC-2 · §3 邀请码兑换 stub 接口 · §6 ADR 候选 · 与 s11 接口契约协商"
+      dev_anchor: ""
+      qa_anchor: ""
+      ux_anchor: |
+        testid: review.me.observer-section / review.me.observer-input / review.me.observer-redeem-btn / review.me.observer-redeem-loading /
+        review.me.observer-error-invalid / review.me.observer-error-expired / review.me.observer-error-too-many
+      observable_behavior_anchor: ""
+    risks:
+      - "stub mock JWT 必须只在 dev/staging 起作用 · 生产环境绑定 s11 真实端点（feature flag observer.real_jwt=true）· 否则任何人构造 JWT 即可观察"
+      - "邀请码格式 O-XXXX-XXX 短 + 字母数字混合 · 防爆破靠 429 + invite_code 单次有效（s11 落地）"
+      - "s8 阶段 e2e 测试用 msw mock · s11 接管后 e2e 切真实链路"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "用户输入 'O-A9T4-XZ7'"
+          when: "点兑换"
+          then: "stub 返回 mock JWT + studentId · sessionStorage 存 · 跳 /observer/{studentId}"
+      error_paths:
+        - id: "error_paths.0"
+          given: "输入 '12345678'（格式错）"
+          when: "前端 onChange 校验"
+          then: "review.me.observer-redeem-btn disabled · hint '邀请码格式 O-XXXX-XXX'"
+        - id: "error_paths.1"
+          given: "stub 返回 410 CODE_EXPIRED"
+          when: "POST"
+          then: "review.me.observer-error-expired toast '邀请码已过期 · 请重新生成'"
+        - id: "error_paths.2"
+          given: "5 次错误后第 6 次"
+          when: "POST"
+          then: "stub 返回 429 · review.me.observer-error-too-many toast '尝试过于频繁 · 请 5min 后再试'"
+      boundary:
+        - id: "boundary.0"
+          given: "正确格式但 stub 返回 200 · JWT scope ≠ READ（s11 配置错）"
+          when: "前端校验"
+          then: "拒绝跳 /observer · toast '权限异常 · 请联系学生重新生成'· Sentry critical"
+      observable: []
+      visual:
+        - id: "visual.0"
+          given: "Playwright 截图'我的'页 observer-section"
+          when: "vs baseline/me-observer-section.png（fe-preflight 补 baseline）"
+          then: "pixel diff ≤ 3%"
+
+# ============================================================
+# 8. 顶级 verification_matrix 总览（V-S8-19/20 业务匹配/深度闸 测试方法对账 · s7 风格）
+# ============================================================
+
+verification_matrix:
+  # 每行对应一个 @CoversAC 测试方法 · matrix 行数 == 测试方法数（V-S8-20 --tests 校验）
+  - { ac: "SC-08.AC-1", scenario: "happy_path.0",  test: "ReviewTodayPage · renders root + hero + slots + items testid · 8 节点时段分组" }
+  - { ac: "SC-08.AC-1", scenario: "boundary.0",    test: "ReviewTodayPage · empty state · 0 节点显 review.today.empty" }
+  - { ac: "SC-08.AC-1", scenario: "boundary.1",    test: "ReviewTodayPage · timezone NY · 时段分桶按 NY 本地" }
+  - { ac: "SC-08.AC-1", scenario: "visual.0",      test: "Playwright P-REVIEW-TODAY pixel diff baseline" }
+  - { ac: "SC-08.AC-1", scenario: "a11y.0",        test: "ReviewTodayPage · 0 jest-axe violations" }
+  - { ac: "SC-08.AC-2", scenario: "happy_path.0",  test: "ReviewExecPage · thinking → revealed transition · 题干 + work + reveal 全区块" }
+  - { ac: "SC-08.AC-2", scenario: "error_paths.0", test: "ReviewExecPage · 404 已 mastered 跳回 today" }
+  - { ac: "SC-08.AC-2", scenario: "boundary.0",    test: "ReviewExecPage · T0 首次复习 · 时间线无 done dot" }
+  - { ac: "SC-08.AC-2", scenario: "visual.0",      test: "Playwright P-REVIEW-EXEC thinking pixel diff" }
+  - { ac: "SC-08.AC-2", scenario: "visual.1",      test: "Playwright P-REVIEW-EXEC revealed pixel diff" }
+  - { ac: "SC-08.AC-2", scenario: "a11y.0",        test: "ReviewExecPage · 0 axe violations" }
+  - { ac: "SC-08.AC-3", scenario: "happy_path.0",  test: "ReviewExec · rating mastered · POST 200 · invalidate today + 跳 done" }
+  - { ac: "SC-08.AC-3", scenario: "error_paths.0", test: "ReviewExec · 410 mastered 走 done · hero 已掌握态" }
+  - { ac: "SC-08.AC-3", scenario: "error_paths.1", test: "ReviewExec · 409 自动重试 · 仍 409 toast" }
+  - { ac: "SC-08.AC-3", scenario: "boundary.0",    test: "ReviewExec · 双击 dedupe · 只发 1 次 POST" }
+  - { ac: "SC-08.AC-3", scenario: "boundary.1",    test: "ReviewExec · 401 触发全局拦截 + sessionStorage 暂存 quality" }
+  - { ac: "SC-08.AC-3", scenario: "visual.0",      test: "Playwright rating loading pixel diff" }
+  - { ac: "SC-08.AC-4", scenario: "happy_path.0",  test: "ReviewDonePage · hero + memory-curve + next + today-stats + kp 全显" }
+  - { ac: "SC-08.AC-4", scenario: "error_paths.0", test: "ReviewDonePage · today 缓存丢 · fallback 0 0 0" }
+  - { ac: "SC-08.AC-4", scenario: "boundary.0",    test: "ReviewDonePage · mastered 状态进入 hero 文案变" }
+  - { ac: "SC-08.AC-4", scenario: "visual.0",      test: "Playwright P-REVIEW-DONE pixel diff" }
+  - { ac: "SC-08.AC-4", scenario: "a11y.0",        test: "ReviewDonePage · 0 axe violations" }
+  - { ac: "SC-09.AC-1", scenario: "happy_path.0",  test: "InsightPage · range=week + 3 区块（频次/正确率/Top3）" }
+  - { ac: "SC-09.AC-1", scenario: "error_paths.0", test: "InsightPage · TIMEZONE_FALLBACK warning banner" }
+  - { ac: "SC-09.AC-1", scenario: "boundary.0",    test: "InsightPage · 本周 0 数据 · empty state" }
+  - { ac: "SC-09.AC-1", scenario: "visual.0",      test: "Playwright P-INSIGHT week pixel diff（fe-preflight 补 baseline）" }
+  - { ac: "SC-09.AC-2", scenario: "happy_path.0",  test: "InsightPage · subjectBreakdown 5 科条形 · 解冻后启用" }
+  - { ac: "SC-09.AC-2", scenario: "error_paths.0", test: "InsightPage · v2 未上线 · skeleton + warning 不阻塞" }
+  - { ac: "SC-09.AC-3", scenario: "happy_path.0",  test: "InsightPage · ebbinghaus overlay 7 散点 · 解冻后启用" }
+  - { ac: "SC-09.AC-3", scenario: "error_paths.0", test: "InsightPage · v2 未上线 · skeleton" }
+  - { ac: "SC-14.AC-1", scenario: "happy_path.0",  test: "ObserverPage · 全区块 + watermark + disabled buttons" }
+  - { ac: "SC-14.AC-1", scenario: "error_paths.0", test: "ObserverPage · 写请求被网关 403 拒（mock 验证）" }
+  - { ac: "SC-14.AC-1", scenario: "error_paths.1", test: "ObserverPage · 学生撤销 → 401 → 清 token + 跳登录" }
+  - { ac: "SC-14.AC-1", scenario: "error_paths.2", test: "ObserverPage · 非 READ scope JWT 进路由 → 403 守门" }
+  - { ac: "SC-14.AC-1", scenario: "boundary.1",    test: "ObserverPage · 会话过期 modal + 强制清 JWT" }
+  - { ac: "SC-14.AC-1", scenario: "visual.0",      test: "Playwright P-OBSERVER pixel diff" }
+  - { ac: "SC-14.AC-1", scenario: "a11y.0",        test: "ObserverPage · 0 axe violations · ARIA aria-disabled 验证" }
+  - { ac: "SC-14.AC-2", scenario: "happy_path.0",  test: "MePage observer-section · stub 兑换 200 · 跳 observer 路由" }
+  - { ac: "SC-14.AC-2", scenario: "error_paths.0", test: "MePage observer-section · 格式校验 · btn disabled" }
+  - { ac: "SC-14.AC-2", scenario: "error_paths.1", test: "MePage observer-section · 410 expired toast" }
+  - { ac: "SC-14.AC-2", scenario: "error_paths.2", test: "MePage observer-section · 5 次错后 429 防爆破" }
+  - { ac: "SC-14.AC-2", scenario: "boundary.0",    test: "MePage observer-section · scope ≠ READ 拒跳 + Sentry critical" }
+
+# ============================================================
+# 9. 签字落款（User 填）
+# ============================================================
+
+# - [ ] sc_covered = [SC-08, SC-09, SC-14]（路径 A）确认
+# - [ ] drift_resolution D1-D5 5 条修正 ack
+# - [ ] conflicts_resolved Q1-Q4 4 条决策 ack
+# - [ ] ambiguities_resolved A1-A2 2 条 AI 工程决策签
+# - [ ] dor_static_check 11 条状态确认 · s5-stats-v2-frozen PENDING 接受作为 fe-builder 阻塞
+# - [ ] ac_coverage 9 AC ux_anchor / risks / verification_matrix 通读 ok
+# - [ ] biz_gate: in_review → approved
+# - [ ] signed_by: @____  approved_at: ____  approval_method: in-person|comment
+# - [ ] PR description /biz-ok 评论

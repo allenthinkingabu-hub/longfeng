@@ -1,7 +1,9 @@
 # AI 前端高保真开发三段式方案
 
-> 版本：v1.0 · 2026-04-27
+> 版本：v1.1 · 2026-04-28
 > 背景：针对 S7 Phase 开发结果与高保真 mockup 差距过大的问题，设计一套 AI 可执行的三阶段工作流，覆盖开发前 · 开发中 · 开发后三个环节。
+>
+> **v1.1 更新**：基于"测试用例作者 / 执行者职责分离"原则，在 Stage 1（Pre-flight）与 Stage 2（Builder）之间插入 `fe-testplan`（测试用例编写）阶段。原"三段式"演进为"三段式 + 测试编排"——builder 只读 build-spec.json，accept-* 退化为测试用例执行器，只读 test-plan.json，AC 覆盖率从"AI 当下记得检查什么"变成"plan 列了 N 条、跑过 N 条、过 M 条"。
 
 ---
 
@@ -117,7 +119,113 @@ S7 + Sd 现有信息：
 }
 ```
 
-**User 交互节点**：Pre-flight Agent 完成后，User 审阅 `token-mapping-review.md` 中的"近似处理"条目，确认可接受 → 开工。
+**User 交互节点**：Pre-flight Agent 完成后，User 审阅 `token-mapping-review.md` 中的"近似处理"条目，确认可接受 → 进入阶段一·五。
+
+---
+
+### 阶段一·五：开发前 · Test Plan Authoring（v1.1 新增）
+
+**目标**：把 `business-analysis.yml` 的 AC 转成结构化测试用例（test-plan.json），同时回填 testid 清单到 build-spec.json，让"测试用例作者"和"测试用例执行者"在职责上彻底切开。
+
+**为什么需要这一阶段**：
+
+原三段式中，accept-* skill 既负责"决定要检查什么"也负责"执行检查"——AC 覆盖完全取决于这次验收 AI 当下记得检查什么，没有可追溯、可复用的测试契约。新增 fe-testplan 后：
+
+```
+build-spec.json   = "做什么"（区块、组件、token、testid 清单）   → Builder 唯一 context
+test-plan.json    = "怎么验"（操作步骤、预期结果、断言点）        → Accept 唯一 context
+```
+
+**职责铁律**：
+
+| 角色 | 能看 | 不能看 |
+|---|---|---|
+| Builder | build-spec.json（含回填的 testid 清单） | test-plan.json |
+| Accept | test-plan.json | （无新增限制，但严禁执行时新增 TC） |
+
+- Builder 看不到 TC 的"预期结果"——避免"针对测试编程"，只让 TC 过、TC 没覆盖的边角不管反而降质
+- Accept 严禁在执行时新增 TC——发现 plan 漏了，必须回头改 plan，不允许临时加检查
+
+**执行动作**：
+
+1. 读 `design/analysis/<page>-business-analysis.yml`（AC + user_journey + risks）
+2. 读 `design/tasks/preflight/<page>-build-spec.json`（区块 + 已知 testid）
+3. 对每条 AC 生成一组 TC，每条 TC 含：
+   - `id`：唯一 ID（如 `TC-FE-WB-001`）
+   - `ac`：来源 AC（如 `SC-08.AC-1`）
+   - `title`：人类可读标题
+   - `testids`：涉及的 testid 列表
+   - `tracks`：适用轨道（A / B / C 子集）
+   - `setup_group`：执行分桶键（`list-empty` / `list-loaded` / `detail-loaded` …）
+   - `priority`：P0 / P1 / P2
+   - `steps`：操作序列（导航 / 点击 / 输入）
+   - `expected`：断言点（DOM 可见性、文本内容、URL、网络调用）
+4. 回填完整 testid 清单到 build-spec.json `blocks[*].testids`
+5. 产出 `test-plan.json` + `test-plan-review.md`（覆盖率统计 + 漏覆盖 AC 提醒 + 边界用例缺失警示）
+
+**test-plan.json 示例结构**：
+
+```json
+{
+  "page": "ListPage",
+  "version": "1.0",
+  "generated_at": "2026-04-28T10:00:00Z",
+  "test_cases": [
+    {
+      "id": "TC-FE-WB-001",
+      "ac": "SC-08.AC-1",
+      "title": "列表页加载后显示卡片",
+      "testids": ["wrongbook.list.item-card", "wrongbook.list.empty-state"],
+      "tracks": ["A", "B"],
+      "setup_group": "list-loaded",
+      "priority": "P0",
+      "steps": [
+        "导航到 /wrongbook",
+        "等待 wrongbook.list.item-card 出现"
+      ],
+      "expected": [
+        "wrongbook.list.item-card 数量 ≥ 1",
+        "wrongbook.list.empty-state 不可见"
+      ]
+    },
+    {
+      "id": "TC-FE-WB-002",
+      "ac": "SC-08.AC-1",
+      "title": "点击卡片跳转详情",
+      "testids": ["wrongbook.list.item-card"],
+      "tracks": ["B"],
+      "setup_group": "list-loaded",
+      "priority": "P0",
+      "steps": [
+        "前置：列表已加载",
+        "点击第一张 wrongbook.list.item-card"
+      ],
+      "expected": [
+        "URL 匹配 /wrongbook/:id",
+        "wrongbook.detail.* 区块可见"
+      ]
+    },
+    {
+      "id": "TC-FE-WB-003",
+      "ac": "SC-08.AC-1",
+      "title": "空态展示",
+      "testids": ["wrongbook.list.empty-state"],
+      "tracks": ["B", "C"],
+      "setup_group": "list-empty",
+      "priority": "P1",
+      "steps": ["导航到 /wrongbook（fixture 返回空数组）"],
+      "expected": [
+        "wrongbook.list.empty-state 可见",
+        "wrongbook.list.item-card 不存在"
+      ]
+    }
+  ]
+}
+```
+
+**User 交互节点**：
+
+User 审阅 `test-plan-review.md`，确认覆盖率（每条 AC 至少 1 条 P0 TC + 关键边界态：empty / error / loading）后才能进入阶段二。**fe-builder 在 test-plan 未确认前禁止启动**——否则 builder 看见用例反向迁就，TDD 优势消失。
 
 ---
 
@@ -147,7 +255,7 @@ ListPage 拆成 6 个区块：
 2. 写 TSX：
    → 优先复用 ui-kit 组件（按 spec 指定）
    → CSS Module 中只用 var(--tkn-*) 引用 token
-   → 所有可点击元素带 data-testid
+   → 所有可点击元素带 data-testid（清单来自 build-spec.json，由 fe-testplan 回填）
 
 3. 区块级本地验证（三条 grep 门禁）：
    ① ! grep -E '#[0-9a-fA-F]{3,6}|rgb\(' 区块文件  # 零硬编码色值
@@ -159,11 +267,22 @@ ListPage 拆成 6 个区块：
 
 **关键约束**：每个区块的 Builder prompt context **只包含该区块的 spec 摘录**，避免上下文过长导致 AI 跳过约束走捷径。
 
+**v1.1 关键约束**：Builder 严禁读 `test-plan.json`，只读 `build-spec.json`（即使 testid 是从 testplan 回填的）。看到 TC 的"预期结果"会触发"针对测试编程"，反而降质。这是"作者/执行者分离"的硬边界。
+
 ---
 
 ### 阶段三：开发后 · Acceptance Agent
 
 **目标**：独立 AI 从三个维度验收，产出有证据的 gap report，不修代码。
+
+**v1.1 更新**：accept-* skill 退化为"测试用例执行器"，输入是 `test-plan.json`，不再自行决定检查什么。
+
+执行规则：
+- 按 TC 的 `setup_group` 分桶执行（同桶共用浏览器状态、桶间重置），避免每条 TC 重启 page 的性能死，也避免一锅煮的状态污染
+- 桶内逐条 TC 独立断言、独立 ✅/❌
+- 报告颗粒度必须是逐条 TC（禁止聚合成"列表页 OK"），覆盖率公式：`通过 TC 数 / 适用本轨道的 TC 数`
+- 严禁在执行时新增 TC：plan 漏了必须回头改 plan，不允许临时加检查（这是"作者/执行者分离"的另一条硬边界）
+- 三轨各自只跑 `tracks` 字段含自己轨道字母的 TC
 
 **关键突破 · 视觉对比可自动化**：
 
@@ -315,15 +434,21 @@ M 类自主执行，V 类等待 User 决策后执行，B 类先归因再决定�
           ↓
   Pre-flight Agent（解析 + 映射 + 产 build-spec.json）
           ↓
-  User 审阅 token-mapping-review.md → 确认 → 开工
+  User 审阅 token-mapping-review.md → 确认
           ↓
-  Builder 区块循环（每块：写 → grep 验 → commit）
+  Test Plan Authoring（v1.1 新增）
+    · 读 business-analysis.yml + build-spec.json
+    · 产 test-plan.json + 回填 testid 清单 → build-spec.json
+          ↓
+  User 审阅 test-plan-review.md → 确认覆盖率
+          ↓
+  Builder 区块循环（每块：写 → grep 验 → commit · 只读 build-spec）
     ① NavBar  ② Chips  ③ 掌握度筛选  ④ CardItem  ⑤ FAB  ⑥ TabBar
           ↓
-  Acceptance Agent（三维度验收）
+  Acceptance Agent（三维度验收 · 只读 test-plan）
     · Playwright 截图 pixel diff（视觉）
     · grep 合规扫描（设计系统）
-    · Verifier AI（业务完整性）
+    · 逐 TC 执行（业务完整性）
           ↓
   gap report（视觉 diff + 合规评分 + AC 矩阵）
           ↓
@@ -348,10 +473,11 @@ M 类自主执行，V 类等待 User 决策后执行，B 类先归因再决定�
 | Skill | 阶段 | 输入 | 输出 | 状态 |
 |---|---|---|---|---|
 | `/fe-preflight <page>` | 阶段一 | mockup HTML + tokens.css + ui-kit 组件列表 | `build-spec.json` + `token-mapping-review.md` | ✅ 可用 |
-| `/fe-builder <page> [block-id]` | 阶段二 | `build-spec.json` 对应区块 | TSX + CSS + grep 验证通过 + commit | ✅ 可用 |
-| `/fe-accept-diff <page>` | 阶段三 C 轨 | Vite dev server（无 MSW） | `<page>-diff-report.md`（视觉偏差 %） | ✅ 可用 |
-| `/fe-accept-mock <page>` | 阶段三 B 轨 | MSW handlers + Vite dev server | `<page>-gap-report.md`（视觉 + 合规 + AC） | ✅ 可用 |
-| `/fe-accept-e2e <page>` | 阶段三 A 轨 | 真实后端（gateway:8080） | `<page>-e2e-report.md`（完整 AC 矩阵） | ✅ 可用 |
+| `/fe-testplan <page>` | 阶段一·五（v1.1 新增） | `business-analysis.yml` + `build-spec.json` | `test-plan.json` + `test-plan-review.md` + 回填 testid 到 build-spec.json | 🚧 待建 |
+| `/fe-builder <page> [block-id]` | 阶段二 | `build-spec.json` 对应区块（**不读 test-plan**） | TSX + CSS + grep 验证通过 + commit | ✅ 可用（v1.1 改造中：去除自有 testid 推断，统一从 build-spec 读取） |
+| `/fe-accept-diff <page>` | 阶段三 C 轨 | `test-plan.json`（tracks 含 C）+ Vite dev server | `<page>-diff-report.md`（逐 TC 视觉偏差 %） | ✅ 可用（v1.1 改造中：从自决检查改为 plan 驱动） |
+| `/fe-accept-mock <page>` | 阶段三 B 轨 | `test-plan.json`（tracks 含 B）+ MSW + Vite dev server | `<page>-gap-report.md`（逐 TC 通过/失败） | ✅ 可用（v1.1 改造中） |
+| `/fe-accept-e2e <page>` | 阶段三 A 轨 | `test-plan.json`（tracks 含 A）+ 真实后端（gateway:8080） | `<page>-e2e-report.md`（逐 TC 通过/失败） | ✅ 可用（v1.1 改造中） |
 | `/fe-repair <page> [m\|v\|b] [block-id]` | 修复回路 | gap report（Markdown） | 定向修复 + 全页回归 + commit | ✅ 可用 |
 
 ---
@@ -365,6 +491,13 @@ Step 1 · Pre-flight
   /fe-preflight <page>
   → 生成 build-spec.json + token-mapping-review.md
   → 审阅 token-mapping-review.md 中的"近似处理"条目，确认后继续
+
+Step 1.5 · Test Plan Authoring（v1.1 新增）
+  /fe-testplan <page>
+  → 读 business-analysis.yml + build-spec.json
+  → 生成 test-plan.json + test-plan-review.md，并回填 testid 清单到 build-spec.json
+  → 审阅 test-plan-review.md 的覆盖率（每条 AC 至少 1 条 P0 TC + 关键边界态）
+  → 确认后才能进入 Step 2（Builder 在 testplan 未确认前禁止启动）
 
 Step 2 · Builder（区块循环）
   /fe-builder <page>
@@ -444,7 +577,8 @@ Step 6 · Sprint 联调验收（A 轨，需后端已启动）
 
 | 说这些 | 触发 skill |
 |---|---|
-| "开始开发 ListPage" / "做 S7 列表页" | `fe-preflight` → `fe-builder` |
+| "开始开发 ListPage" / "做 S7 列表页" | `fe-preflight` → `fe-testplan` → `fe-builder` |
+| "写测试用例" / "做 testplan" / "生成 test-plan" | `fe-testplan` |
 | "快速截图对比" / "跑 C 轨" / "只验视觉" | `fe-accept-diff` |
 | "跑 B 轨验收" / "生成 gap report" / "PR 前验收" | `fe-accept-mock` |
 | "跑 A 轨" / "联调验收" / "跑 e2e" | `fe-accept-e2e` |
@@ -456,13 +590,17 @@ Step 6 · Sprint 联调验收（A 轨，需后端已启动）
 
 ```
 fe-preflight
-  └─ 输出 → build-spec.json
-               └─ 消费 → fe-builder
-                           └─ 输出 → 实现代码（TSX + CSS）
-                                       ├─ 消费 → fe-accept-diff   → diff-report.md
-                                       ├─ 消费 → fe-accept-mock   → gap-report.md
-                                       └─ 消费 → fe-accept-e2e    → e2e-report.md
-                                                     ↓（有问题）
-                                                 fe-repair（读 Markdown report）
-                                                     └─ 输出 → 修复 commit + 更新 report
+  └─ 输出 → build-spec.json (v1.0)
+               └─ 消费 → fe-testplan（v1.1 新增）
+                           ├─ 回填 testid 清单 → build-spec.json (v1.1)
+                           └─ 输出 → test-plan.json
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                ↓                                              ↓
+            build-spec → fe-builder                     test-plan → fe-accept-diff → diff-report.md（逐 TC）
+                          └─ 输出 → 实现代码（TSX+CSS）             → fe-accept-mock → gap-report.md（逐 TC）
+                                                                   → fe-accept-e2e  → e2e-report.md（逐 TC）
+                                                                                     ↓（有问题）
+                                                                                 fe-repair（读 Markdown report）
+                                                                                     └─ 输出 → 修复 commit + 更新 report
 ```

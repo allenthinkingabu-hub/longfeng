@@ -1,7 +1,9 @@
 # AI 后端自动开发三段式方案
 
-> 版本：v1.2 · 2026-04-27
+> 版本：v1.3 · 2026-04-28
 > 背景：在执行落地实施计划（`落地实施计划_v1.0_AI自动执行.md`）的后端 Phase（S3/S4/S5/S6/S11）时，AI 仅凭 Phase 规范文档开发，产出的后端存在三类偏差：接口形状和前端对不上、业务规则实现有遗漏、架构模式用错。本方案设计三段式 Skill Pipeline，在动代码前强制完成三类信息提取与对齐，确保最终产出是可运行、业务正确、前端可直接对接的后端服务。
+>
+> **v1.3 更新**：基于"测试用例作者 / 执行者职责分离"原则，在 Stage 1（be-preflight）与 Stage 2（be-builder）之间插入 `be-testplan`（接口×场景矩阵编写）阶段。Stage 3 维度 B 退化为 test-plan 驱动的执行器，业务行为覆盖率从"AI 当下记得检查什么"变成"plan 列了 N 条、跑过 N 条、过 M 条"。施工图从 3 份扩展为 4 份。
 
 ---
 
@@ -113,12 +115,19 @@ S1（纯 DDL）、S2（网关骨架）、S5.5（联调闸）使用简化版，�
                  ├── YES → 停机，User 确认 contract-gaps.md
                  └── NO  ↓
   ┌──────────────────────────────────┐
+  │  Stage 1.5: be-testplan (v1.3)  │  编织接口×场景矩阵
+  │  /be-testplan <phase>            │  → be-test-plan.json
+  │                                  │  ②(业务规则) × ①(端点) → TC
+  └──────────────┬───────────────────┘
+                 │ User 审阅 be-test-plan-review.md
+                 ↓
+  ┌──────────────────────────────────┐
   │  Stage 2: be-builder             │  分层构建，每层精准注入
-  │  /be-builder <phase> <layer>     │
+  │  /be-builder <phase> <layer>     │  （不读 be-test-plan.json）
   │  layer 1: entity     (读 ③)      │  → mvn compile ✅
   │  layer 2: repo       (读 ③)      │  → mvn compile ✅
   │  layer 3: service    (读 ②+③)   │  → mvn compile ✅
-  │  layer 4: controller (读 ①+③)   │  → mvn verify  ✅
+  │  layer 4: controller (读 ①+③)   │  → mvn verify  ✅（IT 仅冒烟）
   │  layer 5: openapi    (读 ①)      │  → paths ≥ N   ✅
   └──────────────┬───────────────────┘
                  ▼
@@ -126,7 +135,8 @@ S1（纯 DDL）、S2（网关骨架）、S5.5（联调闸）使用简化版，�
   │  Stage 3: be-accept              │  三维验收
   │  /be-accept <phase>              │
   │  维度 A：接口契约（① 形状对齐）  │
-  │  维度 B：业务行为（② 行为正确）  │
+  │  维度 B：业务行为（读 test-plan │
+  │           逐 TC 执行 + 断言）    │
   │  维度 C：架构合规（③ 模式遵守）  │
   └──────────────┬───────────────────┘
                  ▼
@@ -267,6 +277,8 @@ design/analysis/<phase>-be-build-spec.json
 design/analysis/<phase>-business-rule-cards.json
 design/analysis/<phase>-arch-constraints.json
 design/analysis/<phase>-contract-gaps.md
+design/analysis/<phase>-be-test-plan.json          # v1.3 新增
+design/analysis/<phase>-be-test-plan-review.md     # v1.3 新增
 ```
 
 Builder 启动时第一步永远是：**读文件，不靠记忆**。Agent 不应该凭对话历史里"我记得 be-preflight 说过的约束"来写代码，必须重新从文件读取，确保约束的精确性。
@@ -619,6 +631,162 @@ Step 7  has_blocking_gaps = true → 停机；false → 输出"施工图就绪"
 
 ---
 
+## Stage 1.5：`/be-testplan <phase>` — 接口×场景矩阵编写（v1.3 新增）
+
+### 目标
+
+把 `business-rule-cards.json` 的 invariants/side_effects/error_cases 与 `be-build-spec.json` 的 endpoints 编织成结构化测试用例（接口×场景矩阵），驱动 Stage 3 的 be-accept 维度 B 执行。
+
+### 为什么需要这一阶段
+
+原三段式中，be-accept 维度 B 既负责"决定要测什么场景"也负责"执行测试"——业务行为覆盖率完全靠这次 accept AI 当下记得检查什么，没有可追溯、可复用的测试契约。
+
+新增 be-testplan 后，三类约束 + 一份测试契约的分工：
+
+| 文件 | 职责 | 谁消费 |
+|---|---|---|
+| `be-build-spec.json` | 端点形状（路径、字段、枚举） | Layer 4 Controller |
+| `business-rule-cards.json` | 业务规则语义（不变量、副作用、错误场景） | Layer 3 Service |
+| **`be-test-plan.json`**（v1.3 新增） | 接口×场景矩阵（TC = setup + 输入 + 预期断言） | be-accept 维度 B |
+| `arch-constraints.json` | 架构模式约束 | Layer 1-4 全部 |
+
+### 与 OpenAPI / business-rule-cards 的边界
+
+最大的设计风险：be-test-plan 不能写成"OpenAPI 注释版"或"rule-cards 改了个文件名"。三者职责必须清晰切分：
+
+| 文件 | 定义什么 | 不定义什么 |
+|---|---|---|
+| OpenAPI / be-build-spec | 接口长什么样：路径、方法、参数、响应字段、状态码集合 | 什么时候返回 400 vs 409 |
+| business-rule-cards | 业务规则的**语义**：不变量、副作用、错误场景的描述 | 具体测试输入和断言点 |
+| be-test-plan | 怎么测：每条规则 × 每种触发条件 → 具体输入 + 预期断言 | 不重复 OpenAPI 字段定义、不重复 rule_card 的语义描述 |
+
+### 执行动作
+
+```
+Step 1  读 be-build-spec.json 的 endpoints 和 vo_definitions
+Step 2  读 business-rule-cards.json 的 rule_cards
+Step 3  按矩阵生成 TC（每个 endpoint × 每张规则卡 × 多种 category）：
+          happy_path    每个 endpoint 至少 1 条 P0
+          boundary      字段最小/最大/空/超长
+          error_case    每条 rule.error_cases 1 条
+          side_effect   每条 rule.side_effects 1 条 DB/MQ/Cache 断言
+          concurrency   乐观锁、幂等、并发触发场景
+          degradation   中间件不可用降级路径
+Step 4  产出 be-test-plan.json + be-test-plan-review.md
+          覆盖率统计：每条 rule_card 是否有对应 TC，缺漏在 review 中红色标记
+```
+
+### 产出文件：`be-test-plan.json`
+
+```json
+{
+  "phase": "s3",
+  "version": "1.0",
+  "generated_at": "2026-04-28T10:00:00Z",
+  "test_cases": [
+    {
+      "id": "TC-BE-S3-001",
+      "endpoint": "POST /wrongbook/items",
+      "sc_ac": "SC-07.AC-1",
+      "rule_card_ref": "createItem",
+      "category": "happy_path",
+      "priority": "P0",
+      "setup": ["DB clean", "Redis clean"],
+      "request": {
+        "headers": { "X-Request-Id": "test-001" },
+        "body": { "subject": "math", "stem_text": "2x+3=7" }
+      },
+      "expected": {
+        "http_status": 201,
+        "body_assertions": [
+          "$.id is string",
+          "$.status == 'pending'",
+          "$.mastery == 0",
+          "$.version == 0"
+        ],
+        "db_assertions": ["wrong_item count == 1"],
+        "mq_assertions": ["wrongbook.item.changed received with action='created'"]
+      }
+    },
+    {
+      "id": "TC-BE-S3-002",
+      "endpoint": "POST /wrongbook/items",
+      "rule_card_ref": "createItem",
+      "category": "error_case",
+      "priority": "P0",
+      "setup": ["DB clean"],
+      "request": {
+        "body": { "subject": "biology", "stem_text": "..." }
+      },
+      "expected": {
+        "http_status": 400,
+        "body_assertions": ["$.error == 'INVALID_SUBJECT'"]
+      }
+    },
+    {
+      "id": "TC-BE-S3-006",
+      "endpoint": "POST /wrongbook/items",
+      "rule_card_ref": "createItem",
+      "category": "concurrency",
+      "priority": "P0",
+      "setup": ["DB clean", "Redis clean"],
+      "execution": "parallel-2",
+      "request": {
+        "headers": { "X-Request-Id": "same-rid-001" },
+        "body": { "subject": "math", "stem_text": "..." }
+      },
+      "expected": {
+        "all_responses_same_id": true,
+        "db_assertions": ["wrong_item count == 1 (idempotent)"]
+      }
+    },
+    {
+      "id": "TC-BE-S3-009",
+      "endpoint": "POST /wrongbook/items",
+      "rule_card_ref": "createItem",
+      "category": "degradation",
+      "priority": "P1",
+      "setup": ["docker stop redis"],
+      "request": {
+        "headers": { "X-Request-Id": "deg-001" },
+        "body": { "subject": "math", "stem_text": "..." }
+      },
+      "expected": {
+        "http_status": 201,
+        "note": "Redis 降级到 DB 唯一索引兜底，不返回 500"
+      },
+      "teardown": ["docker start redis"]
+    }
+  ]
+}
+```
+
+### 与 Stage 2 / Stage 3 的关系
+
+- **Stage 2 Layer 4 IT**：保留为"骨架冒烟测试"（mvn verify 门禁所需的最小 happy_path），**不读 be-test-plan.json**——避免 builder 看见预期断言后反向迁就实现
+- **Stage 3 be-accept 维度 B**：作为测试用例执行器，读 be-test-plan.json，按 setup 分组依次启动服务/调用 endpoint/校验 expected，逐 TC 报告
+
+**铁律**：
+
+| 角色 | 能看 | 不能看 |
+|---|---|---|
+| be-builder（所有 Layer） | be-build-spec / business-rule-cards / arch-constraints | be-test-plan.json |
+| be-accept 维度 B | be-test-plan.json（全量） | （无新增限制，但严禁执行时新增 TC） |
+
+- be-builder 不读 be-test-plan.json（Layer 4 的 IT 是冒烟级别，不替代维度 B 的覆盖）
+- be-accept 严禁在执行时新增 TC：发现 plan 漏了，回头改 plan，不允许临时加场景
+
+### User 交互节点
+
+User 审阅 `be-test-plan-review.md`，确认：
+- 每个 endpoint 至少 1 条 happy_path TC
+- 每条 rule_card 的 error_cases / side_effects / invariants 都有对应 TC
+- 关键并发（幂等、乐观锁）和降级（中间件不可用）场景已覆盖
+
+确认后才能进入 Stage 2 Builder。**be-builder 在 be-test-plan 未确认前禁止启动**。
+
+---
+
 ## Stage 2：`/be-builder <phase> <layer>` — 精准注入分层构建
 
 ### 目标
@@ -719,7 +887,7 @@ Service 层是业务规则最密集的地方，Builder 对每张 Rule Card 逐�
 | 维度 | 来源 | 执行方式 | 对标前端三段式 |
 |---|---|---|---|
 | **A · 接口契约** | `be-build-spec.json` | 用前端真实调用格式 curl 每个端点，校验 response 字段/枚举/类型 | 视觉 pixel diff |
-| **B · 业务行为** | `business-rule-cards.json` | 跑真实业务场景，验证 side_effects 和 error_cases 实际发生 | AC 覆盖矩阵 |
+| **B · 业务行为** | **`be-test-plan.json`**（v1.3 改造） | 按 TC 逐条执行：setup → request → 校验 expected（HTTP/DB/MQ/Cache） | 逐 TC 通过/失败 |
 | **C · 架构合规** | `arch-constraints.json` | 静态 grep 扫描 + 运行时降级行为验证 | 设计系统 grep 扫描 |
 
 ### 维度 A：接口契约验收
@@ -732,11 +900,27 @@ Service 层是业务规则最密集的地方，Builder 对每张 Rule Card 逐�
 # 校验：HTTP 状态码 / 所有 required 字段存在 / 枚举值在范围内 / id 为 string 类型
 ```
 
-### 维度 B：业务行为验收
+### 维度 B：业务行为验收（v1.3 改造为 test-plan 驱动）
 
-对每张 Rule Card 的 side_effects 和 error_cases 跑真实场景验证：
+读 `be-test-plan.json`，按 TC 的 `setup` 分组依次执行：
 
-**S3 业务场景（共 9 个）：**
+```
+对每条 TC：
+  Step 1 · 应用 setup（DB clean / Redis clean / docker stop redis / ...）
+  Step 2 · 发送 request（HTTP 调用，含 headers / body / query / X-Request-Id）
+  Step 3 · 校验 expected：
+            http_status        响应状态码
+            body_assertions    JSONPath 断言（字段值、类型、范围）
+            db_assertions      数据库行数 / 字段值断言
+            mq_assertions      消息消费者收到的 payload 校验
+  Step 4 · 应用 teardown（docker start redis 等）
+  Step 5 · 记录 ✅ / ❌ 到逐 TC 报告
+```
+
+并发类 TC（`category: concurrency`）按 `execution: parallel-N` 启动多线程同时调用。
+降级类 TC（`category: degradation`）按 `setup` 中的 docker 命令禁用中间件后调用，TC 结束后必须 teardown 恢复。
+
+**S3 测试用例示例（来自 be-test-plan.json，原 9 个业务场景已结构化为 TC）：**
 
 ```
 Scene 1 · 录入主流程（Capture 页）
@@ -941,11 +1125,15 @@ POST /wrongbook/items → 201（不是 500）
 ```
 §X.5 DoR 检查（现有）
      ↓
-/be-preflight <phase>              ← 新增：三类约束提取 + 对齐
+/be-preflight <phase>              ← 三类约束提取 + 对齐
      ↓
-User 确认 contract-gaps.md        ← 新增：人工决策冲突点
+User 确认 contract-gaps.md        ← 人工决策冲突点
      ↓
-/be-builder <phase> layer1         ← 替换 §X.7 Step 3-14（分层执行）
+/be-testplan <phase>               ← v1.3 新增：接口×场景矩阵编写
+     ↓
+User 确认 be-test-plan-review.md  ← v1.3 新增：覆盖率审阅
+     ↓
+/be-builder <phase> layer1         ← 替换 §X.7 Step 3-14（分层执行，不读 test-plan）
 /be-builder <phase> layer2
 /be-builder <phase> layer3
 /be-builder <phase> layer4
@@ -965,12 +1153,13 @@ User 确认 contract-gaps.md        ← 新增：人工决策冲突点
 | 命令 | 阶段 | Context 来源 | 产出 |
 |---|---|---|---|
 | `/be-preflight <phase>` | 约束提取与对齐 | Phase 规范全文 + api-contracts + business-analysis.yml + design/arch/<phase>.md | `be-build-spec.json` + `business-rule-cards.json` + `arch-constraints.json` + `contract-gaps.md`（写入 design/analysis/） |
+| `/be-testplan <phase>` | 接口×场景矩阵编写（v1.3 新增） | 从磁盘读 be-build-spec.json + business-rule-cards.json | `be-test-plan.json` + `be-test-plan-review.md`（写入 design/analysis/） |
 | `/be-builder <phase> layer1` | Entity 层构建 | 从磁盘读 arch-constraints 的 layer1 片段 + git 当前状态 | JPA Entity 类 + Flyway SQL + compile gate ✅ |
 | `/be-builder <phase> layer2` | Repo 层构建 | 从磁盘读 arch-constraints 的 layer2 片段 + git 当前状态 | Repository + QueryDSL Predicates + compile gate ✅ |
 | `/be-builder <phase> layer3` | Service 层构建 | 从磁盘读 business-rule-cards（按批）+ arch-constraints 的 layer3 片段 | Service + Idempotency + Producer + compile gate ✅（支持 Sub-layer 自动拆分） |
-| `/be-builder <phase> layer4` | Controller 层构建 | 从磁盘读 be-build-spec endpoints + arch-constraints layer4 片段 | Controller + DTO + MapStruct + IT + verify gate ✅ |
+| `/be-builder <phase> layer4` | Controller 层构建 | 从磁盘读 be-build-spec endpoints + arch-constraints layer4 片段 | Controller + DTO + MapStruct + IT（冒烟级）+ verify gate ✅ |
 | `/be-builder <phase> layer5` | OpenAPI 导出 | 从磁盘读 be-build-spec validation 字段 | wrongbook.yaml 入库 + paths 数量门禁 ✅ |
-| `/be-accept <phase>` | 三维验收 | 从磁盘读三份施工图（全量）+ 运行中服务 | `reports/phase-<phase>-be-acceptance.md` |
+| `/be-accept <phase>` | 三维验收（v1.3 维度 B 改为 test-plan 驱动） | 从磁盘读四份施工图 + be-test-plan.json + 运行中服务 | `reports/phase-<phase>-be-acceptance.md`（含逐 TC 通过/失败矩阵） |
 
 > **关键**：be-builder 每层是独立 Sub-agent，从磁盘读文件，不共享对话历史。
 
@@ -981,7 +1170,9 @@ User 确认 contract-gaps.md        ← 新增：人工决策冲突点
 | 维度 | 前端三段式 | 后端三段式（v1.1） |
 |---|---|---|
 | **真值来源** | Mockup HTML（视觉） | `api-contracts`（接口契约）+ `business-analysis.yml`（业务）+ `design/arch`（架构） |
-| **施工图数量** | 1 个（build-spec.json） | 3 个（be-build-spec + business-rule-cards + arch-constraints） |
+| **施工图数量** | 2 个（build-spec.json + test-plan.json，v1.1 起） | 4 个（be-build-spec + business-rule-cards + arch-constraints + be-test-plan，v1.3 起） |
+| **测试用例作者** | `fe-testplan` skill | `be-testplan` skill |
+| **测试用例执行者** | `fe-accept-*`（mock/diff/e2e 三轨） | `be-accept` 维度 B |
 | **Builder 粒度** | 区块（NavBar / CardItem…） | 层（entity / repo / service / controller） |
 | **精准注入** | 每区块只注入该区块 spec | 每层只注入本层所需的施工图摘录 |
 | **门禁** | `grep` 零硬编码色值 | `mvn compile/verify` exit 0 + 架构合规 grep |
