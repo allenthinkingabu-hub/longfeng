@@ -1,0 +1,272 @@
+# ============================================================
+# longfeng-wrongbook · Dev Compose Stack
+# COMPOSE_PROJECT_NAME=lf-dev docker compose -f infra/docker-compose.dev.yml up -d
+#
+# Port offset +10000 vs default service ports:
+#   PG      5432  → host 15432
+#   Redis   6379  → host 16379
+#   MQ NS   9876  → host 19876
+#   MQ Brk  10911 → host 10911+10000 = 20911  (broker also 10909)
+#   MinIO   9000  → host 19000  / console 9001 → 19001
+#   Nacos   8848  → host 18848
+#   XXL-Job 8080  → host 18080
+#
+# Agent worktree namespace isolation (see README):
+#   COMPOSE_PROJECT_NAME=lf-<agent-id> + additional port offset +100
+# ============================================================
+
+version: "3.9"
+
+# ---------- Networks ----------
+networks:
+  lf-dev:
+    driver: bridge
+
+# ---------- Named Volumes ----------
+volumes:
+  lf-dev-pg:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/pg
+  lf-dev-redis:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/redis
+  lf-dev-mq:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/mq
+  lf-dev-minio:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/minio
+  lf-dev-nacos:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/nacos
+  lf-dev-xxljob:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.longfeng-dev/xxljob
+
+services:
+
+  # ============================================================
+  # 1. PostgreSQL 16 + pgvector + pg_trgm + btree_gin
+  # ============================================================
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lf-dev-postgres
+    restart: unless-stopped
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: longfeng_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - lf-dev-pg:/var/lib/postgresql/data
+      - ./init/pg-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d longfeng_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 2. Redis 7 (rate-limit / Bloom filter / ShedLock)
+  # ============================================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: lf-dev-redis
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel notice
+      --appendonly yes
+    volumes:
+      - lf-dev-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 3. RocketMQ 5.3 – Name Server
+  # ============================================================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.1
+    container_name: lf-dev-rocketmq-namesrv
+    restart: unless-stopped
+    ports:
+      - "19876:9876"
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx512m"
+    volumes:
+      - lf-dev-mq:/home/rocketmq/logs/namesrv
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9876 || exit 1"]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+      start_period: 40s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 4. RocketMQ 5.3 – Broker
+  # ============================================================
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.1
+    container_name: lf-dev-rocketmq-broker
+    restart: unless-stopped
+    ports:
+      - "20911:10911"
+      - "20909:10909"
+    command: sh mqbroker -n rocketmq-namesrv:9876 autoCreateTopicEnable=true
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx512m"
+    volumes:
+      - lf-dev-mq:/home/rocketmq/store
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:10911 2>/dev/null; [ $$? -ne 7 ]"]
+      interval: 15s
+      timeout: 8s
+      retries: 15
+      start_period: 60s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 5. MinIO (dev OSS – wrongbook-dev / guest-tmp-dev / shared-thumbnail-dev)
+  # ============================================================
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: lf-dev-minio
+    restart: unless-stopped
+    ports:
+      - "19000:9000"
+      - "19001:9001"
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    volumes:
+      - lf-dev-minio:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 6-a. MinIO bucket init (one-shot)
+  # ============================================================
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-05T11-29-45Z
+    container_name: lf-dev-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./init/minio-buckets.sh:/init/minio-buckets.sh:ro
+    entrypoint: ["/bin/sh", "/init/minio-buckets.sh"]
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    networks:
+      - lf-dev
+    restart: "no"
+
+  # ============================================================
+  # 6. Nacos 2.3 standalone (config + registry)
+  # ============================================================
+  nacos:
+    image: nacos/nacos-server:v2.3.2-slim
+    container_name: lf-dev-nacos
+    restart: unless-stopped
+    ports:
+      - "18848:8848"
+      - "19848:9848"
+      - "19849:9849"
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      SPRING_DATASOURCE_PLATFORM: embedded
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    volumes:
+      - lf-dev-nacos:/home/nacos/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 15s
+      timeout: 8s
+      retries: 15
+      start_period: 60s
+    networks:
+      - lf-dev
+
+  # ============================================================
+  # 7. XXL-Job Admin 2.4.1
+  # Dev: embedded H2 (no MySQL needed; persistent via bind-mount volume)
+  # PARAMS override uses H2 file-based DB stored in /data/applogs
+  # ============================================================
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.1
+    container_name: lf-dev-xxljob
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:h2:file:/data/applogs/xxl-job/db/xxl-job;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+        --spring.datasource.driver-class-name=org.h2.Driver
+        --spring.datasource.username=sa
+        --spring.datasource.password=
+        --xxl.job.i18n=zh_CN
+        --xxl.job.triggerpool.fast.max=200
+        --xxl.job.triggerpool.slow.max=100
+        --xxl.job.logretentiondays=30
+      JAVA_OPTS: "-Xms128m -Xmx256m"
+    volumes:
+      - lf-dev-xxljob:/data/applogs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/xxl-job-admin/"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 90s
+    networks:
+      - lf-dev
