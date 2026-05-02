@@ -1,14 +1,42 @@
-# anonymous-service · 落地计划 §6.7 Step 11
+# anonymous-service · S2 BE-05 · plan §5.S2
 server:
   port: 8085
 
 spring:
   application:
     name: anonymous-service
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/anonymous}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: anon
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: anon
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 500ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
 
 springdoc:
   api-docs:
@@ -25,3 +53,15 @@ management:
     health:
       probes:
         enabled: true
+
+snowflake:
+  worker-id: 5
+
+anon:
+  job:
+    enabled: ${ANON_JOB_ENABLED:false}
+  ratelimit:
+    fp-prefix: "rate:guest:fp:"
+    ip-prefix: "rate:guest:ip:"
+    landing-prefix: "rate:landing:"
+    landing-limit: 30
