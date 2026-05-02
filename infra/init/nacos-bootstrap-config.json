@@ -1,0 +1,179 @@
+{
+  "_comment": "longfeng-wrongbook · Nacos dev bootstrap config placeholder",
+  "_doc": "Push to Nacos namespace 'dev' via Nacos console or nacos-sync script (S3+). Keys map to TDD §10.",
+  "_version": "0.1.0-placeholder",
+  "_phase": "S0 skeleton — S3+ fills real values",
+
+  "longfeng-shared.yaml": {
+    "_doc": "Shared by all services (TDD §10.8)",
+    "spring": {
+      "cloud": {
+        "sentinel": {
+          "transport": {
+            "dashboard": "localhost:8080",
+            "port": "8719"
+          }
+        }
+      }
+    },
+    "feign": {
+      "sentinel": {
+        "enabled": true
+      },
+      "client": {
+        "config": {
+          "default": {
+            "connectTimeout": 3000,
+            "readTimeout": 5000
+          },
+          "calendar-core": {
+            "connectTimeout": 1500,
+            "readTimeout": 1500
+          }
+        }
+      }
+    },
+    "management": {
+      "tracing": {
+        "sampling": {
+          "probability": 1.0
+        }
+      }
+    }
+  },
+
+  "longfeng-ai-analysis-service.yaml": {
+    "_doc": "AI provider hot-swap (TDD §10.1 / §10.2) — fill real API keys in Vault, not here",
+    "longfeng": {
+      "ai": {
+        "default-provider": "qwen",
+        "providers": {
+          "qwen": {
+            "model": "qwen-vl-max",
+            "base-url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "api-key": "${QWEN_API_KEY}",
+            "timeout-sync-ms": 8000,
+            "timeout-stream-first-token-ms": 3000,
+            "max-tokens": 2048
+          },
+          "openai": {
+            "model": "gpt-4o-mini",
+            "base-url": "https://api.openai.com/v1",
+            "api-key": "${OPENAI_API_KEY}",
+            "timeout-sync-ms": 15000,
+            "timeout-stream-first-token-ms": 5000,
+            "max-tokens": 2048
+          }
+        },
+        "model-catalog": [
+          {
+            "id": "qwen-vl-max",
+            "provider": "qwen",
+            "displayName": "通义千问 VL Max",
+            "vipOnly": false,
+            "cost_tier": "M",
+            "avg_latency_ms": 4000
+          },
+          {
+            "id": "gpt-4o-mini",
+            "provider": "openai",
+            "displayName": "GPT-4o Mini",
+            "vipOnly": false,
+            "cost_tier": "L",
+            "avg_latency_ms": 3000
+          }
+        ]
+      }
+    }
+  },
+
+  "longfeng-gateway.yaml": {
+    "_doc": "Rate-limit and JWT config refs (TDD §10.5 / §10.6)",
+    "longfeng": {
+      "jwt": {
+        "user": { "ttl-min": 1440 },
+        "anon": { "ttl-min": 60 },
+        "share": { "ttl-max-days": 7 },
+        "observer": {
+          "ttl-parent-d": 30,
+          "ttl-teacher-d": 90,
+          "slide-renew-d": 7
+        }
+      },
+      "rate-limit": {
+        "guest": {
+          "device-fp-per-day": 1,
+          "ip-per-day": 10
+        },
+        "landing": {
+          "ip-per-min": 30
+        },
+        "ai": {
+          "user-per-min": 10,
+          "user-per-hour": 60
+        },
+        "bucket-storage": "redis"
+      }
+    }
+  },
+
+  "longfeng-review-plan-service.yaml": {
+    "_doc": "Ebbinghaus SM-2 config (TDD §10.4)",
+    "longfeng": {
+      "review": {
+        "strategy-default": "EBBINGHAUS_STD",
+        "sm2": {
+          "ease-min": 1.30,
+          "ease-max": 2.50,
+          "interval-init-days": 1
+        },
+        "sweeper": {
+          "ready-batch-size": 500,
+          "forgotten-window-h": 24
+        },
+        "outbox": {
+          "relay-interval-sec": 30,
+          "max-retry": 5,
+          "backoff-base-sec": 30
+        },
+        "feign": {
+          "calendar": {
+            "cache-min": 10,
+            "timeout-ms": 1500,
+            "retry": 1
+          }
+        }
+      }
+    }
+  },
+
+  "longfeng-file-service.yaml": {
+    "_doc": "Storage SPI config (TDD §10.3) — dev uses MinIO",
+    "longfeng": {
+      "storage": {
+        "provider": "minio",
+        "minio": {
+          "endpoint": "http://minio:9000",
+          "bucket": "wrongbook-dev",
+          "access-key": "minio",
+          "secret-key": "minio12345"
+        },
+        "presign-ttl-min": 15,
+        "guest-tmp-bucket": "guest-tmp-dev",
+        "guest-tmp-ttl-min": 5
+      }
+    }
+  },
+
+  "longfeng-anonymous-service.yaml": {
+    "_doc": "Observer + guest config (TDD §10.7) — S2+ fills",
+    "longfeng": {
+      "observer": {
+        "revoke-cache-key-prefix": "obs:revoked:",
+        "revoke-cache-ttl-buffer-min": 5,
+        "invite-code-pattern": "O-{2}{4}-{2}{3}",
+        "pii-fields-blocked": ["original_image_url", "student_email", "chat_id"]
+      }
+    }
+  }
+}
