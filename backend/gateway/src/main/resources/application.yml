@@ -7,6 +7,12 @@ spring:
     name: gateway
   main:
     web-application-type: reactive
+  # Redis · Lettuce (reactive) · Bloom revocation check for share/observer tokens
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 500ms
   cloud:
     gateway:
       routes:
@@ -30,6 +36,14 @@ spring:
           uri: http://localhost:8085
           predicates:
             - Path=/api/v1/anon/**
+    # Nacos config center (prod profile) — routes hot-reload from gateway-sentinel-flow-rule.yaml
+    nacos:
+      config:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
+        file-extension: yaml
 
 resilience4j:
   ratelimiter:
@@ -47,3 +61,20 @@ management:
 
 jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH:docs/dev/jwt-dev-pubkey.pem}
+
+# Anonymous JWT secrets (TDD §0.9 D-Anon-JWT)
+longfeng:
+  jwt:
+    share:
+      secret: ${LONGFENG_JWT_SHARE_SECRET:changeme-share-secret-min32chars!!}
+    anon:
+      secret: ${LONGFENG_JWT_ANON_SECRET:changeme-anon-secret-min32chars!!!}
+  sentinel:
+    ai:
+      qps: ${SENTINEL_AI_QPS:200}
+  ratelimit:
+    guest:
+      ip:
+        per-second: ${RATELIMIT_GUEST_IP_PER_SECOND:1}
+      fp:
+        per-second: ${RATELIMIT_GUEST_FP_PER_SECOND:1}
