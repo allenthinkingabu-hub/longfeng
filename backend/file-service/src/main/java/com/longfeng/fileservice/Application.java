@@ -2,9 +2,11 @@ package com.longfeng.fileservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /** file-service entry point · 落地计划 §10. */
 @SpringBootApplication(scanBasePackages = {"com.longfeng.fileservice", "com.longfeng.common"})
+@EnableScheduling
 public class Application {
 
   public static void main(String[] args) {

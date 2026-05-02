@@ -57,3 +57,31 @@ management:
 
 snowflake:
   worker-id: 6
+
+# TDD §10.3 app.storage.* — AttachmentStorage SPI (BE-04-file)
+# Parallel to legacy file-service.storage.* (kept for backward compat with existing StorageProvider)
+app:
+  storage:
+    provider: ${FEATURE_STORAGE_PROVIDER:minio}
+    presign-ttl-min: ${PRESIGN_TTL_MIN:15}
+    minio:
+      endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+      access-key: ${STORAGE_AK:minio}
+      secret-key: ${STORAGE_SK:minio12345}
+      bucket: ${STORAGE_BUCKET:wrongbook-dev}
+    obs:
+      endpoint: ${OSS_ENDPOINT:https://obs.cn-hangzhou.aliyuncs.com}
+      bucket: ${OSS_BUCKET:wrongbook-prod-cn}
+      access-key: ${OSS_AK:}
+      secret-key: ${OSS_SK:}
+    s3:
+      region: ${AWS_REGION:us-east-1}
+      bucket: ${AWS_BUCKET:wrongbook-prod-overseas}
+      access-key: ${AWS_AK:}
+      secret-key: ${AWS_SK:}
+    lifecycle:
+      ia-after-days: 30
+      archive-after-days: 180
+      sweep-cron: "0 0 2 * * ?"
+    guest-tmp-bucket: ${GUEST_TMP_BUCKET:guest-tmp-cn}
+    guest-tmp-ttl-min: 5
