@@ -1,0 +1,268 @@
+{
+  "phase": "s5",
+  "arch_source": "design/arch/s5-review-plan.md",
+  "api_contracts_source": "frontend/packages/api-contracts/src/types.ts (line 96-106, ReviewPlanVO)",
+  "business_analysis": "design/analysis/s5-business-analysis.yml",
+  "generated_at": "2026-04-27T14:30:00Z",
+  "_note": "No frontend review-plan client file exists in clients/. types.ts contains ReviewPlanVO as the expected contract shape (consumed by S8).",
+  "_api_contracts": {
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/review-plans",
+        "query_params": ["date (required, format:date)", "subject (optional)"],
+        "request_headers": ["X-User-Timezone (optional, default: Asia/Shanghai)"],
+        "response_dto": "DayViewResp",
+        "error_codes": ["503 CALENDAR_DEPENDENCY_DOWN (core-service cache 过期且断路)"],
+        "frontend_file": "frontend/packages/api-contracts/src/types.ts:97 (ReviewPlanVO)"
+      },
+      {
+        "method": "GET",
+        "path": "/review-plans/{id}",
+        "path_params": ["id: Long (Snowflake)"],
+        "response_dto": "ReviewPlanDto",
+        "error_codes": ["404 (不存在或已 mastered)"],
+        "frontend_file": "frontend/packages/api-contracts/src/types.ts:97 (ReviewPlanVO)"
+      },
+      {
+        "method": "POST",
+        "path": "/review-plans/{id}/complete",
+        "path_params": ["id: Long (Snowflake)"],
+        "request_dto": "{quality: integer, minimum:0, maximum:5}",
+        "response_dto": "CompleteResp",
+        "error_codes": ["400 INVALID_QUALITY", "404 PLAN_NOT_FOUND", "409 乐观锁冲突", "410 PLAN_MASTERED"],
+        "frontend_file": "design/arch/s5-review-plan.md:446 (POST /review-plans/{id}/complete)"
+      },
+      {
+        "method": "POST",
+        "path": "/review-plans/batch-reset",
+        "security": "JWT ROLE_ADMIN",
+        "request_dto": "{}",
+        "response_dto": "ApiResult<Void>",
+        "error_codes": ["403 FORBIDDEN"],
+        "frontend_file": "design/arch/s5-review-plan.md:457 (POST batch-reset)"
+      },
+      {
+        "method": "GET",
+        "path": "/review-stats",
+        "query_params": ["range (required, enum: week|month|quarter)", "subject (optional)"],
+        "request_headers": ["X-User-Timezone (optional)", "X-User-Id (required)"],
+        "response_dto": "StatsResp",
+        "error_codes": ["400 INVALID_RANGE (code=40003)", "200+warnings TIMEZONE_FALLBACK", "200+warnings PARTIAL_HISTORY"],
+        "frontend_file": "design/arch/s5-review-plan.md:461 (GET /review-stats)"
+      }
+    ],
+    "vo_fields": {
+      "ReviewPlanDto": {
+        "arch_definition": "design/arch/s5-review-plan.md:473",
+        "_resolved_gaps": "G-01~G-06 全部自解决 (2026-04-28)",
+        "fields": {
+          "id": {"json_name": "id", "java_type": "String", "source": "String.valueOf(reviewPlan.id)", "note": "SERIALIZE_AS_STRING — S3/S4 precedent"},
+          "wrong_item_id": {"json_name": "wrong_item_id", "java_type": "String", "source": "String.valueOf(reviewPlan.wrongItemId)", "note": "@JsonProperty(\"wrong_item_id\")"},
+          "user_id": {"json_name": "user_id", "java_type": "String", "source": "String.valueOf(reviewPlan.userId)", "note": "G-04 resolved: review_plan.user_id 字段存在 (arch line 171)"},
+          "node_index": {"json_name": "node_index", "java_type": "int", "source": "reviewPlan.nodeIndex", "note": "@JsonProperty(\"node_index\")"},
+          "next_due_at": {"json_name": "next_due_at", "java_type": "String", "source": "reviewPlan.nextReviewAt.toString()", "note": "G-01 resolved: @JsonProperty(\"next_due_at\") — 'due' 语义更准确，前端明确使用此名"},
+          "mastery": {"json_name": "mastery", "java_type": "int", "source": "JOIN wrong_item wi ON wi.id=rp.wrong_item_id → wi.mastery", "note": "G-05 resolved: 同库 JOIN wrong_item.mastery (SMALLINT 0..2) · ReviewPlanRepository 原生查询回填"},
+          "ease_factor": {"json_name": "ease_factor", "java_type": "BigDecimal", "source": "reviewPlan.easeFactor", "note": "@JsonProperty(\"ease_factor\")"},
+          "interval": {"json_name": "interval", "java_type": "int", "source": "reviewPlan.intervalDays", "note": "G-06 resolved: @JsonProperty(\"interval\") — 前端用无 _days 后缀名"}
+        }
+      },
+      "CompleteResp": {
+        "arch_definition": "design/arch/s5-review-plan.md:483",
+        "fields": {
+          "planId": {"arch_type": "integer(int64)", "note": "SERIALIZE_AS_STRING"},
+          "nextReviewAt": {"arch_type": "date-time", "note": "@JsonProperty next_review_at"},
+          "easeFactorAfter": {"arch_type": "number", "note": "@JsonProperty ease_factor_after"},
+          "mastered": {"arch_type": "boolean"}
+        }
+      },
+      "StatsResp": {
+        "arch_definition": "design/arch/s5-review-plan.md:490",
+        "fields": {
+          "range": {"arch_type": "string"},
+          "subject": {"arch_type": "string", "nullable": true},
+          "timezone": {"arch_type": "string", "note": "effective timezone after fallback"},
+          "data[]": {"arch_type": "array of {date, correctRate(nullable), masteredCount, reviewCount}"},
+          "topWeak[]": {"arch_type": "array of {subject, totalReview, forgetCount, forgetRate}"},
+          "warnings[]": {"arch_type": "array of {code, detail}"}
+        }
+      }
+    },
+    "status_type": {
+      "frontend_values": ["active", "mastered"],
+      "backend_values": ["ACTIVE", "MASTERED"],
+      "mapping_required": true,
+      "mapping_note": "ReviewPlan.status enum → lowercase string in VO"
+    }
+  },
+  "_business_rules": {
+    "state_machine": {
+      "states": ["active", "mastered"],
+      "transitions": [
+        {"from": "active", "to": "mastered", "trigger": "连续3次 ease≥2.8 (Q-G)"},
+        {"from": "mastered", "to": "active", "trigger": "禁止 (软删后不可逆)"}
+      ],
+      "invariants": [
+        "INV-01: mastered 触发后所有 7 行同时 status=mastered + deleted_at=now()",
+        "INV-02: dispatch_version 单调递增 (乐观锁)",
+        "INV-03: (wrong_item_id, node_index) UNIQUE WHERE deleted_at IS NULL"
+      ]
+    },
+    "idempotency": {
+      "scope": "WrongItemAnalyzedConsumer.onMessage",
+      "key_pattern": "DB UNIQUE INDEX (wrong_item_id, node_index) WHERE deleted_at IS NULL",
+      "ttl_seconds": null,
+      "fallback": "ON CONFLICT DO NOTHING"
+    },
+    "soft_delete": {
+      "column": "deleted_at TIMESTAMPTZ",
+      "trigger": "mastered (all 7 rows simultaneously)",
+      "annotation": "@SQLDelete + @Where(clause='deleted_at IS NULL')",
+      "post_delete_get": "404 (plan not found or mastered)"
+    },
+    "optimistic_lock": {
+      "column": "dispatch_version BIGINT",
+      "conflict_http_status": 409,
+      "note": "SELECT FOR UPDATE pattern — see SC-08.AC-1"
+    },
+    "sm2_algorithm": {
+      "quality_range": "0-5",
+      "quality_lt3_behavior": "reset ease=easeInit(2.5), interval=1",
+      "quality_gte3_behavior": "SM-2 formula: newEase = clamp(ease + 0.1-(5-q)*(0.08+(5-q)*0.02), 1.3, 2.5); interval = round(interval * newEase)",
+      "first_interval": "intervalDays=0 → nextInterval=1d",
+      "ease_guard_rail": "[1.3, 2.5]",
+      "interval_max_days": 60,
+      "config_source": "@ConfigurationProperties('review.sm2')"
+    },
+    "mastered_threshold": {
+      "condition": "consecutiveGoodCount >= 3 && easeFactor >= 2.8",
+      "action": "UPDATE all 7 rows status=mastered + deleted_at=now() + send review.mastered event",
+      "source": "Q-G decision"
+    },
+    "t0_timing": {
+      "value": "now() + 2h (user timezone via X-User-Timezone header)",
+      "source": "Q-D/E decisions"
+    }
+  },
+  "_arch_constraints": {
+    "orm": "JPA (禁 MyBatis)",
+    "mq": "RocketMQ 5.x + review_plan_outbox (ADR 0005)",
+    "id_generation": "Snowflake worker-id=3 (禁 BIGSERIAL/UUID)",
+    "forbidden_patterns": [
+      "MyBatis / Mapper XML",
+      "Seata 分布式事务",
+      "Spring Statemachine",
+      "UUID 主键",
+      "BIGSERIAL (业务实体)",
+      "AlgorithmConfig 硬编码 (必须 @ConfigurationProperties)"
+    ],
+    "required_patterns": [
+      "JPA + @Transactional (complete 事务: UPDATE + INSERT outcome + Outbox)",
+      "RocketMQ Outbox 兜底 (ADR 0005: review.due/completed/mastered)",
+      "Sentinel @SentinelResource + Caffeine 10min cache (CalendarFeignClient)",
+      "XXL-Job @XxlJob('review-due-scan') 5min · DB 锁 HA",
+      "@CoversAC 测试注解"
+    ],
+    "external_feign": {
+      "WrongbookFeignClient": "GET /wrongbook/items/{id} · Sentinel 熔断 · fallback {subject:'unknown'}",
+      "CalendarFeignClient": "GET /calendar/nodes?date= · Sentinel + Caffeine 10min TTL",
+      "NotificationFeignClient": "POST /notifications/review-due (from XXL-Job)"
+    },
+    "migrations_required": [
+      "V1.0.053__review_outcome.sql",
+      "V1.0.054__review_plan_outbox.sql",
+      "V1.0.055__review_plan_node_index.sql (ALTER review_plan: ADD node_index/dispatch_version/consecutive_good_count IF NOT EXISTS)"
+    ]
+  },
+  "layers": [
+    {
+      "id": "algo",
+      "label": "算法层 (SM-2 · 纯函数)",
+      "symbols": ["AlgorithmConfig", "SM2Algorithm", "SM2Result"],
+      "key_rules": [
+        "SM2Algorithm.compute 纯函数无 IO",
+        "AlgorithmConfig @ConfigurationProperties('review.sm2') · 禁硬编码",
+        "quality 0-5 校验 · 越界抛 IllegalArgumentException",
+        "guard-rail: ease ∈ [1.3, 2.5] clamp"
+      ],
+      "files_to_create": [
+        "src/main/java/com/longfeng/reviewplan/algo/AlgorithmConfig.java",
+        "src/main/java/com/longfeng/reviewplan/algo/SM2Algorithm.java",
+        "src/main/java/com/longfeng/reviewplan/algo/SM2Result.java"
+      ]
+    },
+    {
+      "id": "entity",
+      "label": "实体层 (Entity + Migrations)",
+      "symbols": ["ReviewPlan", "ReviewOutcome", "ReviewPlanOutbox"],
+      "key_rules": [
+        "ReviewPlan: Snowflake id · @SQLDelete/@Where · dispatch_version @Version · node_index(0..6) · ease_factor · interval_days · consecutive_good_count",
+        "ReviewOutcome: BIGSERIAL 允许 (audit 表 · 参考 S4 AiUsageLog)",
+        "ReviewPlanOutbox: Outbox 兜底 (ADR 0005)",
+        "UNIQUE INDEX (wrong_item_id, node_index) WHERE deleted_at IS NULL"
+      ],
+      "files_to_create": [
+        "src/main/java/com/longfeng/reviewplan/entity/ReviewPlan.java",
+        "src/main/java/com/longfeng/reviewplan/entity/ReviewOutcome.java",
+        "src/main/java/com/longfeng/reviewplan/entity/ReviewPlanOutbox.java",
+        "src/main/resources/db/migration/V1.0.053__review_outcome.sql",
+        "src/main/resources/db/migration/V1.0.054__review_plan_outbox.sql",
+        "src/main/resources/db/migration/V1.0.055__review_plan_node_index.sql"
+      ]
+    },
+    {
+      "id": "repository",
+      "label": "仓储层 (Repository)",
+      "symbols": ["ReviewPlanRepository", "ReviewOutcomeRepository", "ReviewPlanOutboxRepository"],
+      "key_rules": [
+        "ReviewPlanRepository: findDueNodes(now, limit) · findByWrongItemIdAndNodeIndex · findAllByWrongItemId",
+        "ReviewOutcomeRepository: aggregateDailyStats (native query + AT TIME ZONE) · topWeakSubjects (native + JOIN wrong_item) · findRecentByWrongItemId(limit=3)",
+        "禁 @Query 大量 JPQL · 复杂聚合用 native query"
+      ]
+    },
+    {
+      "id": "service",
+      "label": "业务层 (Service + Consumer + Job)",
+      "symbols": [
+        "ReviewPlanService",
+        "ReviewStatsService",
+        "WrongItemAnalyzedConsumer",
+        "ReviewDueJob",
+        "CalendarFeignClient",
+        "CalendarFeignClientFallback"
+      ],
+      "key_rules": [
+        "ReviewPlanService.createSevenNodes: 幂等 INSERT 7 行 · ON CONFLICT DO NOTHING · @Transactional",
+        "ReviewPlanService.complete: SELECT FOR UPDATE → SM2 → UPDATE + dispatch_version 乐观锁 → INSERT outcome → INSERT outbox",
+        "mastered 触发: consecutiveGoodCount >= 3 && ease >= 2.8 → UPDATE 全部 7 行 deleted_at + INSERT outbox(review.mastered)",
+        "ReviewStatsService.aggregate: JPA native GROUP BY date(AT TIME ZONE) · TopN=3 · min_sample=3 · 填充空日 · tz fallback",
+        "WrongItemAnalyzedConsumer: @RocketMQMessageListener · topic=wrongbook.item.analyzed · group=review-plan-cg",
+        "ReviewDueJob: @XxlJob('review-due-scan') · @ConditionalOnProperty · 批 500 · dispatch_version 乐观锁"
+      ]
+    },
+    {
+      "id": "controller",
+      "label": "控制层 (Controller + DTO)",
+      "symbols": ["ReviewPlanController", "ReviewPlanExceptionHandler"],
+      "key_rules": [
+        "路径前缀: /review-plans, /review-stats (无 /api/v1/)",
+        "id/wrong_item_id 序列化为 String (Long → String)",
+        "VO snake_case: @JsonProperty on all fields",
+        "next_due_at 字段名 (对齐 G-01: 非 next_review_at)",
+        "ExceptionHandler: PlanNotFoundException→404 / PlanMasteredException→410 / OptimisticLockingFailureException→409 / InvalidRangeException→400"
+      ]
+    },
+    {
+      "id": "openapi",
+      "label": "OpenAPI 规格 (springdoc)",
+      "symbols": ["OpenApiConfig"],
+      "key_rules": [
+        "5 端点全部有 @Operation/@ApiResponse/@Tag",
+        "DTO 全部有 @Schema",
+        "端点数量 ≥ 5"
+      ]
+    }
+  ],
+  "has_blocking_gaps": false,
+  "blocking_gaps_summary": "所有 gap 已自解决 (2026-04-28): G-01 → @JsonProperty(next_due_at); G-04 → user_id 字段补入 VO; G-05 → JOIN wrong_item.mastery; G-06 → @JsonProperty(interval)"
+}

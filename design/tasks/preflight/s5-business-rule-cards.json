@@ -1,0 +1,138 @@
+[
+  {
+    "id": "BR-01",
+    "title": "Consumer 幂等 INSERT 7 行 review_plan",
+    "layer": "service",
+    "ac_ref": "SC-07.AC-1",
+    "critical": true,
+    "rule": "WrongItemAnalyzedConsumer 消费 wrongbook.item.analyzed 后，一次性幂等 INSERT 7 行 review_plan（node_index 0..6，偏移 [2h, 1d, 2d, 4d, 7d, 14d, 30d]）。每行初始 ease_factor=2.5、interval_days=偏移天数、status=active、next_review_at 按用户 timezone 计算。DB 唯一索引 (wrong_item_id, node_index) WHERE deleted_at IS NULL 兜底，重投事件 ON CONFLICT DO NOTHING。",
+    "violation_behavior": "孤儿事件（wrong_item_id 不存在）→ warn log + ACK（不写 plan，不重试）+ metric review_plan_create_orphan_total+1；重投事件 → ON CONFLICT DO NOTHING，不双写",
+    "test_scenarios": [
+      "analyzed 事件首次消费 → review_plan count=7，node_index 0..6，ease=2.5",
+      "同一事件重投 → count 仍为 7（无双写）",
+      "孤儿 wrong_item_id（wrongbook-service 返 404）→ ACK，count=0，orphan metric+1",
+      "T0 节点 next_review_at = analyzedAt + 2h（用户 timezone）"
+    ]
+  },
+  {
+    "id": "BR-02",
+    "title": "SM-2 算法纯函数 · quality<3 reset · guard-rail",
+    "layer": "algo",
+    "ac_ref": "SC-07.AC-2",
+    "critical": false,
+    "rule": "SM2Algorithm.compute(ease, interval, quality, cfg) 纯函数。quality<3 时 nextEase=cfg.easeInit(2.5)，nextInterval=1。quality≥3 时 newEase=clamp(ease+0.1-(5-q)*(0.08+(5-q)*0.02), cfg.easeMin(1.3), cfg.easeMax(2.5))，nextInterval=min(cfg.intervalMaxDays(60), round(interval*newEase))。首次（interval=0）→ nextInterval=1。",
+    "violation_behavior": "quality ∉ [0,5] → IllegalArgumentException；ease 超界 → clamp 而非异常",
+    "test_scenarios": [
+      "首次（interval=0，ease=2.5，quality=5）→ nextInterval=1，nextEase=2.5（顶板夹）",
+      "quality=0（重置）→ nextEase=2.5，nextInterval=1",
+      "ease 已在地板 1.3，quality=0 → nextEase=2.5（reset，不是 1.3）",
+      "interval=60（顶板），quality=5 → nextInterval=60（不超限）",
+      "quality=-1 或 6 → IllegalArgumentException",
+      "SM2Algorithm 单次执行 ≤ 10ms（纯函数，无 IO）"
+    ]
+  },
+  {
+    "id": "BR-03",
+    "title": "POST complete 主循环 · 乐观锁 · review.completed 事件",
+    "layer": "service",
+    "ac_ref": "SC-08.AC-1",
+    "critical": true,
+    "rule": "ReviewPlanService.complete(planId, quality) 单事务：(1) SELECT FOR UPDATE 读当前 ease/interval/dispatch_version；(2) SM2Algorithm.compute 计算新 ease/interval；(3) UPDATE review_plan SET ease=?, interval=?, next_review_at=now()+interval, completed_at=now(), dispatch_version=dispatch_version+1 WHERE id=? AND dispatch_version=?（乐观锁）；(4) INSERT review_outcome；(5) INSERT review_plan_outbox(review.completed)。乐观锁冲突（UPDATE rows=0）→ 抛 409。",
+    "violation_behavior": "404 PLAN_NOT_FOUND（plan 不存在或 deleted_at≠NULL）；400 INVALID_QUALITY（quality<0 或 >5）；409 Conflict（乐观锁冲突）；410 PLAN_MASTERED（plan status=mastered 再调 complete）",
+    "test_scenarios": [
+      "正常 complete quality=5 → 200，plan 更新，outcome+1，outbox+1",
+      "plan 不存在 → 404",
+      "quality=6 → 400 INVALID_QUALITY",
+      "两并发请求同一 plan → 一 200 一 409，无双写 outcome",
+      "plan 已 mastered（deleted_at≠NULL）→ 410",
+      "乐观锁冲突率 < 1%（100 次请求）"
+    ]
+  },
+  {
+    "id": "BR-04",
+    "title": "Mastered 触发 · 软删全部 7 行 · review.mastered 事件",
+    "layer": "service",
+    "ac_ref": "SC-08.AC-1 (mastered branch, Q-G)",
+    "critical": true,
+    "rule": "complete 后聚合该 wrong_item 最近 3 次 review_outcome。若 consecutiveGoodCount >= 3 AND 最新 ease >= 2.8：UPDATE 所有 7 行 plan status=mastered + deleted_at=now()；INSERT review_plan_outbox(review.mastered {wrongItemId, masteredAt})。mastered 触发后，该 wrong_item 的任何 plan 再 POST complete → 410 PLAN_MASTERED。",
+    "violation_behavior": "未满 3 次连续 ease≥2.8 → 不触发 mastered；mastered 后再 complete → 410",
+    "test_scenarios": [
+      "连续 3 次 quality=5（ease≥2.8 每次）→ 第 3 次触发 mastered，7 行全 deleted_at≠NULL",
+      "质量不稳定（ease 时高时低）→ 不触发 mastered",
+      "mastered 后第 4 次 complete → 410",
+      "mastered 事件进 outbox → review.mastered 出站"
+    ]
+  },
+  {
+    "id": "BR-05",
+    "title": "GET /review-stats 聚合 · 日视图 + TopN 薄弱项 · timezone",
+    "layer": "service",
+    "ac_ref": "SC-09.AC-1",
+    "critical": false,
+    "rule": "ReviewStatsService.aggregate(userId, range, subject, tz)：按 header X-User-Timezone 解析时区（非法 ZoneId 降级 Asia/Shanghai + warnings TIMEZONE_FALLBACK）；JPA native query GROUP BY date(AT TIME ZONE tz)；TopN=3 薄弱 subject（min_sample=3，按 forget_rate 降序）；缺失日填充 DailyStats(date, null, 0, 0)；range 跨 180d → warnings PARTIAL_HISTORY。@Cacheable('review-stats') TTL 5min，IT 环境关闭缓存。",
+    "violation_behavior": "range ∉ {week,month,quarter} → 400 INVALID_RANGE code=40003；非法 ZoneId → 200 + warnings TIMEZONE_FALLBACK（不 400）；0 条数据 → data=7条空日，topWeak=[]",
+    "test_scenarios": [
+      "math 10 forget，physics 4 correct → topWeak[0].subject=math，forgetRate=1.0",
+      "range=year → 400 code=40003",
+      "X-User-Timezone=Invalid/Zone → 200，timezone=Asia/Shanghai，warnings TIMEZONE_FALLBACK",
+      "range=week，0 次 complete → data 7 条，correctRate=null，topWeak=[]",
+      "range=quarter（90d < 180d）→ warnings 不含 PARTIAL_HISTORY"
+    ]
+  },
+  {
+    "id": "BR-06",
+    "title": "CalendarFeignClient · Sentinel 熔断 + Caffeine 10min cache",
+    "layer": "service",
+    "ac_ref": "SC-10.AC-1",
+    "critical": true,
+    "rule": "CalendarFeignClient 调 calendar-platform core-service GET /calendar/nodes。@SentinelResource 流控 QPS 500。超时 > 3s → circuit open → fallback 读 Caffeine cache（TTL 10min，size 1000）。cache 存在返 source=cache。cache 过期且 core-service 仍断 → 上层 GET /review-plans 返 503 CALENDAR_DEPENDENCY_DOWN + source=unavailable。",
+    "violation_behavior": "core-service 断 + cache 过期 → 503（不硬崩，不返回 500）；QPS > 500 → 429（Sentinel 限流）",
+    "test_scenarios": [
+      "core-service 正常 < 50ms → 200，source=fresh",
+      "core-service 超时 > 3s → fallback cache，source=cache:Nm",
+      "cache 过期 + core-service 断 → /review-plans 返 503",
+      "1000 并发 Sentinel QPS 500 生效 → 超出 429",
+      "cache 命中率 ≥ 80%（10min TTL）"
+    ]
+  },
+  {
+    "id": "BR-07",
+    "title": "T0 节点时间策略 · 用户 timezone · UTC 存储",
+    "layer": "service",
+    "ac_ref": "SC-07.AC-1 (Q-D/E)",
+    "critical": false,
+    "rule": "Consumer 消费 wrongbook.item.analyzed 时，node_index=0 的 next_review_at = analyzedAt + 2h（用户当地时间）。时间戳库内 UTC timestamptz 存储。GET /review-plans?date= 按 header X-User-Timezone 切日（默认 Asia/Shanghai）。",
+    "violation_behavior": "无 X-User-Timezone header → 默认 Asia/Shanghai（不报错）；无效 timezone → 降级 Asia/Shanghai + warnings",
+    "test_scenarios": [
+      "Consumer 在 10:00Z 消费 → node=0 next_review_at = 12:00 UTC（+2h）",
+      "GET /review-plans?date=2026-04-27 X-User-Timezone=Asia/Shanghai → 按 +08:00 切日"
+    ]
+  },
+  {
+    "id": "BR-08",
+    "title": "XXL-Job review-due-scan · 5min 周期 · DB 锁 HA",
+    "layer": "service",
+    "ac_ref": "SC-07.AC-4 内部 (A3)",
+    "critical": false,
+    "rule": "@XxlJob('review-due-scan')，5min 周期，批 500，乐观锁 dispatch_version 保证单次处理。@ConditionalOnProperty review.job.enabled=true（IT 关）。HA 走 XXL-Job admin DB 锁（非 Redisson）。扫 next_review_at ≤ now() AND status=active AND deleted_at IS NULL。",
+    "violation_behavior": "job 停摆不影响 complete 主循环；双 executor 高可用（单 admin SPOF 影响 scan 不影响用户操作）",
+    "test_scenarios": [
+      "IT: ReviewDueJobIT · @ConditionalOnProperty 关闭 job · 手动触发验证 outbox 写入",
+      "乐观锁：两个 executor 同时扫同一节点 → dispatch_version 冲突，只一次发 review.due"
+    ]
+  },
+  {
+    "id": "BR-09",
+    "title": "Outbox 兜底模式 · review.due/completed/mastered",
+    "layer": "service",
+    "ac_ref": "ADR 0005",
+    "critical": false,
+    "rule": "review.due（由 XXL-Job 发）/ review.completed / review.mastered 均经 review_plan_outbox 兜底。INSERT outbox 同 @Transactional 主事务。Outbox Relay 异步重发（S10 补偿 job 另建）。RocketMQ 断时主事务仍 commit，outbox 记录等 Relay 重发。",
+    "violation_behavior": "MQ 断时 complete 操作不失败（DB 成功）；outbox 未发出 → Relay 异步重发（不丢事件）",
+    "test_scenarios": [
+      "complete 后 outbox 表新增 1 行（review.completed payload）",
+      "mastered 触发后 outbox +1（review.mastered）",
+      "XXL-Job due 事件 → outbox +1（review.due）"
+    ]
+  }
+]

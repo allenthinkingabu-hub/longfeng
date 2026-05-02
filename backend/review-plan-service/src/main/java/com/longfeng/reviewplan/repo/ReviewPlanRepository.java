@@ -40,6 +40,26 @@ public interface ReviewPlanRepository extends JpaRepository<ReviewPlan, Long> {
   int markAllMasteredByWrongItemId(
       @Param("wrongItemId") Long wrongItemId, @Param("now") Instant now);
 
+  /** 学期初清空 · 软删该学生所有 active plan · POST /review-plans/batch-reset (admin). */
+  @Modifying
+  @Query(
+      value =
+          "UPDATE review_plan SET deleted_at = now() WHERE student_id = :studentId "
+              + "AND status = 0 AND deleted_at IS NULL",
+      nativeQuery = true)
+  int softDeleteAllActiveByStudentId(@Param("studentId") Long studentId);
+
+  /** GET /review-plans?date= 日视图 · 按学生 ID + next_due_at UTC 时间窗口过滤. */
+  @Query(
+      value =
+          "SELECT * FROM review_plan WHERE student_id = :studentId AND deleted_at IS NULL "
+              + "AND next_due_at >= :start AND next_due_at < :end ORDER BY next_due_at ASC",
+      nativeQuery = true)
+  List<ReviewPlan> findDueOnDate(
+      @Param("studentId") Long studentId,
+      @Param("start") Instant start,
+      @Param("end") Instant end);
+
   /** XXL-Job CAS 派发 · UPDATE dispatch_version WHERE id AND expected · rowsAffected=1 成功. */
   @Modifying
   @Query(

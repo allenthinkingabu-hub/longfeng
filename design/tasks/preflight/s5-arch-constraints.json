@@ -1,0 +1,117 @@
+{
+  "phase": "s5",
+  "service": "review-plan-service",
+  "java_package_root": "com.longfeng.reviewplan",
+  "service_directory": "backend/review-plan-service",
+  "generated_at": "2026-04-27T14:30:00Z",
+  "orm": {
+    "allowed": ["JPA", "Spring Data JPA", "native @Query for aggregation"],
+    "forbidden": ["MyBatis", "Mapper XML", "MybatisPlus", "CQRS/Elasticsearch (ADR 0011)"]
+  },
+  "messaging": {
+    "allowed": ["RocketMQ 5.x", "review_plan_outbox INSERT in same @Transactional"],
+    "forbidden": ["Seata", "DTM", "裸发 RocketMQ (不经 Outbox 尝试)", "Kafka"],
+    "topics": {
+      "inbound": ["wrongbook.item.analyzed (consumer group: review-plan-cg)"],
+      "outbound": ["review.due", "review.completed", "review.mastered"]
+    },
+    "outbox_table": "review_plan_outbox",
+    "outbox_note": "ADR 0005: INSERT outbox 在同一事务 · Relay job 异步重发"
+  },
+  "id_strategy": {
+    "allowed": ["Snowflake worker-id=3 (review_plan 主键)"],
+    "allowed_bigserial": ["review_outcome (audit 表, 参照 S4 AiUsageLog)", "review_plan_outbox"],
+    "forbidden": ["BIGSERIAL for business entities", "UUID", "random Long"]
+  },
+  "state_machine": {
+    "allowed": ["手写枚举 + Service 守卫"],
+    "forbidden": ["Spring Statemachine 库"]
+  },
+  "transaction": {
+    "rule": "complete 事务内同步 INSERT review_outcome + INSERT outbox",
+    "forbidden": ["@Async review_outcome", "review_outcome 事后写", "Controller @Transactional"]
+  },
+  "soft_delete": {
+    "column": "deleted_at TIMESTAMPTZ",
+    "trigger": "mastered (所有 7 行同时)",
+    "annotations": [
+      "@SQLDelete(sql='UPDATE review_plan SET deleted_at=now() WHERE id=?')",
+      "@Where(clause='deleted_at IS NULL')"
+    ],
+    "forbidden": ["deleted boolean 字段", "status=9 代替软删"],
+    "applies": true
+  },
+  "optimistic_lock": {
+    "column": "dispatch_version BIGINT",
+    "annotation": "@Version",
+    "conflict_http_status": 409,
+    "note": "SELECT FOR UPDATE + WHERE dispatch_version=? 模式 · SC-08.AC-1"
+  },
+  "sm2_algorithm": {
+    "config_class": "AlgorithmConfig",
+    "config_prefix": "review.sm2",
+    "required_annotation": "@ConfigurationProperties",
+    "forbidden": ["算法阈值硬编码 (easeMin/easeMax/easeInit/intervalMaxDays 必须来自配置)"]
+  },
+  "feign": {
+    "calendar": {
+      "name": "core-service",
+      "path": "GET /calendar/nodes?date=",
+      "required": ["@SentinelResource", "Caffeine TTL 10min", "fallback bean CalendarFeignClientFallback"],
+      "on_cache_miss_and_circuit_open": "503 CALENDAR_DEPENDENCY_DOWN"
+    },
+    "wrongbook": {
+      "name": "wrongbook-service",
+      "path": "GET /wrongbook/items/{id}",
+      "required": ["Sentinel 熔断"],
+      "fallback": "{subject:'unknown', stemText:'[降级]'}"
+    },
+    "notification": {
+      "name": "notification-service",
+      "path": "POST /notifications/review-due",
+      "caller": "ReviewDueJob (XXL-Job)",
+      "required": ["Sentinel 熔断"]
+    }
+  },
+  "scheduler": {
+    "type": "XXL-Job",
+    "job_name": "review-due-scan",
+    "cron": "5min",
+    "batch_size": 500,
+    "ha": "DB 锁 (非 Redisson)",
+    "conditional_property": "review.job.enabled",
+    "forbidden": ["Quartz (ADR 0015)", "Spring @Scheduled (无分布式锁)", "Redisson"]
+  },
+  "api_path_prefix": {
+    "rule": "/review-plans, /review-stats (无 /api/v1/ 前缀, gateway 统一加)",
+    "examples": ["/review-plans", "/review-plans/{id}", "/review-plans/{id}/complete", "/review-plans/batch-reset", "/review-stats"]
+  },
+  "subject_enum": {
+    "values": ["math", "physics", "chemistry", "english", "chinese"],
+    "note": "TopN 薄弱项 subject 白名单 (SC-09.AC-v2-1)"
+  },
+  "additional_constraints": {
+    "cache_stats": "@Cacheable('review-stats') TTL 5min · IT 环境关闭 (review.cache.enabled=false)",
+    "timezone_default": "Asia/Shanghai (Q-E)",
+    "stats_top_n": 3,
+    "stats_min_sample": 3,
+    "retention_days": 180
+  },
+  "migrations": {
+    "V1.0.053": "CREATE TABLE review_outcome",
+    "V1.0.054": "CREATE TABLE review_plan_outbox",
+    "V1.0.055": "ALTER TABLE review_plan ADD COLUMN IF NOT EXISTS node_index/dispatch_version/consecutive_good_count + ADD UNIQUE INDEX (wrong_item_id, node_index) WHERE deleted_at IS NULL"
+  },
+  "test_annotations": {
+    "required": "@CoversAC (com.longfeng.common.test) on all IT test methods",
+    "it_classes": [
+      "SM2AlgorithmUT",
+      "CalendarFeignClientFallbackUT",
+      "ReviewPlanServiceIT",
+      "ReviewDueJobIT",
+      "S5VerifierIT",
+      "ReviewStatsControllerIT",
+      "MockMvcSmokeIT"
+    ]
+  }
+}

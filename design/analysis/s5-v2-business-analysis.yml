@@ -1,0 +1,367 @@
+# S5-v2 · review-plan-service 统计接口扩展 · Business Analysis YAML
+# schema_version 1.1（与 s8-business-analysis.yml 保持一致）
+# 增量子 Phase · 仅覆盖 SC-09 统计能力扩展 · 不重写 s5 主阶段内容
+#
+# 背景：
+#   - s5 主阶段已 frozen（tag: s5-arch-frozen · s5-done）
+#   - s8 SC-09.AC-2/AC-3（学科分布柱图 + 艾宾浩斯曲线 overlay）的 fe-builder 阶段
+#     依赖 GET /review-stats 响应新增字段 subjectBreakdown[] + ebbinghaus[]
+#   - s8 SC-14.AC-1（家长视图）依赖 GET /review-stats + GET /wrongbook/items 支持 ownerId 参数
+#   - 用户决策（2026-04-27 Q3）：解冻 s5 · 走独立 v2 子 Phase · 重打 s5-stats-v2-frozen tag
+#   - ADR 0017（字段扩展）+ ADR 0018（ownerId 参数）在 G-Arch 阶段定案
+#
+# biz_gate / gate_status 保持 in_review · 不自行签署 · 等用户确认
+
+schema_version: 1.1
+
+phase_id: s5-v2
+phase_level: A                              # 增量子 Phase · 共享 s5 主阶段 A 级约束
+_stage: entry                               # dev_anchor / qa_anchor 后续阶段回填后 → exit
+biz_gate: in_review                         # 待 User /biz-ok 签署
+gate_status: in_review                      # 待 User /arch-ok 签署
+signed_by: ""                               # 待 User 填写（如 @allen）
+approved_at: ""                             # 待 User 填写（ISO 8601 · 如 2026-04-27T18:00:00+08:00）
+approval_method: ""                         # 待 User 选择（如 in-conversation | in-pr-comment | in-person）
+
+# ============================================================
+# 1. 子 Phase 定位与 SC 覆盖（增量说明）
+# ============================================================
+
+sc_covered:
+  - SC-09                                   # 学情分析卡片 · v2 统计字段扩展（subjectBreakdown[] + ebbinghaus[]）
+
+parent_phase: s5
+parent_frozen_tag: s5-arch-frozen
+target_new_tag: s5-stats-v2-frozen          # 本子 Phase 完成后打此 tag · 解除 s8 SC-09.AC-2/AC-3 阻塞
+
+increment_scope: |
+  仅扩展 GET /review-stats 响应结构 + 增加 ownerId query param 支持。
+  不改动：ReviewPlan 领域实体 / SM2Algorithm / complete 事务 / review_plan outbox / Feign 依赖 / 现有 IT。
+  不引入新 DB 表（在 review_outcome JOIN review_plan JOIN wrongbook_item 上扩展 JPA 查询）。
+
+dependency_on_s8:
+  blocks:
+    - "SC-09.AC-2.fe-builder（学科分布柱状图）"
+    - "SC-09.AC-3.fe-builder（艾宾浩斯曲线 overlay）"
+  does_not_block:
+    - "s8 0.0.5/0.1/0.2 设计阶段（并行进行）"
+    - "s8 SC-08.* fe-builder 阶段"
+    - "s8 SC-14.AC-1 若先用 mock data 推进"
+
+# ============================================================
+# 2. 决策登记（v2 子 Phase 专属 · 不含 s5 主阶段 Q-A~Q-H）
+# ============================================================
+
+conflicts_resolved:
+  - code: ADR-0017-candidate
+    kind: api_extension_strategy
+    decision: "扩展现有 GET /review-stats 响应 body · 不新增端点 · 字段可选 + 向后兼容"
+    detail: |
+      GET /review-stats 现有响应 {range, subject, data[], topWeak[], warnings[]} 保持不变。
+      v2 在同一接口响应 body 追加可选字段：
+        - subjectBreakdown[]: 按学科聚合（null 时老版本客户端忽略 → 向后兼容）
+        - ebbinghaus[]: 7 日遗忘曲线数据点（同上 null 兼容）
+      ADR 0017 在 G-Arch 阶段定案后写入 docs/adr/0017-s5-v2-stats-field-extension.md。
+    raised_at: "2026-04-27T00:00:00+08:00"
+
+  - code: ADR-0018-candidate
+    kind: ownerId_auth_strategy
+    decision: "ownerId query param + JWT.parentOf 鉴权 · 仅家长角色可跨账户读"
+    detail: |
+      GET /review-stats 增加可选 ?ownerId={studentId}。
+      鉴权规则：JWT.roles 包含 PARENT 且 JWT.parentOf 数组包含 ownerId 值才放行 · 否则返回 403。
+      同样规则适用于 GET /wrongbook/items?ownerId=（s3 侧 · 独立 ADR 0018 范围内 · 但 s3 已 done
+      需走 HOTFIX 或独立修订 · 不在本 yml 内追踪 · 见 risks）。
+      ADR 0018 在 G-Arch 阶段定案后写入 docs/adr/0018-ownerId-param-parent-auth.md。
+    raised_at: "2026-04-27T00:00:00+08:00"
+
+  - code: Q-v2-A
+    kind: data_source_for_ebbinghaus
+    decision: "ebbinghaus[] 数据来自 review_outcome JOIN review_plan · 按 nodeIndex 分组 · 不新增表"
+    detail: |
+      每个 wrong_item 的 ebbinghaus[] 点 = 7 个 node_index 的聚合：
+        expectedRetention: 按 R = e^(-t/S)*100 · S=0.5 · t=节点偏移小时数（设计层面公式，实现时可读 design/艾宾浩斯.md）
+        actualRetention: 该 node_index 下所有用户 quality>=3 的比例（或单用户的 completedAt 时刻与 scheduledAt 的对比）
+      具体聚合口径在 G-Arch 阶段结合 review_outcome schema 确认。
+    raised_at: "2026-04-27T00:00:00+08:00"
+
+  - code: Q-v2-B
+    kind: subjectBreakdown_data_source
+    decision: "subjectBreakdown[] 来自 review_outcome JOIN review_plan JOIN wrongbook_item.subject · JPA 原生查询（ADR 0011 继承）"
+    detail: |
+      wrongbook_item.subject 字段（s3 已落地）通过 wrongItemId FK 关联。
+      JPA native query: SELECT wi.subject, count(*), count(quality>=3), count(status='mastered')
+        FROM review_outcome ro
+        JOIN review_plan rp ON rp.id = ro.plan_id
+        JOIN wrongbook_item wi ON wi.id = rp.wrong_item_id
+        WHERE rp.user_id = :userId AND ro.completed_at BETWEEN :start AND :end
+        GROUP BY wi.subject
+      subject 枚举白名单：math/physics/chemistry/english/chinese（与前端 --tkn-subject-* token 对齐）。
+    raised_at: "2026-04-27T00:00:00+08:00"
+
+# ============================================================
+# 3. 叙述（narrative · 增量说明）
+# ============================================================
+
+narrative: |
+  S5-v2 是 s5 主阶段的统计能力增量扩展 · 以独立子 Phase 形式解冻、完成、重冻，最终交付 s5-stats-v2-frozen tag
+  以解除 s8 SC-09.AC-2（学科分布）和 SC-09.AC-3（艾宾浩斯曲线 overlay）的 fe-builder 阻塞。
+
+  【字段扩展 · ADR 0017 候选】GET /review-stats 在现有响应体末尾新增两个可选数组字段：
+    ① subjectBreakdown[]：按 subject 维度（5 科：math/physics/chemistry/english/chinese）汇总
+       每科的 reviewCount / correctCount（quality>=3）/ masteredCount · 供 s8 学科分布柱状图消费。
+    ② ebbinghaus[]：7 个 node_index 点（T0-T6）的 expectedRetention（理想遗忘曲线 · 基于 design/艾宾浩斯.md 公式）
+       与 actualRetention（用户实际完成率）+ completedAt · 供 s8 艾宾浩斯曲线 overlay 消费。
+
+  【ownerId 参数 · ADR 0018 候选】GET /review-stats 增加可选 ?ownerId={studentId}。
+  家长持 scope=READ JWT（JWT.parentOf 包含 studentId）时可跨账户读取学生统计数据，供 P-OBSERVER 家长视图消费。
+  鉴权在 review-plan-service 层做（不完全依赖网关）· 网关层继续做 scope 初筛。
+
+  两个字段均向后兼容：现有客户端（s8 SC-09.AC-1）不消费这两个字段，JSON 忽略未知字段不影响现有功能。
+
+  本 Phase 不负责：前端渲染（s8 负责）· ownerId 参数在 s3 wrongbook-service 的落地（需独立计划）·
+  真实邀请码/JWT 颁发链路（s11）。
+
+# ============================================================
+# 4. AC 详尽切片（3 AC · in_review 阶段 dev/qa 锚点留空）
+# ============================================================
+
+ac_coverage:
+
+  # ============ AC-v2-1 · subjectBreakdown[] 字段 ============
+  - ac_id: "SC-09.AC-v2-1"
+    title: "GET /review-stats 新增 subjectBreakdown[] 字段（按学科细分复习进度）"
+    statement: |
+      GET /review-stats?range={week|month|quarter}&subject={opt}&ownerId={opt} 响应 body 在现有字段后追加：
+      subjectBreakdown[]: 数组，每项 {subject: string, reviewCount: int, correctCount: int, masteredCount: int}。
+      subject 枚举白名单：math / physics / chemistry / english / chinese。
+      correctCount = quality >= 3 的 review_outcome 条数（与现有 correctRate 口径对齐）。
+      masteredCount = status='mastered' 的 review_plan 条数（该 range 内进入 mastered 的）。
+      无数据的 subject 不出现在数组中（不返回全零条目）。
+      当 subject query param 有值时，subjectBreakdown[] 仍返回全科（不因 filter 缩减 · 供图表完整显示）。
+      响应字段缺失时（旧客户端）忽略 · 向后兼容。
+    source: |
+      s8-business-analysis.yml SC-09.AC-2 · ADR-0017-candidate · Q-v2-B ·
+      s8-review-insight.md §1 SubjectBreakdownItem classDiagram
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewOutcome, ReviewPlan, WrongItem, SubjectBreakdownItem]
+    upstream_contract:
+      - "wrongbook_item.subject 字段（s3 落地 · wrongbook-service · FK join）"
+    downstream_contract:
+      - "to_phase: s8 · api: GET /review-stats v2 · s8 SC-09.AC-2 学科分布柱状图消费 subjectBreakdown[]"
+    user_journey: |
+      s8 P-INSIGHT 加载 → GET /review-stats?range=week → 响应含 subjectBreakdown[5]（有数据的科目）
+      → 前端渲染横向条形图（5 科颜色按 --tkn-subject-* token）· 用户点 subject 条跳到错题列表过滤
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## Appendix: v2 Increment · §v2-2 OpenAPI patch · subjectBreakdown schema"
+      dev_anchor: ""                        # be-builder 阶段填：实现文件 + commit ref
+      qa_anchor: ""                         # be-accept 阶段填：IT class + @CoversAC refs
+      observable_behavior_anchor: |
+        GET /review-stats 响应 subjectBreakdown 数组非 null · subject 枚举 ∈ whitelist ·
+        metric review_stats_subject_breakdown_query_total · IT 断言非 math/physics 以外科目不出现（无数据场景）
+    risks:
+      - "wrongbook_item.subject JOIN 可能因 s3 数据中 subject=null（题目未归科）导致 subjectBreakdown 漏数 · 需在 JPA query 加 wi.subject IS NOT NULL 过滤"
+      - "subject 枚举白名单在前后端需对齐 · 后端返回白名单外的 subject 会导致前端色板 token 缺失 · 需文档约束"
+      - "min_sample 策略：是否继承 SC-09.AC-1 的 min_sample=3？ 若引入可能让 new user 全科 subjectBreakdown=[] · 需与 s8 对齐 · 暂定不引入 min_sample（数据量不足时显真实零值）"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "user 9000300 tz=Asia/Shanghai · math 10 次 review_outcome · physics 4 次 · chinese 0 次"
+          when: "GET /review-stats?range=week"
+          then: "subjectBreakdown[] 含 math + physics 两项 · chinese 不出现 · reviewCount/correctCount/masteredCount 准确"
+      error_paths:
+        - id: "error_paths.0"
+          given: "wrongbook_item.subject=null（未归科题目）"
+          when: "GET /review-stats"
+          then: "null subject 题目不计入任何 subjectBreakdown 项 · 不报错 · 响应其余字段正常"
+      boundary:
+        - id: "boundary.0"
+          given: "本周 0 次 complete"
+          when: "GET /review-stats?range=week"
+          then: "subjectBreakdown=[] · 空数组 · 不 null · 不报错"
+        - id: "boundary.1"
+          given: "ownerId 参数有值（家长读学生数据）"
+          when: "GET /review-stats?range=week&ownerId={studentId}"
+          then: "subjectBreakdown 按 studentId 的数据聚合 · 非请求方自身数据"
+      observable:
+        - id: "observable.0"
+          given: "IT 运行（含 wrongbook_item JOIN）"
+          when: "查 P95"
+          then: "平均 < 500ms（与 SC-09.AC-1 同 SLO · Caffeine TTL 5min 继承）"
+      visual: []
+
+  # ============ AC-v2-2 · ebbinghaus[] 字段 ============
+  - ac_id: "SC-09.AC-v2-2"
+    title: "GET /review-stats 新增 ebbinghaus[] 字段（7 日遗忘曲线数据点）"
+    statement: |
+      GET /review-stats?range={week|month|quarter}&ownerId={opt} 响应 body 追加：
+      ebbinghaus[]: 数组，长度 = 该用户当前 wrong_item 集合中有 review_plan 的最大 node_index+1（最多 7 项 · node_index 0..6）。
+      每项结构：{nodeIndex: int, expectedRetention: number(0-100), actualRetention: number|null, completedAt: string|null}。
+        - expectedRetention：理想遗忘曲线值 · 公式 R = e^(-t/S)*100 · S=0.5 · t=节点偏移小时数转天（见 design/艾宾浩斯.md）。
+        - actualRetention：当前 range 内该 node_index 完成的 review_outcome 中 quality>=3 的比例（百分比 0-100）· 无完成数据则 null。
+        - completedAt：该 node_index 最近一次 complete 的时间戳（ISO 8601）· 无则 null。
+      range 参数影响 completedAt 和 actualRetention 的统计窗口（仅统计 range 范围内的数据）。
+      响应字段缺失时（旧客户端）忽略 · 向后兼容。
+    source: |
+      s8-business-analysis.yml SC-09.AC-3 · ADR-0017-candidate · Q-v2-A ·
+      s8-review-insight.md §1 EbbinghausPoint classDiagram · design/艾宾浩斯.md T0-T6 曲线公式
+    critical: false
+    critical_reason: ""
+    domain_entities: [ReviewOutcome, ReviewPlan, EbbinghausPoint, SM2State]
+    upstream_contract:
+      - "review_plan.scheduled_at（节点偏移基础时间 · 用于计算 expectedRetention）"
+      - "review_outcome.quality + review_outcome.completed_at（用于 actualRetention 统计）"
+    downstream_contract:
+      - "to_phase: s8 · api: GET /review-stats v2 · s8 SC-09.AC-3 艾宾浩斯曲线 overlay 消费 ebbinghaus[]"
+    user_journey: |
+      s8 P-INSIGHT 加载 → GET /review-stats?range=week → 响应含 ebbinghaus[7]
+      → 前端渲染理想遗忘折线（expectedRetention）+ 用户实际散点叠加（actualRetention · 绿/红/灰按状态）
+      + inset 说明文案"此为群体平均曲线 · 个人记忆参数会因复习习惯有差异"
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## Appendix: v2 Increment · §v2-2 OpenAPI patch · ebbinghaus schema"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: |
+        GET /review-stats 响应 ebbinghaus 数组长度 ≤ 7 · expectedRetention ∈ [0, 100] ·
+        actualRetention null 当 node 未在 range 内完成 · IT 断言无完成数据时 actualRetention=null
+    risks:
+      - "expectedRetention 公式 R=e^(-t/S)*100 中 S=0.5 是群体平均参数 · 与 SM-2 个人化参数不对应 · 文案层面需声明（已在 s8 AC-3 statement 里约束）"
+      - "ebbinghaus[] 聚合跨多个 wrong_item 时 actualRetention 是用户平均 · 可能掩盖个体差异 · G-Arch 阶段需明确是「单题维度」还是「全题集汇总」 → 暂定全题集汇总"
+      - "range=week 窗口内如只完成了 node_index=0 的节点 · ebbinghaus[1..6].actualRetention 全 null · 前端显灰点 · 预期行为"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "user 9000300 · node_index 0 完成 4 次（quality 5/5/3/3 · 均>=3）· node_index 1 完成 2 次（quality 0/0 · <3）"
+          when: "GET /review-stats?range=week"
+          then: "ebbinghaus[0].actualRetention=100 · ebbinghaus[1].actualRetention=0 · ebbinghaus[2..6].actualRetention=null"
+      error_paths:
+        - id: "error_paths.0"
+          given: "review_plan.scheduled_at=null（历史数据漂移）"
+          when: "GET /review-stats"
+          then: "该 node 的 expectedRetention 降级为 null · 不报错 · 其余 node 正常返回"
+      boundary:
+        - id: "boundary.0"
+          given: "用户无任何 review_plan（新用户）"
+          when: "GET /review-stats?range=week"
+          then: "ebbinghaus=[] · 空数组 · 不 null · 不报错"
+        - id: "boundary.1"
+          given: "range=quarter（90d）· 用户只在第 1 周完成了 T0"
+          when: "GET /review-stats?range=quarter"
+          then: "ebbinghaus[0].completedAt 在 range 内 · actualRetention 有值 · ebbinghaus[1..6].actualRetention=null"
+      observable:
+        - id: "observable.0"
+          given: "IT 运行"
+          when: "查 P95"
+          then: "平均 < 500ms（Caffeine TTL 5min 缓存 · 与现有 SC-09.AC-1 同 SLO）"
+      visual: []
+
+  # ============ AC-v2-3 · ownerId param 鉴权 ============
+  - ac_id: "SC-09.AC-v2-3"
+    title: "GET /review-stats + GET /wrongbook/items 支持 ownerId query param（JWT.parentOf 鉴权 · 供家长跨账户读）"
+    statement: |
+      GET /review-stats 和 GET /wrongbook/items 增加可选 query param：ownerId={studentId: long}。
+      鉴权规则（review-plan-service 层）：
+        (1) 若 ownerId 缺失或等于 JWT.sub（自查）→ 无额外检查 · 走现有逻辑。
+        (2) 若 ownerId != JWT.sub：
+            - JWT.roles 必须包含 PARENT 且 JWT.parentOf[] 必须包含 ownerId → 放行 · 按 ownerId 聚合。
+            - 否则 → 返回 403 · error_code=SCOPE_INSUFFICIENT · message="无权限查看该学生数据"。
+      返回数据：按 ownerId 用户的数据聚合 · 与自查逻辑完全一致（仅 userId 参数替换）。
+      GET /wrongbook/items?ownerId= 的 ownerId 支持：需 s3 wrongbook-service 侧独立落地
+      （不在 s5-v2 实现范围内 · 标注为外部依赖 · 见 risks）。
+    source: |
+      s8-business-analysis.yml SC-14.AC-1 upstream_contract · ADR-0018-candidate ·
+      s8-review-insight.md § SC-14.AC-1 ownerId 参数说明
+    critical: true
+    critical_reason: |
+      权限 + 合规 + 未成年人数据跨账号访问。ownerId 参数未做鉴权直接透传会导致任意账户查看他人数据
+      （横向越权 · OWASP API2 · BOLA）。JWT.parentOf 校验必须在 service 层做 · 不能只依赖网关。
+    domain_entities: [ReviewStatsService, ParentAuthContext, JwtClaims]
+    upstream_contract:
+      - "JWT.parentOf: long[]（家长 JWT 中携带的被监督学生 ID 列表 · 由 s11 颁发 scope=READ JWT）"
+      - "JWT.roles: string[]（含 PARENT 角色标识）"
+    downstream_contract:
+      - "to_phase: s8 · api: GET /review-stats?ownerId={studentId} · SC-14.AC-1 家长视图数据源"
+      - "to_phase: s3 · 外部依赖：GET /wrongbook/items?ownerId= 需 s3 另行落地（不在本 Phase 实现）"
+    user_journey: |
+      家长持 scope=READ JWT → P-OBSERVER 页面加载
+      → GET /review-stats?range=week&ownerId={studentId}（s5 v2）
+      → GET /wrongbook/items?ownerId={studentId}（s3 · 外部依赖）
+      → 渲染学生只读视图数据
+    four_role_slots:
+      architect_anchor: "design/arch/s5-review-plan.md ## Appendix: v2 Increment · §v2-3 ownerId 鉴权流程 · ADR 0018"
+      dev_anchor: ""
+      qa_anchor: ""
+      observable_behavior_anchor: |
+        GET /review-stats?ownerId={非 parentOf 的 ID} → 403 SCOPE_INSUFFICIENT ·
+        GET /review-stats?ownerId={parentOf 内的 ID} → 200 · 返回学生数据 ·
+        metric review_stats_ownerId_auth_403_total · review_stats_ownerId_success_total
+    risks:
+      - "GET /wrongbook/items?ownerId= 需要 s3 wrongbook-service 独立落地（s3 已 done · 需走 HOTFIX 或 s3.5 子 Phase）· 本 yml 仅追踪 s5 侧 GET /review-stats 的 ownerId 支持 · s3 侧不在此文档内"
+      - "JWT.parentOf 字段由 s11 真实邀请码兑换链路颁发 · s8 阶段 stub JWT 需手工模拟 parentOf 字段 · IT 用 mock JWT builder 注入"
+      - "ownerId 校验必须防 BOLA（Broken Object Level Authorization）· 严禁只校验 roles=PARENT 而不校验 parentOf 包含 ownerId · code review checklist 需明确"
+      - "service 层校验 vs 网关层校验：网关只做 scope 初筛 · ownerId 细粒度鉴权必须在 ReviewStatsService 内实现 · 防止网关配置变化导致绕过"
+    verification_matrix:
+      happy_path:
+        - id: "happy_path.0"
+          given: "家长 JWT（roles=[PARENT], parentOf=[studentId=42]）调 GET /review-stats?range=week&ownerId=42"
+          when: "请求"
+          then: "返回 200 · 响应数据是 userId=42 的学生数据（含 subjectBreakdown[] + ebbinghaus[]）"
+      error_paths:
+        - id: "error_paths.0"
+          given: "家长 JWT（parentOf=[42]）调 GET /review-stats?ownerId=99（不在 parentOf 内）"
+          when: "请求"
+          then: "返回 403 · error_code=SCOPE_INSUFFICIENT · 无数据泄露"
+        - id: "error_paths.1"
+          given: "普通学生 JWT（roles=[STUDENT]）调 GET /review-stats?ownerId=42（他人 ID）"
+          when: "请求"
+          then: "返回 403 · error_code=SCOPE_INSUFFICIENT（roles 不含 PARENT）"
+        - id: "error_paths.2"
+          given: "ownerId 参数传入非数字字符串（ownerId=abc）"
+          when: "请求"
+          then: "返回 400 · error_code=INVALID_PARAM · message 含 ownerId 类型错误"
+      boundary:
+        - id: "boundary.0"
+          given: "ownerId 等于 JWT.sub（用户查自己 · 自查场景）"
+          when: "请求"
+          then: "等同于无 ownerId 参数 · 走现有逻辑 · 200 返回自身数据"
+        - id: "boundary.1"
+          given: "家长 JWT 的 parentOf=[]（空列表 · 尚未绑定学生）"
+          when: "调 ownerId=42"
+          then: "返回 403 · SCOPE_INSUFFICIENT · parentOf 为空等价于无权限"
+      observable:
+        - id: "observable.0"
+          given: "IT 运行（mock JWT）· 100 次请求（50 合法 + 50 越权）"
+          when: "查指标"
+          then: "review_stats_ownerId_auth_403_total=50 · review_stats_ownerId_success_total=50 · P95 < 500ms"
+      visual: []
+
+# ============================================================
+# 5. DoR（Definition of Ready · v2 子 Phase 进入 be-builder 前置条件）
+# ============================================================
+
+dor_checklist:
+  - check: "s5-arch-frozen tag 已在"
+    status: PASS
+    note: "s5 主阶段已冻结 · 本子 Phase 以增量方式在此基础上扩展"
+  - check: "s8-business-analysis.yml biz_gate=approved（触发 v2 需求的下游 Phase）"
+    status: PASS
+    note: "s8 G-Biz 于 2026-04-27T13:45 approved · Q3 决策触发本 v2 子 Phase"
+  - check: "ADR 0017 draft（字段扩展策略）"
+    status: PENDING
+    note: "本 yml G-Arch approved 后落地 docs/adr/0017-s5-v2-stats-field-extension.md"
+  - check: "ADR 0018 draft（ownerId 鉴权策略）"
+    status: PENDING
+    note: "本 yml G-Arch approved 后落地 docs/adr/0018-ownerId-param-parent-auth.md"
+  - check: "s8 SC-09.AC-2/AC-3 前端 testid + schema 字段名对齐确认"
+    status: PENDING
+    note: "与 s8 fe-preflight 阶段并行确认 subjectBreakdown[].subject / ebbinghaus[].nodeIndex 字段命名"
+  - check: "s3 wrongbook-service ownerId 扩展计划（外部依赖）"
+    status: PENDING
+    note: "SC-09.AC-v2-3 的 GET /wrongbook/items?ownerId= 部分 · 需 s3 侧独立计划 · 不阻塞本 yml 签署"
+  - check: "User /biz-ok 签署（本 yml biz_gate 解锁）"
+    status: PENDING
+    note: "biz_gate=in_review · 等 User 确认 3 个 AC 的关键约束后签署"
+  - check: "G-Arch approved 后打 s5-v2-arch-frozen 中间 tag（可选）+ 最终打 s5-stats-v2-frozen"
+    status: PENDING
+    note: "最终 tag s5-stats-v2-frozen 在 backend IT 全绿后打 · 解除 s8 fe-builder 阻塞"

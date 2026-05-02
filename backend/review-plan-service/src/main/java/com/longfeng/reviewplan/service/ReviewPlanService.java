@@ -219,6 +219,30 @@ public class ReviewPlanService {
     return (int) Math.max(0, days);
   }
 
+  /** POST /review-plans/batch-reset · admin · 学期初软删该学生所有 active plan. */
+  @Transactional
+  public int batchReset(Long studentId) {
+    return planRepo.softDeleteAllActiveByStudentId(studentId);
+  }
+
+  /** GET /review-plans/{id} · 单节点详情 · 404 when missing or mastered. */
+  @Transactional(readOnly = true)
+  public ReviewPlan getById(Long planId) {
+    return planRepo.findById(planId).orElseThrow(() -> new PlanNotFoundException(planId));
+  }
+
+  /**
+   * GET /review-plans?date= · 日视图 · 按学生 ID + 给定日期 UTC 时间窗 过滤.
+   *
+   * @param studentId 学生 ID
+   * @param startOfDayUtc 当日 00:00 UTC（调用方按用户 timezone 换算）
+   * @param endOfDayUtc 次日 00:00 UTC
+   */
+  @Transactional(readOnly = true)
+  public List<ReviewPlan> getDayPlans(Long studentId, Instant startOfDayUtc, Instant endOfDayUtc) {
+    return planRepo.findDueOnDate(studentId, startOfDayUtc, endOfDayUtc);
+  }
+
   /** complete 返回值 · 用于 Controller Response. */
   public record CompleteResult(
       Long planId, Instant nextReviewAt, BigDecimal easeFactorAfter, boolean mastered) {}
