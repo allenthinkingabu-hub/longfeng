@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.longfeng</groupId>
+    <artifactId>wrongbook-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>integration-test</artifactId>
+  <packaging>jar</packaging>
+  <name>integration-test</name>
+  <description>
+    Full-stack @SpringBootTest IT suite — Testcontainers PG 16 + Redis + RocketMQ + WireMock.
+    S0: HelloIT smoke container. S1+: EbbinghausEndToEndIT / GuestClaimE2EIT /
+    ObserverRevokeIT / SsePushOrchestrationIT + 4 more (TDD §14.3 × 8).
+    CI gate: mvn -pl integration-test test (TDD §14.5).
+  </description>
+
+  <properties>
+    <testcontainers.version>1.20.4</testcontainers.version>
+    <!-- maven-surefire: default includes *Test.java; we override to include *IT.java -->
+    <surefire.plugin.version>3.5.2</surefire.plugin.version>
+  </properties>
+
+  <dependencies>
+    <!-- Spring Boot Test — provides @SpringBootTest, MockMvc, ApplicationContext -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Spring Boot Web — needed to bootstrap a minimal app context in HelloIT -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Spring Boot Data JPA — needed to autowire DataSource / EntityManager in IT -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- PostgreSQL JDBC driver (runtime in test) -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers core -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers PostgreSQL module — PostgreSQLContainer -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers JUnit 5 extension — @Testcontainers / @Container -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit 5 engine — explicit declaration required for multi-module parent that
+         does not ship a spring-boot-starter-parent (only BOM) -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        maven-surefire-plugin:
+        Default pattern is *Test.java / Test*.java.
+        Override to ALSO include *IT.java so that `mvn test` (not just `mvn verify`)
+        runs our integration tests — this matches the CI gate command:
+            mvn -pl integration-test -am test   (TDD §14.5)
+        @Tag("integration") is an additional runtime filter used by IDEs / CI steps
+        that want to run only the IT subset in a full-suite project.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.plugin.version}</version>
+        <configuration>
+          <includes>
+            <include>**/*IT.java</include>
+            <include>**/*Test.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
