@@ -1,4 +1,4 @@
-# Gateway test profile · overrides for SmokeIT/RouteIT
+# Gateway test profile · overrides for SmokeIT/RouteIT/GatewayFilterChainIT
 server:
   port: 0
 
@@ -7,6 +7,12 @@ spring:
     name: gateway
   main:
     web-application-type: reactive
+  # Redis test config — overridden by @DynamicPropertySource in GatewayFilterChainIT
+  data:
+    redis:
+      host: ${REDIS_TEST_HOST:localhost}
+      port: ${REDIS_TEST_PORT:6379}
+      timeout: 500ms
   cloud:
     gateway:
       routes:
@@ -30,6 +36,9 @@ spring:
           uri: http://localhost:18085
           predicates:
             - Path=/api/v1/anon/**
+    nacos:
+      config:
+        enabled: false
 
 management:
   endpoints:
@@ -48,3 +57,20 @@ resilience4j:
         limitForPeriod: 5
         limitRefreshPeriod: 1s
         timeoutDuration: 0
+
+# Test JWT secrets (≥ 32 bytes each)
+longfeng:
+  jwt:
+    share:
+      secret: test-share-secret-min32chars-xxxx
+    anon:
+      secret: test-anon-secret-min32chars-xxxxx
+  sentinel:
+    ai:
+      qps: 200
+  ratelimit:
+    guest:
+      ip:
+        per-second: 5
+      fp:
+        per-second: 3

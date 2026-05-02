@@ -23,6 +23,11 @@ import reactor.core.publisher.Mono;
 /**
  * JWT RS256 authentication filter (order = -100) · 落地计划 §6.7 Step 7.
  *
+ * <p><strong>Superseded by {@link AuthFilter} (order = -120)</strong>. This bean is retained for
+ * S7 E2E backward-compat (existing GatewayRouteIT tests reference it) but is effectively a no-op
+ * because {@link AuthFilter} runs earlier (-120 &lt; -100) and either sets scope or short-circuits
+ * before this filter is reached.
+ *
  * <p>Rejects requests without a valid {@code Authorization: Bearer <token>} header.
  * {@code /actuator/**} and {@code /v3/api-docs} bypass authentication so ops/probes can reach
  * gateway health without a token.
@@ -45,6 +50,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     if (path.startsWith("/actuator/")
         || path.startsWith("/v3/api-docs")
         || path.startsWith("/swagger-ui")) {
+      return chain.filter(exchange);
+    }
+
+    // AuthFilter (order=-120) runs before us and already resolved scope — skip to avoid double-401
+    if (exchange.getAttribute(com.longfeng.gateway.tmp.UserContextHolder.ATTR_SCOPE) != null) {
       return chain.filter(exchange);
     }
 
