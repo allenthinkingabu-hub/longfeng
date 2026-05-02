@@ -1,0 +1,165 @@
+{
+  "$metadata": {
+    "source": "design/mockups/wrongbook/_archive/ + design/system/STYLE-TRUTH.md",
+    "version": "v2.0 (DEPRECATED · archive-misaligned · kept for downstream backwards-compat with __migration map)",
+    "previous_version": "v1.0 (warm 暖棕字 #2C2A26 + aurora 蓝紫粉极光 + focus-night 黑底渐变 全部已废)",
+    "deprecation_reason": "原 v1.0 token 体系（warm-bg #FAF8F4 / warm-text-primary #2C2A26 / gradient-aurora 蓝紫粉极光 / gradient-focus-night）与 _archive/ 19 张原版 mockup 不符。Archive 实际用 iOS HIG 完整调色板 + 深蓝 hero + 多色 blob，没有 warm 暖棕色体系，没有 aurora 极光命名，camera 黑底是 #0B0F1A 实色不是渐变 focus-night。"
+  },
+  "_meta": {
+    "description": "⛔️ 已废弃 · 请使用 color.json 中的 archive-aligned token · 本文件保留是为下游引用兼容",
+    "status": "DEPRECATED",
+    "migration_authority": "design/system/STYLE-TRUTH.md",
+    "migration_map": {
+      "tkn.color.warm.bg #FAF8F4": "→ tkn.color.bg.light #F2F2F7 (color.json) · iOS HIG --bg",
+      "tkn.color.warm.elevated #FFFFFF": "→ tkn.color.card #FFFFFF (color.json) · iOS HIG --card",
+      "tkn.color.warm.sunken #F2EDE3": "→ 删除（archive 不用此 token）· 04_result 用 var(--bg) 填充输入框",
+      "tkn.color.warm.text-primary #2C2A26": "→ tkn.color.text.primary #1C1C1E (color.json) · iOS HIG --text",
+      "tkn.color.warm.text-secondary rgba(44,42,38,.72)": "→ tkn.color.text.secondary #636366 (color.json) · iOS HIG --sec",
+      "tkn.color.warm.divider rgba(44,42,38,.08)": "→ tkn.color.sep rgba(60,60,67,.14) (color.json) · iOS HIG --sep",
+      "tkn.color.encouragement.DEFAULT #E8741C": "→ 仍保留（KP 卡 / streak / partial-mastery 用）· 但归档到 celebration.json 或 color.json kp-text-* 体系",
+      "tkn.color.encouragement.soft rgba(232,116,28,.10)": "→ 改用 color.json kp.bg-from #FFF4E6 + kp.bg-to #FFE0C2 渐变 · 14_landing social 暖橙渐变",
+      "tkn.color.aurora.particle rgba(255,255,255,.18)": "→ tkn.color.glass.white-18 (color.json)",
+      "tkn.color.aurora.blur rgba(255,255,255,.06)": "→ tkn.color.glass.white-08 (color.json) · 注：archive 14_landing 用 .06 alpha，新 token 命名为 white-08 更准确",
+      "tkn.gradient.aurora 蓝紫粉极光 #4F6FFF→#7B5FFF→#B85FFF": "→ ⛔️完全废除 · archive 没有这个渐变 · 改用 hero 深蓝渐变（hero-stop 1-7 in color.json）：\n  · linear-gradient(180deg, #1E3A8A 0%, #3B5BDB 45%, #5B8DEF 100%) (01_home)\n  · linear-gradient(170deg, #0F1A3D 0%, #1F3C8C 40%, #5F5BDB 80%, #8B87F6 100%) (14_landing)\n  · linear-gradient(135deg, #0F1A3D 0%, #1F3C8C 60%, #5F5BDB 100%) (reviewhero card)",
+      "tkn.gradient.focus-night #0A0E1A→#1A1F2E": "→ ⛔️完全废除 · archive 02_capture 用 #0B0F1A 实色 (color.json bg.camera) + radial-gradient(800px 400px at 50% 30%, #1d2433 0%, #0B0F1A 65%) viewfinder · 不是 linear focus-night",
+      "tkn.gradient.result-warm #FFF8E7→#FAF8F4": "→ ⛔️废除 · archive 04_result body 用 radial multi-layer + linear bg-stage（见 color.json 待补 grad-stage-bg）· 04 内部仍用 #F2F2F7 主底",
+      "tkn.gradient.today-blue #1F3A93→#4A6FE3": "→ 暂保留（archive 07_review_today 待详查），但建议改名 grad-hero-today 并对齐 archive 实测值",
+      "tkn.gradient.celebrate-green #1A7D34→#34A853": "→ 改 archive 09 实际值: linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%)",
+      "tkn.shadow.warm-card 0 1px 2px rgba(44,42,38,.04), 0 4px 12px rgba(44,42,38,.06)": "→ tkn.shadow.card-deep 0 1px 2px rgba(0,0,0,.04), 0 8px 22px rgba(40,50,90,.06) (shadow.json)",
+      "tkn.shadow.warm-card-pressed": "→ 删除（archive 用 transform:scale(.97/.98) 处理，不切阴影）",
+      "tkn.shadow.warm-hero 0 8px 24px rgba(31,58,147,.20)": "→ tkn.shadow.hero-card 0 10px 30px rgba(31,60,140,.25) (shadow.json)"
+    },
+    "lint_rules_for_migration": [
+      "grep --tkn-color-warm- 命中 → 必须按上面 migration_map 替换",
+      "grep gradient-aurora 命中 → 替换为 grad-hero-home / grad-hero-landing / grad-hero-card 之一",
+      "grep gradient-focus-night 命中 → 替换为 var(--tkn-color-bg-camera) 或 grad-camera-vf",
+      "grep gradient-result-warm 命中 → 替换为 var(--tkn-color-bg-light) #F2F2F7",
+      "grep #2C2A26 / rgba(44,42,38,.72) / rgba(44,42,38,.08) 命中 → 改 iOS HIG --text/--sec/--sep"
+    ],
+    "see_also": [
+      "design/system/STYLE-TRUTH.md (权威真相文档)",
+      "design/system/tokens/color.json (v2.0 archive-aligned 主 token)",
+      "design/system/tokens/shadow.json (v2.0 archive-aligned 阴影)"
+    ]
+  },
+  "tkn": {
+    "_deprecated_color": {
+      "warm": {
+        "bg": {
+          "value": "#F2F2F7",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · 此 token 已重映射到 iOS HIG bg.light · 原 #FAF8F4 不再使用 · 新代码请用 var(--tkn-color-bg-light)",
+          "_replaced_by": "tkn.color.bg.light"
+        },
+        "elevated": {
+          "value": "#FFFFFF",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · 与 tkn.color.card 重复 · 新代码请用 var(--tkn-color-card)",
+          "_replaced_by": "tkn.color.card"
+        },
+        "sunken": {
+          "value": "#F2F2F7",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · archive 不用此层 · 暂回退到 bg-light",
+          "_replaced_by": "tkn.color.bg.light"
+        },
+        "text-primary": {
+          "value": "#1C1C1E",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · 原 #2C2A26 已废 · 重映射到 iOS HIG text-primary #1C1C1E · 新代码请用 var(--tkn-color-text-primary)",
+          "_replaced_by": "tkn.color.text.primary"
+        },
+        "text-secondary": {
+          "value": "#636366",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · 原 rgba(44,42,38,.72) 已废 · 重映射到 iOS HIG --sec",
+          "_replaced_by": "tkn.color.text.secondary"
+        },
+        "divider": {
+          "value": "rgba(60,60,67,0.14)",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · 原 rgba(44,42,38,.08) 已废 · 重映射到 iOS HIG --sep",
+          "_replaced_by": "tkn.color.sep"
+        }
+      },
+      "encouragement": {
+        "DEFAULT": {
+          "value": "#E8741C",
+          "type": "color",
+          "comment": "保留 · KP 鼓励卡 strong 字 / streak number / partial-mastery 用 · archive 01_home kpcard 同色",
+          "contrast_on_light": "4.62:1"
+        },
+        "soft": {
+          "value": "rgba(232,116,28,0.10)",
+          "type": "color",
+          "comment": "⚠️ DEPRECATED · archive 14_landing social 用 linear-gradient(135deg, rgba(255,149,0,.08), rgba(255,59,48,.06)) · 01_home kpcard 用 linear-gradient #FFF4E6→#FFE0C2 · 不是单色",
+          "_replaced_by": "tkn.color.kp.bg-from / kp.bg-to (color.json)"
+        }
+      },
+      "aurora": {
+        "particle": {
+          "value": "rgba(255,255,255,0.18)",
+          "type": "color",
+          "comment": "⚠️ 重映射到 glass.white-18 (color.json) · 仍保留兼容下游引用",
+          "_replaced_by": "tkn.color.glass.white-18"
+        },
+        "blur": {
+          "value": "rgba(255,255,255,0.06)",
+          "type": "color",
+          "comment": "⚠️ 重映射到 glass.white-08 · alpha 0.06 / 0.08 接近，统一",
+          "_replaced_by": "tkn.color.glass.white-08"
+        }
+      }
+    },
+    "_deprecated_gradient": {
+      "aurora": {
+        "value": "linear-gradient(180deg, #1E3A8A 0%, #3B5BDB 45%, #5B8DEF 100%)",
+        "type": "gradient",
+        "comment": "⛔️ DEPRECATED 名字 · 原 #4F6FFF→#7B5FFF→#B85FFF 蓝紫粉极光与 archive 不符 · 重映射到 archive 01_home 的深蓝 hero 渐变 · 新代码请用 grad-hero-home / grad-hero-landing / grad-hero-card",
+        "_replaced_by": "see color.json hero-stop tokens · 用 css custom property 组合"
+      },
+      "focus-night": {
+        "value": "#0B0F1A",
+        "type": "color",
+        "comment": "⛔️ DEPRECATED · archive 02 用 #0B0F1A 实色而非线性渐变 · 重映射到 bg-camera",
+        "_replaced_by": "tkn.color.bg.camera"
+      },
+      "result-warm": {
+        "value": "#F2F2F7",
+        "type": "color",
+        "comment": "⛔️ DEPRECATED · archive 04_result 用 var(--bg) #F2F2F7 · 不需要这个独立渐变",
+        "_replaced_by": "tkn.color.bg.light"
+      },
+      "today-blue": {
+        "value": "linear-gradient(160deg, #1F3A93 0%, #4A6FE3 100%)",
+        "type": "gradient",
+        "comment": "⚠️ 暂保留 · archive 07_review_today 实际配置待详查 · 如果对齐失败将废除"
+      },
+      "celebrate-green": {
+        "value": "linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%)",
+        "type": "gradient",
+        "comment": "✅ 已对齐 archive 09_review_done 实测值（原 1A7D34→34A853 是简化版）"
+      }
+    },
+    "_deprecated_shadow": {
+      "warm-card": {
+        "value": "0 1px 2px rgba(0,0,0,0.04), 0 8px 22px rgba(40,50,90,0.06)",
+        "type": "shadow",
+        "comment": "⚠️ 重映射到 shadow.card-deep · 原 rgba(44,42,38,*) 暖棕已改 archive 真实 rgba(40,50,90,*) 蓝调",
+        "_replaced_by": "tkn.shadow.card-deep"
+      },
+      "warm-card-pressed": {
+        "value": "0 0 0 transparent",
+        "type": "shadow",
+        "comment": "⚠️ DEPRECATED · archive 用 transform:scale(.97/.98) 处理 · 不切阴影",
+        "_replaced_by": "use transform:scale(.97) instead"
+      },
+      "warm-hero": {
+        "value": "0 10px 30px rgba(31,60,140,0.25)",
+        "type": "shadow",
+        "comment": "⚠️ 重映射到 shadow.hero-card",
+        "_replaced_by": "tkn.shadow.hero-card"
+      }
+    }
+  }
+}

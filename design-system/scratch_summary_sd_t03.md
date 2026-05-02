@@ -1,7 +1,9 @@
 # scratch_summary_sd_t03
 
+> **⚠️ 已废 v1.0 · reference-only（2026-05-02 标注）**：Token 转换日志仅作 Style Dictionary 历史调试记录。其中 `#0071e3` 已被 archive 真相 `#007AFF` 取代。当前权威 = `design/system/STYLE-TRUTH.md`。
+
 ## 本任务状态
-status: **done**
+status: **done · superseded by archive-realignment v2.0 · 2026-05-02**
 finished_at: 2026-04-22T22:00:00Z
 attempt: 1
 

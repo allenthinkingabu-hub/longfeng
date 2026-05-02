@@ -1,8 +1,10 @@
-# AI 错题本 · Component Catalog (Sd.2 Skeleton)
+# AI 错题本 · Component Catalog (L0 通用原语)
 
-> Scope: This file lists ~20 components with structural skeletons only.
-> No `.tsx` / `.vue` / `.wxml` source code — that is Sd.2 Storybook implementation, a separate task.
-> All token references use `--tkn-*` namespace from `design/system/tokens/`.
+> **Scope**: This file lists 20 universal primitives — Button / Input / Card / Toast / Modal / Sheet / TabBar / NavBar / Skeleton / Empty / Badge / Avatar / Divider / Banner / Tag / Picker / DatePicker / Stepper / Switch / Progress.
+> **Layer position**: L0 (universal) → L1 (`molecules.md` product-specific) → L2 (`pages/*.spec.md` page composition).
+> **Token usage**: All values via `--tkn-*` from `design/system/tokens/` — three-layer architecture (L1 Apple base · L2 warmth · L3 celebration). See `design/system/DESIGN.md` §2.
+> **Mood adaptation**: Every component supports `data-mood="cool|warm|celebrate"` on parent section. Components default to L1 cool tokens; switch to L2 warm tokens when section is mood=warm; celebrate tokens (L3) are reserved for whitelisted celebration moments only.
+> No `.tsx` / `.vue` / `.wxml` source code — that is implementation, a separate task.
 
 ---
 
@@ -35,7 +37,13 @@
 
 ## 1. Button
 
-**variants**: `primary` · `secondary` · `pill-link` · `ghost` · `danger` · `icon-only`
+**variants**: `primary` · `secondary` · `pill-link` · `ghost` · `danger` · `icon-only` · `mood-celebrate` · `mood-mastery-{forgot|partial|mastered}` · `brand-wechat`
+
+**variant notes**:
+- `primary` (default) · single Apple Blue CTA — iron rule 1 default
+- `mood-celebrate` · used in P09 "继续下一题" button on celebrate-green hero, mint background
+- `mood-mastery-*` · used in P08 self-grading 3-button row · IRON RULE 1 EXCEPTION `self-grading` · requires `data-iron-rule-1-exception="self-grading"`
+- `brand-wechat` · used ONLY on P00 WeChat one-tap login · IRON RULE 1 EXCEPTION `wechat-brand` · requires `data-iron-rule-1-exception="wechat-brand"`
 
 **states**: `default` · `hover` · `focus` · `active` (pressed) · `loading` · `disabled`
 
@@ -57,7 +65,13 @@
 
 **miniprogram_equivalent**: `<button>` with `form-type="button"`, min-height `88rpx`
 
-**token usage**: `--tkn-color-primary-DEFAULT` bg · `--tkn-radius-sm` or `--tkn-radius-pill` · `--tkn-shadow-focus` on focus · `--tkn-motion-duration-fast` transition
+**token usage**:
+- `primary`: bg `--tkn-color-primary-DEFAULT` · text `#ffffff` · `--tkn-radius-sm` or `--tkn-radius-pill` · `--tkn-shadow-focus` on focus · `--tkn-motion-duration-fast` transition
+- `mood-celebrate`: bg `--tkn-color-mastery-mastered` · text `#ffffff` · `--tkn-radius-pill` · `--tkn-motion-celebrate-checkmark` on click
+- `mood-mastery-forgot`: bg `--tkn-color-mastery-forgot` · text `#ffffff`
+- `mood-mastery-partial`: bg `--tkn-color-mastery-partial` · text `#ffffff`
+- `mood-mastery-mastered`: bg `--tkn-color-mastery-mastered` · text `#ffffff`
+- `brand-wechat`: bg `--tkn-color-brand-wechat` · text `#ffffff` · `--tkn-radius-pill`
 
 ---
 
@@ -313,7 +327,7 @@
 
 **miniprogram_equivalent**: Native badge on `<tabbar>` list items or custom `<view>` overlay
 
-**token usage**: bg `--tkn-color-danger-DEFAULT` · text `#ffffff` · `--tkn-type-micro` · `--tkn-radius-pill`
+**token usage**: bg `--tkn-color-system-danger-DEFAULT` · text `#ffffff` · `--tkn-type-micro` · `--tkn-radius-pill`
 
 ---
 

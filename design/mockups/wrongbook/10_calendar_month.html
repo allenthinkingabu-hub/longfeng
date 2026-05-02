@@ -1,268 +1,630 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>日历月视图 · AI 错题本</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="design-spec" content="P10-calendar-month.spec.md@v2" />
+<title>P10 · 日历月视图 · AI 错题本</title>
 <style>
-:root{
-  --blue:#007AFF; --red:#FF3B30; --orange:#FF9500; --green:#34C759;
-  --indigo:#5856D6; --yellow:#FFCC00; --purple:#AF52DE; --pink:#FF2D55; --teal:#30B0C7;
-  --gray1:#8E8E93; --gray2:#AEAEB2; --gray5:#E5E5EA; --gray6:#F2F2F7;
-  --label:#000; --label2:#3C3C4399; --label3:#3C3C434D;
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font);-webkit-font-smoothing:antialiased}
-body{background:linear-gradient(180deg,#EAF1FB 0%,#F7F6FA 55%,#FDF1F4 100%);display:grid;place-items:center;padding:40px;color:var(--label)}
-.phone{position:relative;width:393px;height:852px;background:#F2F2F7;border-radius:55px;
-  box-shadow:0 40px 100px -20px rgba(30,40,80,.35),0 8px 24px rgba(20,30,60,.12),inset 0 0 0 6px #111;overflow:hidden;}
-.phone::before{content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);width:125px;height:37px;background:#000;border-radius:20px;z-index:30;}
-.status{position:absolute;inset:0 0 auto 0;height:54px;padding:18px 34px 0;display:flex;justify-content:space-between;align-items:flex-start;font-size:17px;font-weight:600;z-index:25;color:#000;}
-.status .right{display:flex;gap:6px;align-items:center}
+  /* ── Design tokens (mirrors design/system/tokens/*.json) ─────────────── */
+  :root {
+    /* L1 Apple base · color */
+    --tkn-color-black:                       #000000;
+    --tkn-color-white:                       #ffffff;
+    --tkn-color-text-on-dark:                #ffffff;
+    --tkn-color-primary-DEFAULT:             #0071e3;
+    --tkn-color-primary-dark:                #2997ff;
+    --tkn-color-system-danger-DEFAULT:       #C0392B;
+    /* L1 typography */
+    --tkn-font-display: 'SF Pro Display','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-font-text:    'SF Pro Text','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-type-display-hero-size:    56px;
+    --tkn-type-display-hero-weight:  600;
+    --tkn-type-sub-heading-size:     21px;
+    --tkn-type-sub-heading-weight:   400;
+    --tkn-type-body-size:            17px;
+    --tkn-type-body-weight:          400;
+    --tkn-type-caption-size:         14px;
+    --tkn-type-caption-bold-weight:  600;
+    --tkn-type-micro-size:           12px;
+    /* L1 spacing (4pt grid) */
+    --tkn-spacing-2:   4px;
+    --tkn-spacing-xs:  4px;
+    --tkn-spacing-sm:  8px;
+    --tkn-spacing-12:  32px;
+    --tkn-spacing-md:  16px;
+    --tkn-spacing-lg:  24px;
+    --tkn-spacing-xl:  32px;
+    /* L1 radius */
+    --tkn-radius-xs:    5px;
+    --tkn-radius-sm:    8px;
+    --tkn-radius-md:    11px;
+    --tkn-radius-lg:    12px;
+    --tkn-radius-pill:  980px;
+    --tkn-radius-circle: 50%;
+    /* L1 shadow */
+    --tkn-shadow-focus: 0 0 0 2px #0071e3;
+    /* L1 motion */
+    --tkn-motion-duration-fast: 150ms;
+    --tkn-motion-duration-base: 250ms;
+    --tkn-motion-ease-standard: cubic-bezier(0.25,0.46,0.45,0.94);
+    /* L2 warmth */
+    --tkn-color-warm-bg:                #FAF8F4;
+    --tkn-color-warm-elevated:          #FFFFFF;
+    --tkn-color-warm-sunken:            #F2EDE3;
+    --tkn-color-warm-text-primary:      #2C2A26;
+    --tkn-color-warm-text-secondary:    rgba(44,42,38,0.72);
+    --tkn-color-warm-divider:           rgba(44,42,38,0.08);
+    --tkn-color-encouragement-DEFAULT:  #E8741C;
+    --tkn-color-encouragement-soft:     rgba(232,116,28,0.10);
+    --tkn-shadow-warm-card:             0 1px 2px rgba(44,42,38,0.04), 0 4px 12px rgba(44,42,38,0.06);
+    /* EXCEPTION subject */
+    --tkn-subject-math:       #C41E3A;
+    --tkn-subject-physics:    #0057B7;
+    --tkn-subject-chemistry:  #1A6B3A;
+    --tkn-subject-english:    #9C4F00;
+  }
 
-/* Navbar - secondary page style */
-.navbar{
-  position:absolute;top:54px;left:0;right:0;padding:6px 16px 10px;z-index:22;
-  background:rgba(242,242,247,.82);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
-  border-bottom:.5px solid rgba(60,60,67,.12);
-}
-.nav-top{display:flex;justify-content:space-between;align-items:center;height:44px;font-size:17px;}
-.nav-top .back{display:flex;align-items:center;gap:2px;color:var(--blue);font-size:17px;font-weight:400;text-decoration:none;}
-.nav-top .center{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.nav-top .center .t{font-size:16px;font-weight:700;letter-spacing:.1px;}
-.nav-top .center .s{font-size:10px;color:var(--label2);font-weight:600;letter-spacing:.4px;}
-.nav-top .btn-icn{width:32px;height:32px;border-radius:16px;background:rgba(120,120,128,.12);display:grid;place-items:center;color:var(--label);}
-.sub-nav{display:flex;gap:8px;margin-top:10px;align-items:center}
-.seg{background:rgba(120,120,128,.12);border-radius:9px;padding:2px;display:flex;font-size:13px;font-weight:600;color:var(--label);flex:0 0 auto;}
-.seg span{padding:6px 12px;border-radius:7px;color:var(--label2);cursor:pointer;}
-.seg span.on{background:#fff;color:var(--label);box-shadow:0 1px 2px rgba(0,0,0,.06),0 3px 8px rgba(0,0,0,.04)}
-.sub-nav .grow{flex:1}
-.filter{display:flex;gap:6px;align-items:center;padding:6px 10px;background:rgba(0,122,255,.12);border-radius:9px;font-size:11px;font-weight:700;color:var(--blue);}
-.filter svg{width:11px;height:11px;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  html,body{
+    background:#e5e5ea;
+    font-family:var(--tkn-font-text);
+    color:var(--tkn-color-warm-text-primary);
+  }
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 0;}
 
-/* Body */
-.body{position:absolute;top:164px;left:0;right:0;bottom:83px;overflow:hidden;padding:8px 0 0;}
-.weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px 4px;color:var(--label2);font-size:12px;font-weight:500;text-align:center;letter-spacing:.5px}
-.weekdays .we{color:var(--red);opacity:.85}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 10px}
-.cell{
-  height:52px;border-radius:10px;padding:5px 3px 3px;position:relative;
-  display:flex;flex-direction:column;align-items:center;
-  background:transparent;cursor:pointer;
-}
-.cell .d{font-size:16px;font-weight:500;letter-spacing:-.2px;color:var(--label)}
-.cell.mute .d{color:var(--label3)}
-.cell.weekend .d{color:var(--red)}
-.cell.today{background:rgba(10,132,255,.08)}
-.cell.today .d{background:var(--blue);color:#fff;width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-weight:700;box-shadow:0 3px 8px rgba(10,132,255,.35)}
-.cell.selected{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.06)}
-.cell .bar{position:absolute;top:3px;right:4px;font-size:8px;font-weight:800;color:var(--indigo);background:rgba(88,86,214,.12);padding:1px 3px;border-radius:3px;letter-spacing:.3px;display:flex;align-items:center;gap:1px;}
-.cell .bar svg{width:7px;height:7px;}
-.dots{margin-top:3px;display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:38px;}
-.dot{width:5px;height:5px;border-radius:50%}
-.d-red{background:var(--red)} .d-ora{background:var(--orange)} .d-grn{background:var(--green)}
-.d-ind{background:var(--indigo)} .d-ylw{background:var(--yellow)} .d-pnk{background:var(--pink)}
-.d-tea{background:var(--teal)} .d-pur{background:var(--purple)} .d-blu{background:var(--blue)}
+  /* ── Phone shell 393×852 ──────────────────────────────────────────── */
+  .phone{
+    position:relative;width:393px;height:852px;
+    background:var(--tkn-color-black);
+    border-radius:54px;
+    box-shadow:inset 0 0 0 6px #111, 0 30px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+  }
+  .phone::before{
+    content:"";position:absolute;left:50%;top:11px;
+    transform:translateX(-50%);width:126px;height:37px;
+    background:var(--tkn-color-black);border-radius:20px;z-index:50;
+  }
 
-/* Day event list */
-.list{
-  position:absolute;left:0;right:0;bottom:83px;background:#fff;border-top-left-radius:22px;border-top-right-radius:22px;
-  padding:12px 16px 12px;box-shadow:0 -8px 24px rgba(0,0,0,.05);
-  height:268px;overflow-y:auto;
-}
-.list-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;padding:0 2px;}
-.list-head .t{font-size:18px;font-weight:800;letter-spacing:-.2px}
-.list-head .sub{color:var(--label2);font-size:12px;margin-left:6px;font-weight:500}
-.list-head .more{color:var(--blue);font-size:13px;font-weight:600;text-decoration:none;}
-.row{
-  display:flex;gap:10px;padding:10px 0;border-bottom:.5px solid rgba(60,60,67,.08);align-items:center;cursor:pointer;
-}
-.row:last-child{border-bottom:0}
-.bar3{width:3.5px;align-self:stretch;border-radius:2px;flex:0 0 3.5px}
-.row .content{flex:1;min-width:0}
-.row .ti{font-size:14px;font-weight:700;letter-spacing:-.1px;display:flex;gap:6px;align-items:center;color:var(--label);}
-.row .ti .studytag{font-size:9px;font-weight:800;color:var(--indigo);background:rgba(88,86,214,.12);padding:1px 6px;border-radius:4px;letter-spacing:.3px;display:inline-flex;align-items:center;gap:2px;}
-.row .ti .studytag svg{width:8px;height:8px;}
-.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.2px;}
-.row .meta{display:flex;gap:6px;color:var(--label2);font-size:11px;margin-top:3px;font-weight:500;align-items:center;}
-.row .meta .sep{opacity:.5;}
-.row .meta .mini{display:flex;gap:1.5px;}
-.row .meta .mini i{width:6px;height:6px;border-radius:3px;display:inline-block;background:rgba(120,120,128,.35);}
-.row .meta .mini i.act{background:var(--green);}
-.row .meta .mini i.now{background:var(--blue);}
-.row .time{font-size:14px;font-weight:700;letter-spacing:-.2px;color:var(--label);font-variant-numeric:tabular-nums;text-align:right;}
-.row .time small{color:var(--label2);font-size:10px;font-weight:600;display:block;margin-top:2px;letter-spacing:.4px}
+  /* ── Status bar ─────────────────────────────────────────────────── */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:54px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 var(--tkn-spacing-xl);
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-body-size);font-weight:600;
+    z-index:40;color:var(--tkn-color-warm-text-primary);
+  }
+  .statusbar .time{margin-top:12px;}
+  .statusbar .icons{margin-top:12px;font-size:13px;display:flex;gap:6px;}
 
-/* tab bar */
-.tabbar{
-  position:absolute;bottom:0;left:0;right:0;height:83px;padding:8px 0 20px;
-  background:rgba(255,255,255,.85);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
-  border-top:.5px solid rgba(60,60,67,.12);display:flex;z-index:10;
-}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--gray1);font-size:10px;font-weight:500;letter-spacing:.2px;text-decoration:none;position:relative;}
-.tab svg{width:24px;height:24px;}
-.tab.on{color:var(--blue)}
-.tab .badge{position:absolute;top:-2px;right:24px;min-width:16px;height:16px;border-radius:8px;background:#FF3B30;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;}
+  /* ── Page (warm · single info section) ─────────────────────────── */
+  .page{
+    position:absolute;inset:0;
+    background:var(--tkn-color-warm-bg);
+    z-index:10;
+    padding:54px 0 84px;
+    overflow-y:auto;
+    display:flex;flex-direction:column;
+  }
 
-.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#000;opacity:.85;z-index:50}
+  /* ── B1 Month nav ─────────────────────────────────────────────── */
+  .month-nav{
+    padding:var(--tkn-spacing-md) var(--tkn-spacing-lg);
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--tkn-color-warm-bg);
+  }
+  .month-nav-arrow{
+    width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;
+    background:transparent;border:none;cursor:pointer;
+    color:var(--tkn-color-primary-DEFAULT);
+    border-radius:var(--tkn-radius-pill);
+    transition:background var(--tkn-motion-duration-fast) var(--tkn-motion-ease-standard);
+  }
+  .month-nav-arrow:active{transform:scale(0.97);}
+  .month-nav-arrow:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+  .month-nav-arrow svg{width:20px;height:20px;}
+  .month-nav-title{
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-sub-heading-size);
+    font-weight:var(--tkn-type-caption-bold-weight);
+    color:var(--tkn-color-warm-text-primary);
+    letter-spacing:-0.024em;
+    line-height:1.19;
+  }
+  .month-nav-today{
+    margin-top:var(--tkn-spacing-2);
+    text-align:center;
+    font-size:var(--tkn-type-caption-size);
+    color:var(--tkn-color-primary-DEFAULT);
+    text-decoration:none;
+    padding:var(--tkn-spacing-2) var(--tkn-spacing-sm);
+    border-radius:var(--tkn-radius-pill);
+    min-height:24px;
+    display:inline-block;
+  }
+  .month-nav-center{display:flex;flex-direction:column;align-items:center;gap:0;}
+
+  /* ── B2 Week header ───────────────────────────────────────────── */
+  .week-header{
+    display:grid;grid-template-columns:repeat(7,1fr);
+    padding:var(--tkn-spacing-sm) var(--tkn-spacing-md);
+    border-bottom:1px solid var(--tkn-color-warm-divider);
+  }
+  .week-header-cell{
+    text-align:center;
+    font-size:var(--tkn-type-caption-size);
+    font-weight:var(--tkn-type-caption-bold-weight);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.224px;
+    line-height:1.29;
+  }
+  .week-header-cell.weekend{
+    color:var(--tkn-color-warm-text-primary);
+  }
+
+  /* ── B3 Month grid ───────────────────────────────────────────── */
+  .month-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    grid-template-rows:repeat(6,1fr);
+    gap:var(--tkn-spacing-2);
+    padding:var(--tkn-spacing-sm) var(--tkn-spacing-md);
+    flex:1 1 auto;
+    min-height:480px;
+  }
+  .month-cell{
+    background:var(--tkn-color-warm-elevated);
+    border-radius:var(--tkn-radius-md);
+    padding:var(--tkn-spacing-2) var(--tkn-spacing-2) var(--tkn-spacing-xs);
+    position:relative;
+    cursor:pointer;
+    border:1px solid var(--tkn-color-warm-divider);
+    transition:transform var(--tkn-motion-duration-fast) var(--tkn-motion-ease-standard);
+    min-height:44px;
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .month-cell:active{transform:scale(0.97);}
+  .month-cell:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+  .month-cell[data-out-of-month="true"]{
+    opacity:0.4;
+    background:var(--tkn-color-warm-bg);
+  }
+  .month-cell[data-today="true"]{
+    border:2px solid var(--tkn-color-primary-DEFAULT);
+    padding:3px 3px var(--tkn-spacing-2);
+  }
+  .month-cell-day{
+    font-family:var(--tkn-font-text);
+    font-size:13px;
+    font-weight:600;
+    color:var(--tkn-color-warm-text-primary);
+    line-height:1.2;
+    letter-spacing:-0.224px;
+  }
+  .month-cell[data-out-of-month="true"] .month-cell-day{
+    color:var(--tkn-color-warm-text-secondary);
+    font-weight:400;
+  }
+  .month-cell-dots{
+    display:flex;flex-wrap:wrap;gap:2px;
+    margin-top:auto;
+    align-items:center;
+    min-height:8px;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:var(--tkn-radius-circle);
+    flex:none;
+  }
+  .dot-math      { background:var(--tkn-subject-math); }
+  .dot-physics   { background:var(--tkn-subject-physics); }
+  .dot-chemistry { background:var(--tkn-subject-chemistry); }
+  .dot-english   { background:var(--tkn-subject-english); }
+  .dot-exam      { background:var(--tkn-color-system-danger-DEFAULT); }
+  .dot-family    { background:var(--tkn-color-encouragement-DEFAULT); }
+  .month-cell-overflow{
+    font-size:9px;
+    font-weight:600;
+    color:var(--tkn-color-warm-text-secondary);
+    background:var(--tkn-color-warm-sunken);
+    border-radius:var(--tkn-radius-pill);
+    padding:0 4px;
+    line-height:10px;
+    height:10px;
+    display:inline-flex;align-items:center;
+  }
+
+  /* ── B4 Legend bar ───────────────────────────────────────────── */
+  .legend-bar{
+    margin:var(--tkn-spacing-md);
+    padding:var(--tkn-spacing-md);
+    background:var(--tkn-color-warm-elevated);
+    border-radius:var(--tkn-radius-lg);
+    box-shadow:var(--tkn-shadow-warm-card);
+    border:1px solid var(--tkn-color-warm-divider);
+  }
+  .legend-row{
+    display:flex;flex-wrap:wrap;gap:var(--tkn-spacing-md);
+    align-items:center;
+  }
+  .legend-item{
+    display:inline-flex;align-items:center;gap:var(--tkn-spacing-2);
+    font-size:var(--tkn-type-caption-size);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.224px;
+    line-height:1.29;
+  }
+  .legend-item .dot{width:8px;height:8px;}
+
+  /* ── Tab Bar ─────────────────────────────────────────────────── */
+  .tabbar{
+    position:absolute;left:0;right:0;bottom:0;
+    height:84px;
+    background:var(--tkn-color-warm-elevated);
+    border-top:1px solid var(--tkn-color-warm-divider);
+    display:grid;grid-template-columns:repeat(5,1fr);
+    padding-bottom:24px;
+    z-index:30;
+  }
+  .tabbar-item{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:var(--tkn-spacing-2);
+    cursor:pointer;border:none;background:transparent;
+    color:var(--tkn-color-warm-text-secondary);
+    font-size:10px;letter-spacing:-0.08px;
+    min-height:44px;
+  }
+  .tabbar-item svg{width:24px;height:24px;fill:currentColor;}
+
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="status">
-    <span>9:41</span>
-    <div class="right">
-      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="-2" width="3" height="14" rx="1" opacity=".35"/></svg>
-      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2c3.5 0 6.6 1.4 8.5 3.5l-1.5 1.3C13.9 5 11.3 3.8 8.5 3.8S3.1 5 1.5 6.8L0 5.5C1.9 3.4 5 2 8.5 2zm0 3c2.4 0 4.5 1 6 2.5L13 8.8c-1.2-1.1-2.8-1.8-4.5-1.8S5.2 7.7 4 8.8L2.5 7.5C4 6 6.1 5 8.5 5zm0 3c1.3 0 2.5.5 3.4 1.3L8.5 13 5.1 9.3C6 8.5 7.2 8 8.5 8z"/></svg>
-      <svg width="28" height="12" viewBox="0 0 28 12" fill="none"><rect x=".5" y=".5" width="24" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="26" y="4" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".5"/><rect x="2.5" y="2.5" width="20" height="7" rx="1.5" fill="currentColor"/></svg>
-    </div>
-  </div>
 
-  <!-- Secondary page nav -->
-  <div class="navbar">
-    <div class="nav-top">
-      <a class="back" href="01_home.html">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M14 5l-6 6 6 6" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        首页
-      </a>
-      <div class="center">
-        <div class="t">2026 年 4 月</div>
-        <div class="s">Asia/Shanghai · 周二</div>
-      </div>
-      <div class="btn-icn">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3 V13 M3 8 H13" stroke="#1C1C1E" stroke-width="1.6" stroke-linecap="round"/></svg>
-      </div>
-    </div>
-    <div class="sub-nav">
-      <div class="seg">
-        <span>日</span><span>周</span><span class="on">月</span>
-      </div>
-      <div class="grow"></div>
-      <div class="filter">
-        <svg viewBox="0 0 11 11" fill="none"><path d="M1 2 H10 M3 5.5 H8 M4.5 9 H6.5" stroke="#007AFF" stroke-width="1.3" stroke-linecap="round"/></svg>
-        显示复习 · 开
-      </div>
-    </div>
-  </div>
+<div class="phone" data-mood="warm">
+  <header class="statusbar" data-testid="p10-statusbar" role="banner">
+    <span class="time">9:41</span>
+    <span class="icons">●●● ▮▮ 100%</span>
+  </header>
 
-  <!-- Month grid -->
-  <div class="body">
-    <div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="we">六</div><div class="we">日</div></div>
-    <div class="grid">
-      <!-- week 1 (partly last month) -->
-      <div class="cell mute"><div class="d">30</div></div>
-      <div class="cell mute"><div class="d">31</div></div>
-      <div class="cell"><div class="d">1</div><div class="dots"><span class="dot d-red"></span></div></div>
-      <div class="cell"><div class="d">2</div><span class="bar"><svg viewBox="0 0 7 7" fill="#5856D6"><rect x="1" y="1" width="5" height="5" rx="1"/></svg>3</span><div class="dots"><span class="dot d-red"></span><span class="dot d-red"></span><span class="dot d-ora"></span></div></div>
-      <div class="cell"><div class="d">3</div></div>
-      <div class="cell weekend"><div class="d">4</div><div class="dots"><span class="dot d-pnk"></span></div></div>
-      <div class="cell weekend"><div class="d">5</div></div>
-      <!-- week 2 -->
-      <div class="cell"><div class="d">6</div><span class="bar">2</span><div class="dots"><span class="dot d-red"></span><span class="dot d-ora"></span></div></div>
-      <div class="cell"><div class="d">7</div><div class="dots"><span class="dot d-ora"></span></div></div>
-      <div class="cell"><div class="d">8</div></div>
-      <div class="cell"><div class="d">9</div><span class="bar">4</span><div class="dots"><span class="dot d-red"></span><span class="dot d-red"></span><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">10</div><div class="dots"><span class="dot d-ylw"></span></div></div>
-      <div class="cell weekend"><div class="d">11</div></div>
-      <div class="cell weekend"><div class="d">12</div><div class="dots"><span class="dot d-pnk"></span></div></div>
-      <!-- week 3 -->
-      <div class="cell"><div class="d">13</div><span class="bar">2</span><div class="dots"><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">14</div></div>
-      <div class="cell"><div class="d">15</div><span class="bar">3</span><div class="dots"><span class="dot d-ora"></span><span class="dot d-red"></span></div></div>
-      <div class="cell"><div class="d">16</div><div class="dots"><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">17</div></div>
-      <div class="cell weekend"><div class="d">18</div><div class="dots"><span class="dot d-red"></span></div></div>
-      <div class="cell weekend"><div class="d">19</div></div>
-      <!-- week 4 with today (21) -->
-      <div class="cell"><div class="d">20</div><span class="bar">3</span><div class="dots"><span class="dot d-red"></span></div></div>
-      <div class="cell today"><div class="d">21</div><span class="bar" style="background:#fff;color:var(--blue);">8</span><div class="dots"><span class="dot d-red"></span><span class="dot d-ora"></span><span class="dot d-grn"></span><span class="dot d-pnk"></span></div></div>
-      <div class="cell"><div class="d">22</div><span class="bar">5</span><div class="dots"><span class="dot d-ind"></span><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">23</div><span class="bar">4</span><div class="dots"><span class="dot d-red"></span><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">24</div><span class="bar">6</span><div class="dots"><span class="dot d-ora"></span><span class="dot d-ylw"></span></div></div>
-      <div class="cell weekend"><div class="d">25</div><div class="dots"><span class="dot d-ora"></span></div></div>
-      <div class="cell weekend"><div class="d">26</div><span class="bar">2</span></div>
-      <!-- week 5 -->
-      <div class="cell"><div class="d">27</div><span class="bar">3</span><div class="dots"><span class="dot d-red"></span></div></div>
-      <div class="cell"><div class="d">28</div></div>
-      <div class="cell"><div class="d">29</div><span class="bar">2</span><div class="dots"><span class="dot d-grn"></span></div></div>
-      <div class="cell"><div class="d">30</div><div class="dots"><span class="dot d-red"></span></div></div>
-      <div class="cell mute"><div class="d">1</div></div>
-      <div class="cell mute weekend"><div class="d">2</div></div>
-      <div class="cell mute weekend"><div class="d">3</div></div>
-    </div>
-  </div>
+  <main class="page" data-mood="warm" role="main">
 
-  <!-- Day events list (fused: review + general) -->
-  <div class="list">
-    <div class="list-head">
-      <div><span class="t">4 月 21 日</span><span class="sub">8 条复习 · 1 场考试 · 1 条家庭</span></div>
-      <a class="more" href="07_review_today.html">全部 ›</a>
+    <!-- B1 MonthNav -->
+    <nav class="month-nav" data-testid="p10-month-nav" role="navigation" aria-label="月份切换">
+      <button class="month-nav-arrow" data-testid="p10-month-nav-prev" aria-label="上一月">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M12.5 4 L6 10 L12.5 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="month-nav-center">
+        <h1 class="month-nav-title" data-testid="p10-month-nav-title" aria-live="polite">2026 年 5 月</h1>
+        <a href="#today" class="month-nav-today" data-testid="p10-month-nav-today">回到今天</a>
+      </div>
+      <button class="month-nav-arrow" data-testid="p10-month-nav-next" aria-label="下一月">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M7.5 4 L14 10 L7.5 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- B2 WeekHeader -->
+    <div class="week-header" data-testid="p10-week-header">
+      <div class="week-header-cell" data-testid="p10-week-header-mon">一</div>
+      <div class="week-header-cell" data-testid="p10-week-header-tue">二</div>
+      <div class="week-header-cell" data-testid="p10-week-header-wed">三</div>
+      <div class="week-header-cell" data-testid="p10-week-header-thu">四</div>
+      <div class="week-header-cell" data-testid="p10-week-header-fri">五</div>
+      <div class="week-header-cell weekend" data-testid="p10-week-header-sat">六</div>
+      <div class="week-header-cell weekend" data-testid="p10-week-header-sun">日</div>
     </div>
 
-    <a class="row" href="11_event_detail.html" style="text-decoration:none;color:inherit;">
-      <div class="bar3" style="background:var(--red)"></div>
-      <div class="content">
-        <div class="ti">二次函数 · 顶点式 <span class="studytag"><svg viewBox="0 0 8 8" fill="#5856D6"><rect x="0" y="1" width="6" height="6" rx="1"/></svg>T1 复习</span></div>
-        <div class="meta"><span>数学 · 第 2 次</span><span class="sep">·</span><span class="mini"><i class="act"></i><i class="now"></i><i></i><i></i><i></i><i></i></span><span>2/6</span></div>
-      </div>
-      <div class="time">10:15<small>倒计时 34m</small></div>
-    </a>
+    <!-- B3 MonthGrid · 2026-05 starts on Friday (5/1) -->
+    <div class="month-grid" data-testid="p10-month-grid" role="grid" aria-label="2026 年 5 月日历">
 
-    <a class="row" href="11_event_detail.html" style="text-decoration:none;color:inherit;">
-      <div class="bar3" style="background:var(--orange)"></div>
-      <div class="content">
-        <div class="ti">牛顿第三定律 <span class="studytag"><svg viewBox="0 0 8 8" fill="#5856D6"><rect x="0" y="1" width="6" height="6" rx="1"/></svg>T3 复习</span></div>
-        <div class="meta"><span>物理 · 第 4 次</span><span class="sep">·</span><span>预计 3 min</span></div>
+      <!-- Row 1 · 4/27-5/3 -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-1" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">27</span>
+        <div class="month-cell-dots"></div>
       </div>
-      <div class="time">14:30<small>下午</small></div>
-    </a>
-
-    <a class="row" href="11_event_detail.html" style="text-decoration:none;color:inherit;">
-      <div class="bar3" style="background:var(--pink)"></div>
-      <div class="content">
-        <div class="ti">五月月考（模拟） <span class="tag" style="background:rgba(255,45,85,.14);color:#C71F47">考试</span></div>
-        <div class="meta"><span>妈妈分享 · 全天</span><span class="sep">·</span><span>距离 21 天</span></div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-2" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">28</span>
+        <div class="month-cell-dots"></div>
       </div>
-      <div class="time">全天<small>5 月 12 日</small></div>
-    </a>
-
-    <a class="row" href="11_event_detail.html" style="text-decoration:none;color:inherit;">
-      <div class="bar3" style="background:var(--green)"></div>
-      <div class="content">
-        <div class="ti">接奶奶放学 <span class="tag" style="background:rgba(52,199,89,.14);color:#1E7E34">提醒</span></div>
-        <div class="meta"><span>每工作日重复</span></div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-3" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">29</span>
+        <div class="month-cell-dots"></div>
       </div>
-      <div class="time">17:40<small>SHA</small></div>
-    </a>
-  </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-4" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">30</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-5" role="gridcell">
+        <span class="month-cell-day">1</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-5-dot-1"></span>
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-5-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-6" role="gridcell">
+        <span class="month-cell-day">2</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-family" data-testid="p10-month-grid-cell-6-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-7" role="gridcell">
+        <span class="month-cell-day">3</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-7-dot-1"></span>
+        </div>
+      </div>
 
-  <!-- Tab bar (首页 active) -->
-  <div class="tabbar">
-    <a class="tab on" href="01_home.html" style="color:var(--blue);">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M3 11 L12 3 L21 11 V20 a1 1 0 0 1 -1 1 H14 V14 H10 V21 H4 a1 1 0 0 1 -1 -1 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <!-- Row 2 · 5/4-5/10 -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-8" role="gridcell">
+        <span class="month-cell-day">4</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-8-dot-1"></span>
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-8-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-9" role="gridcell">
+        <span class="month-cell-day">5</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-9-dot-1"></span>
+          <span class="dot dot-chemistry" data-testid="p10-month-grid-cell-9-dot-2"></span>
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-9-dot-3"></span>
+          <span class="month-cell-overflow" data-testid="p10-month-grid-cell-9-overflow">+2</span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-10" role="gridcell">
+        <span class="month-cell-day">6</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-10-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-11" role="gridcell">
+        <span class="month-cell-day">7</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-11-dot-1"></span>
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-11-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-12" role="gridcell">
+        <span class="month-cell-day">8</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-exam" data-testid="p10-month-grid-cell-12-dot-1"></span>
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-12-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-13" role="gridcell">
+        <span class="month-cell-day">9</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-family" data-testid="p10-month-grid-cell-13-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-14" role="gridcell">
+        <span class="month-cell-day">10</span>
+        <div class="month-cell-dots"></div>
+      </div>
+
+      <!-- Row 3 · 5/11-5/17 -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-15" role="gridcell">
+        <span class="month-cell-day">11</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-15-dot-1"></span>
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-15-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-16" role="gridcell">
+        <span class="month-cell-day">12</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-chemistry" data-testid="p10-month-grid-cell-16-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-17" role="gridcell">
+        <span class="month-cell-day">13</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-17-dot-1"></span>
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-17-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-18" role="gridcell">
+        <span class="month-cell-day">14</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-exam" data-testid="p10-month-grid-cell-18-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-19" role="gridcell">
+        <span class="month-cell-day">15</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-19-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-20" role="gridcell">
+        <span class="month-cell-day">16</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-family" data-testid="p10-month-grid-cell-20-dot-1"></span>
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-20-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-21" role="gridcell">
+        <span class="month-cell-day">17</span>
+        <div class="month-cell-dots"></div>
+      </div>
+
+      <!-- Row 4 · 5/18-5/24 · today=22 -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-22" role="gridcell">
+        <span class="month-cell-day">18</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-22-dot-1"></span>
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-22-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-23" role="gridcell">
+        <span class="month-cell-day">19</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-chemistry" data-testid="p10-month-grid-cell-23-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-24" role="gridcell">
+        <span class="month-cell-day">20</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-24-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-25" role="gridcell">
+        <span class="month-cell-day">21</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-25-dot-1"></span>
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-25-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-26" data-today="true" role="gridcell" aria-label="今日 5 月 22 日 · 4 个事件">
+        <span class="month-cell-day">22</span>
+        <span data-testid="p10-month-grid-cell-26-today-marker" hidden></span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-26-dot-1"></span>
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-26-dot-2"></span>
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-26-dot-3"></span>
+          <span class="month-cell-overflow" data-testid="p10-month-grid-cell-26-overflow">+1</span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-27" role="gridcell">
+        <span class="month-cell-day">23</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-family" data-testid="p10-month-grid-cell-27-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-28" role="gridcell">
+        <span class="month-cell-day">24</span>
+        <div class="month-cell-dots"></div>
+      </div>
+
+      <!-- Row 5 · 5/25-5/31 -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-29" role="gridcell">
+        <span class="month-cell-day">25</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-29-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-30" role="gridcell">
+        <span class="month-cell-day">26</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-30-dot-1"></span>
+          <span class="dot dot-chemistry" data-testid="p10-month-grid-cell-30-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-31" role="gridcell">
+        <span class="month-cell-day">27</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-english" data-testid="p10-month-grid-cell-31-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-32" role="gridcell">
+        <span class="month-cell-day">28</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-exam" data-testid="p10-month-grid-cell-32-dot-1"></span>
+          <span class="dot dot-math" data-testid="p10-month-grid-cell-32-dot-2"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-33" role="gridcell">
+        <span class="month-cell-day">29</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-physics" data-testid="p10-month-grid-cell-33-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-34" role="gridcell">
+        <span class="month-cell-day">30</span>
+        <div class="month-cell-dots">
+          <span class="dot dot-family" data-testid="p10-month-grid-cell-34-dot-1"></span>
+        </div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-35" role="gridcell">
+        <span class="month-cell-day">31</span>
+        <div class="month-cell-dots"></div>
+      </div>
+
+      <!-- Row 6 · 6/1-6/7 (out of month) -->
+      <div class="month-cell" data-testid="p10-month-grid-cell-36" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">1</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-37" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">2</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-38" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">3</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-39" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">4</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-40" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">5</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-41" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">6</span>
+        <div class="month-cell-dots"></div>
+      </div>
+      <div class="month-cell" data-testid="p10-month-grid-cell-42" data-out-of-month="true" role="gridcell">
+        <span class="month-cell-day">7</span>
+        <div class="month-cell-dots"></div>
+      </div>
+    </div>
+
+    <!-- B4 LegendBar -->
+    <div class="legend-bar" data-testid="p10-legend-bar">
+      <div class="legend-row">
+        <span class="legend-item" data-testid="p10-legend-bar-item-math">
+          <span class="dot dot-math"></span>数学
+        </span>
+        <span class="legend-item" data-testid="p10-legend-bar-item-physics">
+          <span class="dot dot-physics"></span>物理
+        </span>
+        <span class="legend-item" data-testid="p10-legend-bar-item-chemistry">
+          <span class="dot dot-chemistry"></span>化学
+        </span>
+        <span class="legend-item" data-testid="p10-legend-bar-item-english">
+          <span class="dot dot-english"></span>英语
+        </span>
+        <span class="legend-item" data-testid="p10-legend-bar-item-exam">
+          <span class="dot dot-exam"></span>考试
+        </span>
+        <span class="legend-item" data-testid="p10-legend-bar-item-family">
+          <span class="dot dot-family"></span>家庭
+        </span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Tab Bar (no active · this is a sub-page of P-HOME) -->
+  <nav class="tabbar" data-testid="p10-tabbar" role="navigation" aria-label="主导航">
+    <button class="tabbar-item" data-testid="p10-tabbar-home" aria-label="首页">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L3 11 L5 11 L5 20 L10 20 L10 14 L14 14 L14 20 L19 20 L19 11 L21 11 Z"/></svg>
       <span>首页</span>
-    </a>
-    <a class="tab" href="05_wrongbook_list.html">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M5 4 h10 l4 4 v12 a2 2 0 0 1 -2 2 H5 a2 2 0 0 1 -2 -2 V6 a2 2 0 0 1 2 -2 z" stroke="#8E8E93" stroke-width="1.5"/><path d="M8 13 h8 M8 17 h5" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button class="tabbar-item" data-testid="p10-tabbar-wrongbook" aria-label="错题本">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4 L19 4 L19 20 L5 20 Z M8 8 L16 8 M8 12 L16 12 M8 16 L13 16" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
       <span>错题本</span>
-    </a>
-    <a class="tab" href="02_capture.html">
-      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="3" stroke="#8E8E93" stroke-width="1.5"/><circle cx="12" cy="13.5" r="3.5" stroke="#8E8E93" stroke-width="1.5"/><path d="M9 7 L10 5 h4 L15 7" stroke="#8E8E93" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tabbar-item" data-testid="p10-tabbar-capture" aria-label="拍题">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 8 L9 8 L10 6 L14 6 L15 8 L19 8 L19 19 L5 19 Z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
       <span>拍题</span>
-    </a>
-    <a class="tab" href="07_review_today.html">
-      <div class="badge">8</div>
-      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12 a8 8 0 1 1 2.3 5.6" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/><path d="M4 18 V12 h6" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8 V12 L15 14" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button class="tabbar-item" data-testid="p10-tabbar-review" aria-label="复习">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 A8 8 0 1 0 20 12 M12 4 L12 1 L15 4 L12 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
       <span>复习</span>
-    </a>
-    <a class="tab" href="13_settings.html">
-      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="9" r="4" stroke="#8E8E93" stroke-width="1.5"/><path d="M4 20 c1.5 -4 5 -6 8 -6 s6.5 2 8 6" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button class="tabbar-item" data-testid="p10-tabbar-me" aria-label="我的">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 21 C4 16 8 14 12 14 C16 14 20 16 20 21" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
       <span>我的</span>
-    </a>
-  </div>
-
-  <div class="homebar"></div>
+    </button>
+  </nav>
 </div>
+
 </body>
 </html>

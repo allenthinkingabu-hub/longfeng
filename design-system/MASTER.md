@@ -1,11 +1,22 @@
 # Longfeng Wrong-Answer Notebook · Design System Master
 
+> **⚠️ 已废 v1.0 · reference-only（2026-05-02 标注）**
+>
+> 本文是早期 Apple 体系决策文档，基于 macOS `#0071e3` / 近黑 `#1d1d1f` / 蓝灰底 `#f5f5f7` 等纯 Apple HIG 色。**这套体系已被 archive 真相反推取代**——archive 19 张 mockup 实际用 iOS HIG 完整调色板（`#007AFF` / `#1C1C1E` / `#F2F2F7` + 8 色辅色 + 深蓝 hero + 多色 blob + conic 彩虹）。
+>
+> **当前权威**：
+> - `design/system/STYLE-TRUTH.md`（archive 反推 · 权威真相）
+> - `design/system/DESIGN.md v2.0`（设计宪法）
+> - `design/system/tokens/color.json v2.0`（token 真相）
+>
+> 阅读本文请视为"v1.0 历史决策记录"。具体色值（如 `#0071e3` / `#1d1d1f`）已不在项目中使用，请按权威文档取值。
+
 <!--
-source: getdesign.md/apple/design-md
+source: getdesign.md/apple/design-md (v1.0 reference-only)
 saved_local: design/system/inspiration/apple.design.md
 generated_by: ui-ux-pro-max-skill v2.5.0
-human_overrides: [subject-palette, miniprogram-saturation]
-style: Minimalism & Swiss Style — Apple.com specialization
+human_overrides: [subject-palette, miniprogram-saturation, archive-realignment-v2.0]
+style: v1.0 = Apple Minimalism · v2.0 = iOS HIG 多彩 vibrant + 教育温度
 code_as_design: true  (no Figma, no .fig)
 project_cn: AI wrong-answer notebook (H5 + WeChat miniprogram)
 -->

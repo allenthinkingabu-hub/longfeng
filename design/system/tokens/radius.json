@@ -1,40 +1,120 @@
 {
   "$metadata": {
-    "source": "getdesign.md/apple/design-md",
-    "saved_local": "design/system/inspiration/apple.design.md",
-    "generated_by": "ui-ux-pro-max-skill v2.5.0"
+    "source": "design/mockups/wrongbook/_archive/ + design/system/STYLE-TRUTH.md §2.3",
+    "version": "v2.0 (archive-aligned)",
+    "previous_source": "getdesign.md/apple/design-md (only 6 values · 不够用)",
+    "generated_by": "ui-ux-pro-max-skill v2.5.0 + STYLE-TRUTH.md reverse-engineering"
+  },
+  "_meta": {
+    "description": "Radius tokens — archive 实测全集 · 13 档（原 Apple HIG 仅 6 档不够用）",
+    "philosophy": "archive 用更多 radius 档位制造视觉层次：phone 54px → hero card 22px → card 18px → qcard 16px → btn 14px → cell 12px → ic 11px → md 10px → sm 8px → 6px → 4px → 3px",
+    "deprecated_values": {
+      "xs 5px": "改 6px (archive sample chip / qno 用 6px)"
+    }
   },
   "tkn": {
     "radius": {
-      "xs": {
-        "value": "5px",
+      "phone": {
+        "value": "54px",
         "type": "dimension",
-        "comment": "Small containers, link tags, small badges"
+        "comment": "Phone outer frame · iPhone 15 Pro 标准 · home/landing 用 54px / 02-04 用 55px"
+      },
+      "phone-camera": {
+        "value": "55px",
+        "type": "dimension",
+        "comment": "Phone outer frame variant · 02_capture / 04_result 用 55px"
+      },
+      "scroll-overlap": {
+        "value": "26px",
+        "type": "dimension",
+        "comment": "Mood A scroll 区圆角白底 overlap hero · 14_landing 用 26px"
+      },
+      "scroll-overlap-sm": {
+        "value": "24px",
+        "type": "dimension",
+        "comment": "Mood A scroll 区圆角白底 overlap · 01_home / 17_welcomeback 用 24px"
+      },
+      "hero-card": {
+        "value": "22px",
+        "type": "dimension",
+        "comment": "Hero card 主圆角 · 01_home reviewhero / 04 / 07 / 09 hero card"
+      },
+      "card-lg": {
+        "value": "18px",
+        "type": "dimension",
+        "comment": "标准卡片 · weekly / weekcard / msgs / kpcard · 18px 是 archive 主卡片圆角"
+      },
+      "card-sm": {
+        "value": "16px",
+        "type": "dimension",
+        "comment": "次级卡 · 14_landing sample / qcard / cta-try / btn 主按钮 · 04_result ebbing"
+      },
+      "btn": {
+        "value": "14px",
+        "type": "dimension",
+        "comment": "按钮主圆角 · rh-btn / kpbtn / 04 nav top sheet / btn ghost / btn primary"
+      },
+      "cell": {
+        "value": "12px",
+        "type": "dimension",
+        "comment": "Grid cell · weekstrip wd / how-step / rh-sub-chip / 04 chip ans"
+      },
+      "ic-md": {
+        "value": "11px",
+        "type": "dimension",
+        "comment": "iOS HIG 中等圆角 · qcard ic 36×36 / feat ico · search inputs"
+      },
+      "ic-sm": {
+        "value": "10px",
+        "type": "dimension",
+        "comment": "Icon 小圆角 · 02 nav icon-btn / msg ic 34×34 (msg ic 实际 10px) / 14_landing logo 方块"
       },
       "sm": {
         "value": "8px",
         "type": "dimension",
-        "comment": "Buttons, product cards, image containers — the standard Apple button radius"
+        "comment": "Buttons 小 · 04 chip 'm' link bg / week-strip num badge / mini sep · Apple HIG 标准按钮圆角"
       },
-      "md": {
-        "value": "11px",
+      "xs": {
+        "value": "6px",
         "type": "dimension",
-        "comment": "Search inputs, filter buttons"
+        "comment": "Sample chip / qno / strk / 02 paper · 极小圆角"
       },
-      "lg": {
-        "value": "12px",
+      "micro": {
+        "value": "4px",
         "type": "dimension",
-        "comment": "Feature panels, lifestyle image containers. Maximum for rectangular elements."
+        "comment": "Mini sep / spark height / wcrow gap / chip outline · 4pt"
+      },
+      "tiny": {
+        "value": "3px",
+        "type": "dimension",
+        "comment": "Home indicator / mini badge · 3pt"
       },
       "pill": {
+        "value": "999px",
+        "type": "dimension",
+        "comment": "Pill 完全圆角 · streak flame / signin pill / metric chips / chip sm · 04 chip · 14_landing eyebrow"
+      },
+      "pill-apple": {
         "value": "980px",
         "type": "dimension",
-        "comment": "Full pill CTAs — 'Learn more', 'Shop' links. The signature Apple CTA link shape. 980px mirrors Apple's max-content-width."
+        "comment": "Apple HIG 历史值 · 与 999px 等价 · 部分 spec 仍引用 980px"
       },
       "circle": {
         "value": "50%",
         "type": "dimension",
-        "comment": "Media controls (play/pause arrows), avatar images, circular icon buttons"
+        "comment": "Avatar / blob / shutter / dots / progress ring / control-btn / icon-btn (02)"
+      },
+      "_legacy": {
+        "md": {
+          "value": "11px",
+          "type": "dimension",
+          "comment": "🔁 别名 · 等同 ic-md · 兼容老 spec 引用 'radius-md'"
+        },
+        "lg": {
+          "value": "12px",
+          "type": "dimension",
+          "comment": "🔁 别名 · 等同 cell · 兼容老 spec 引用 'radius-lg'"
+        }
       }
     }
   }

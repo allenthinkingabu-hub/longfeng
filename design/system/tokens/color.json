@@ -1,12 +1,27 @@
 {
   "$metadata": {
-    "source": "getdesign.md/apple/design-md",
-    "saved_local": "design/system/inspiration/apple.design.md",
-    "generated_by": "ui-ux-pro-max-skill v2.5.0",
-    "human_overrides": ["subject-palette", "miniprogram-saturation"]
+    "source": "design/mockups/wrongbook/_archive/ + design/system/STYLE-TRUTH.md §2.1",
+    "version": "v2.0 (archive-aligned)",
+    "previous_source": "getdesign.md/apple/design-md (pure Apple HIG)",
+    "generated_by": "ui-ux-pro-max-skill v2.5.0 + STYLE-TRUTH.md reverse-engineering",
+    "saved_local": "design/system/inspiration/apple.design.md (legacy reference only)",
+    "human_overrides": ["subject-palette", "miniprogram-saturation", "archive-iOS-HIG-realignment"]
   },
   "_meta": {
-    "description": "AI错题本 color tokens — Apple aesthetic base with two human overrides",
+    "description": "AI错题本 color tokens — archive 真相反推：完整 iOS HIG 9 色调色板 + 灰阶 + Hero 深蓝渐变 stops + 装饰 blob 颜色 + Em 渐变字 + 玻璃态白透 + 学科色（铁律 1 例外）",
+    "layered": "L1-iOS-HIG-base",
+    "philosophy": "iOS HIG 多彩 vibrant + 教育温度 — 不是 macOS 冷白极简，也不是纯黑灰",
+    "see_also": [
+      "design/system/STYLE-TRUTH.md (权威真相 · 反推自 _archive)",
+      "design/system/tokens/warmth.json (L2 - DEPRECATED · 暖棕字 #2C2A26 已废)",
+      "design/system/tokens/celebration.json (L3 - celebration / mastery / streak)"
+    ],
+    "deprecated_values": {
+      "primary-DEFAULT": "原 #0071e3 (macOS) → 改 #007AFF (iOS HIG)",
+      "text-primary": "原 #1d1d1f → 改 #1C1C1E (iOS HIG)",
+      "text-secondary": "原 rgba(0,0,0,.80) → 改 #636366 (iOS HIG --sec)",
+      "text-tertiary": "原 rgba(0,0,0,.48) → 改 #8E8E93 (iOS HIG --ter)"
+    },
     "platform_overrides": {
       "wechat": {
         "saturation_delta": 12,
@@ -20,30 +35,46 @@
       "black": {
         "value": "#000000",
         "type": "color",
-        "comment": "Hero dark backgrounds, immersive product sections"
+        "comment": "Hero dark backgrounds (legacy Apple); also phone notch/frame inner border"
       },
       "white": {
         "value": "#ffffff",
         "type": "color",
-        "comment": "Text on dark backgrounds, button text on blue/dark CTAs"
+        "comment": "Text on dark backgrounds, button text on blue/dark CTAs, card surface"
       },
       "bg": {
         "light": {
-          "value": "#f5f5f7",
+          "value": "#F2F2F7",
           "type": "color",
-          "comment": "Alternate section backgrounds — slight blue-gray tint prevents sterility"
+          "comment": "iOS HIG light bg · standard for mood=pure-warm pages (P04-P07/P10-P13). Replaces legacy #f5f5f7 (Apple HIG) with iOS HIG value · grep target --bg",
+          "archive_var": "--bg"
         },
         "dark": {
           "value": "#000000",
           "type": "color",
-          "comment": "Immersive dark section backgrounds"
+          "comment": "Immersive dark section backgrounds (legacy Apple alternating)"
+        },
+        "camera": {
+          "value": "#0B0F1A",
+          "type": "color",
+          "comment": "Mood C dark-camera fullscreen bg · P02 capture / P15 guest_capture · archive 02 .screen { background: #0B0F1A }"
         }
+      },
+      "card": {
+        "value": "#FFFFFF",
+        "type": "color",
+        "comment": "Card surface on bg-light (mood B pure-warm). Pure white pops against #F2F2F7. archive_var --card"
+      },
+      "sep": {
+        "value": "rgba(60,60,67,0.14)",
+        "type": "color",
+        "comment": "iOS HIG separator line · cards / nav / list items · archive_var --sep · 几乎所有 list-style 分割线都是这个值"
       },
       "surface": {
         "dark-1": {
           "value": "#272729",
           "type": "color",
-          "comment": "Card backgrounds in dark sections"
+          "comment": "Card backgrounds in dark sections (legacy Apple)"
         },
         "dark-2": {
           "value": "#262628",
@@ -68,25 +99,36 @@
       },
       "text": {
         "primary": {
-          "value": "#1d1d1f",
+          "value": "#1C1C1E",
           "type": "color",
-          "comment": "Primary body text on light backgrounds",
-          "contrast_on_light": "16.83:1"
+          "comment": "iOS HIG primary text on light bg · archive_var --text · 不是 #1d1d1f 也不是 #2C2A26",
+          "contrast_on_light": "16.5:1",
+          "archive_var": "--text"
         },
         "secondary": {
-          "value": "rgba(0,0,0,0.80)",
+          "value": "#636366",
           "type": "color",
-          "comment": "Secondary text, nav items on light. Effective ~#333 on white = 12.6:1"
+          "comment": "iOS HIG secondary text · archive_var --sec · 替代旧的 rgba(0,0,0,.80)",
+          "contrast_on_light": "5.74:1",
+          "archive_var": "--sec"
         },
         "tertiary": {
-          "value": "rgba(0,0,0,0.48)",
+          "value": "#8E8E93",
           "type": "color",
-          "comment": "Disabled states, carousel controls. For decorative/large use only"
+          "comment": "iOS HIG tertiary / disabled · archive_var --ter · 替代旧的 rgba(0,0,0,.48)",
+          "contrast_on_light": "3.55:1",
+          "archive_var": "--ter"
+        },
+        "secondary-alt": {
+          "value": "#3C3C43",
+          "type": "color",
+          "comment": "iOS HIG label color · 极少使用 · 仅 02_capture / 04_result 内嵌使用 archive_var --text2",
+          "archive_var": "--text2"
         },
         "on-dark": {
           "value": "#ffffff",
           "type": "color",
-          "comment": "Text on dark section backgrounds",
+          "comment": "Text on dark / hero / camera backgrounds",
           "contrast_on_dark": "21:1"
         }
       },
@@ -111,20 +153,19 @@
       },
       "primary": {
         "DEFAULT": {
-          "value": "#0071e3",
+          "value": "#007AFF",
           "type": "color",
-          "comment": "Apple Blue — ONLY chromatic accent in core palette. Primary CTA backgrounds, focus rings.",
-          "contrast_on_light": "4.70:1",
-          "contrast_on_dark": "4.47:1",
-          "_warning_dark": "below-AA for small text on pure black (#000); use primary-dark for small text on dark backgrounds"
+          "comment": "iOS HIG System Blue · 主交互色 / CTA / 焦点环 · 不是 macOS #0071e3 · archive_var --blue",
+          "contrast_on_light": "4.62:1",
+          "contrast_on_dark": "5.36:1",
+          "archive_var": "--blue"
         },
         "dark": {
           "value": "#2997ff",
           "type": "color",
-          "comment": "Links/interactive on dark section backgrounds. Higher luminance for contrast on black.",
+          "comment": "Brighter blue for links on dark backgrounds. Higher luminance for contrast on black/navy hero.",
           "contrast_on_light": "3.02:1",
-          "contrast_on_dark": "6.96:1",
-          "_warning_light": "below-AA for small text on white; use primary-DEFAULT for light backgrounds"
+          "contrast_on_dark": "6.96:1"
         },
         "link": {
           "value": "#0066cc",
@@ -134,41 +175,366 @@
           "contrast_on_dark": "3.77:1"
         }
       },
-      "success": {
-        "DEFAULT": {
-          "value": "#1A7D34",
+      "system": {
+        "red": {
+          "value": "#FF3B30",
           "type": "color",
-          "comment": "Success states, confirmations",
-          "contrast_on_light": "5.21:1",
-          "contrast_on_dark": "4.03:1"
+          "comment": "iOS HIG System Red · error / forgot / wrong / exam-event · archive_var --red",
+          "archive_var": "--red"
+        },
+        "orange": {
+          "value": "#FF9500",
+          "type": "color",
+          "comment": "iOS HIG System Orange · warning / partial-mastery / weak-KP · archive_var --orange",
+          "archive_var": "--orange"
+        },
+        "green": {
+          "value": "#34C759",
+          "type": "color",
+          "comment": "iOS HIG System Green · success / mastered / streak / sparkline · archive_var --green",
+          "archive_var": "--green"
+        },
+        "indigo": {
+          "value": "#5856D6",
+          "type": "color",
+          "comment": "iOS HIG System Indigo · KP / message-icon / blob-purple base · archive_var --indigo",
+          "archive_var": "--indigo"
+        },
+        "yellow": {
+          "value": "#FFCC00",
+          "type": "color",
+          "comment": "iOS HIG System Yellow · 02_capture 检测 brackets / scan line / detect badge / mode tab on · archive_var --yellow",
+          "archive_var": "--yellow"
+        },
+        "purple": {
+          "value": "#AF52DE",
+          "type": "color",
+          "comment": "iOS HIG System Purple · settings / preferences icon · archive_var --purple",
+          "archive_var": "--purple"
+        },
+        "teal": {
+          "value": "#30B0C7",
+          "type": "color",
+          "comment": "iOS HIG System Teal · system notifications / 16_shared / 18_observer / message-system-icon · archive_var --teal",
+          "archive_var": "--teal"
+        },
+        "pink": {
+          "value": "#FF2D55",
+          "type": "color",
+          "comment": "iOS HIG System Pink · exam events / family share / blob-pink base · archive_var --pink",
+          "archive_var": "--pink"
+        },
+        "success": {
+          "DEFAULT": {
+            "value": "#1A7D34",
+            "type": "color",
+            "comment": "Toast/banner system success (deeper than --green for AA contrast at body text size). Distinct from --tkn-color-mastery-mastered.",
+            "contrast_on_light": "5.21:1"
+          }
+        },
+        "warning": {
+          "DEFAULT": {
+            "value": "#B45309",
+            "type": "color",
+            "comment": "Toast/banner system warning (deeper than --orange for AA contrast). Distinct from --tkn-color-encouragement-DEFAULT.",
+            "contrast_on_light": "5.02:1"
+          }
+        },
+        "danger": {
+          "DEFAULT": {
+            "value": "#C0392B",
+            "type": "color",
+            "comment": "System error / destructive actions. Same hex as --tkn-color-mastery-forgot but separate semantic namespace.",
+            "contrast_on_light": "5.44:1"
+          }
+        },
+        "info": {
+          "DEFAULT": {
+            "value": "#005C99",
+            "type": "color",
+            "comment": "Info banners, observer-mode banner",
+            "contrast_on_light": "7.02:1"
+          }
         }
       },
-      "warning": {
-        "DEFAULT": {
-          "value": "#B45309",
-          "type": "color",
-          "comment": "Warning states, caution banners",
-          "contrast_on_light": "5.02:1",
-          "contrast_on_dark": "4.18:1"
+      "hero-gradient": {
+        "home": {
+          "value": "linear-gradient(180deg, #1E3A8A 0%, #3B5BDB 45%, #5B8DEF 100%)",
+          "type": "gradient",
+          "comment": "Mood A · 01_home hero 240px · archive 实测 · 替代旧 --tkn-gradient-aurora 名字",
+          "css_var": "--tkn-gradient-hero-home",
+          "wechat_fallback": "#3B5BDB"
+        },
+        "landing": {
+          "value": "linear-gradient(170deg, #0F1A3D 0%, #1F3C8C 40%, #5F5BDB 80%, #8B87F6 100%)",
+          "type": "gradient",
+          "comment": "Mood A · 14_landing hero 380px · archive 实测",
+          "css_var": "--tkn-gradient-hero-landing",
+          "wechat_fallback": "#1F3C8C"
+        },
+        "card": {
+          "value": "linear-gradient(135deg, #0F1A3D 0%, #1F3C8C 60%, #5F5BDB 100%)",
+          "type": "gradient",
+          "comment": "Mood A · reviewhero card 内嵌渐变 · archive 01_home reviewhero 实测",
+          "css_var": "--tkn-gradient-hero-card",
+          "wechat_fallback": "#1F3C8C"
+        },
+        "welcomeback": {
+          "value": "linear-gradient(135deg, #4F6FFF 0%, #7B5FFF 50%, #B85FFF 100%)",
+          "type": "gradient",
+          "comment": "Mood A · 17_welcomeback hero 460px · archive 实测（保留更鲜明的紫调与情感性回流意象）",
+          "css_var": "--tkn-gradient-hero-welcomeback",
+          "wechat_fallback": "#7B5FFF"
+        },
+        "today-blue": {
+          "value": "linear-gradient(160deg, #1F3A93 0%, #4A6FE3 100%)",
+          "type": "gradient",
+          "comment": "⚠️ archive 07_review_today 待详查 · 当前值是 v1.0 推测值 · 保留作 alias",
+          "css_var": "--tkn-gradient-today-blue",
+          "wechat_fallback": "#4A6FE3"
         }
       },
-      "danger": {
-        "DEFAULT": {
-          "value": "#C0392B",
+      "hero-stop": {
+        "1": {
+          "value": "#0F1A3D",
           "type": "color",
-          "comment": "Error states, destructive actions",
-          "contrast_on_light": "5.44:1",
-          "contrast_on_dark": "3.86:1"
+          "comment": "Hero 渐变 stop 1 · 极深 · 用于 reviewhero card / 14_landing 起点"
+        },
+        "2": {
+          "value": "#1E3A8A",
+          "type": "color",
+          "comment": "Hero 渐变 stop 2 · 深蓝 · 01_home hero 起点（推荐）"
+        },
+        "3": {
+          "value": "#1F3C8C",
+          "type": "color",
+          "comment": "Hero 渐变 stop 3 · reviewhero 中段 · 14_landing 中段"
+        },
+        "4": {
+          "value": "#3B5BDB",
+          "type": "color",
+          "comment": "Hero 渐变 stop 4 · 01_home hero 中段"
+        },
+        "5": {
+          "value": "#5B8DEF",
+          "type": "color",
+          "comment": "Hero 渐变 stop 5 · 01_home hero 终点（亮）"
+        },
+        "6": {
+          "value": "#5F5BDB",
+          "type": "color",
+          "comment": "Hero 渐变 stop 6 · reviewhero 终点 · 14_landing 紫色段"
+        },
+        "7": {
+          "value": "#8B87F6",
+          "type": "color",
+          "comment": "Hero 渐变 stop 7 · 14_landing 终点（最亮紫）"
         }
       },
-      "info": {
-        "DEFAULT": {
-          "value": "#005C99",
+      "blob": {
+        "purple": {
+          "value": "rgba(88,86,214,.55)",
           "type": "color",
-          "comment": "Info banners, informational states",
-          "contrast_on_light": "7.02:1",
-          "contrast_on_dark": "2.99:1",
-          "_warning_dark": "below-AA on black; info banners should only appear on light backgrounds"
+          "comment": "Hero 装饰 blob 紫 · 右上 · blur 20-28px · 与 --indigo 同基"
+        },
+        "cyan": {
+          "value": "rgba(88,214,255,.55)",
+          "type": "color",
+          "comment": "Hero 装饰 blob 青 · 左下 · blur 20-24px · sky cyan"
+        },
+        "cyan-soft": {
+          "value": "rgba(88,214,255,.45)",
+          "type": "color",
+          "comment": "Hero 装饰 blob 青软 · 01_home hero ::after"
+        },
+        "pink": {
+          "value": "rgba(255,45,85,.35)",
+          "type": "color",
+          "comment": "Hero 装饰 blob 粉 · 中央偏左 · blur 18px · 与 --pink 同基"
+        },
+        "coral": {
+          "value": "rgba(255,107,107,.45)",
+          "type": "color",
+          "comment": "Hero card 装饰 blob 珊瑚红 · 04 result hero / 14 landing top-right · blur 28px"
+        },
+        "mint": {
+          "value": "rgba(79,209,217,.35)",
+          "type": "color",
+          "comment": "Hero card 装饰 blob 薄荷 · 04 result hero card 内底 · 01_home reviewhero ::after"
+        },
+        "gold": {
+          "value": "rgba(255,209,102,.40)",
+          "type": "color",
+          "comment": "Hero card 装饰 blob 金 · 14 landing 中央 · blur 22px"
+        }
+      },
+      "em": {
+        "from-gold": {
+          "value": "#FFD166",
+          "type": "color",
+          "comment": "Em 强调字渐变起点（gold）· hero title em / hero card title em / streak flame · 与 blob.gold 配套"
+        },
+        "to-coral": {
+          "value": "#FF6B6B",
+          "type": "color",
+          "comment": "Em 强调字渐变终点（coral）· landing hero title em / 14 landing"
+        },
+        "to-amber": {
+          "value": "#FFB454",
+          "type": "color",
+          "comment": "Em 强调字渐变终点 amber · 01 home hero name em（更柔和）"
+        }
+      },
+      "kp": {
+        "bg-from": {
+          "value": "#FFF4E6",
+          "type": "color",
+          "comment": "KP 鼓励卡渐变起点 · 暖米 · 01_home kpcard"
+        },
+        "bg-to": {
+          "value": "#FFE0C2",
+          "type": "color",
+          "comment": "KP 鼓励卡渐变终点 · 暖橙"
+        },
+        "border": {
+          "value": "rgba(255,149,0,.25)",
+          "type": "color",
+          "comment": "KP 卡 border · 与 --orange 同基"
+        },
+        "text-title": {
+          "value": "#8B4513",
+          "type": "color",
+          "comment": "KP 卡标题棕色"
+        },
+        "text-body": {
+          "value": "#A0522D",
+          "type": "color",
+          "comment": "KP 卡正文棕色"
+        },
+        "text-em": {
+          "value": "#6B2C0F",
+          "type": "color",
+          "comment": "KP 卡强调棕色（深）· strong 标签"
+        }
+      },
+      "ans": {
+        "wrong-from": {
+          "value": "#FFE8E6",
+          "type": "color",
+          "comment": "答案错误卡渐变起点 · 04 result .ans.wrong"
+        },
+        "wrong-to": {
+          "value": "#FFFFFF",
+          "type": "color",
+          "comment": "答案错误卡渐变终点（白）"
+        },
+        "right-from": {
+          "value": "#E4F7EA",
+          "type": "color",
+          "comment": "答案正确卡渐变起点 · 04 result .ans.right"
+        },
+        "right-to": {
+          "value": "#FFFFFF",
+          "type": "color",
+          "comment": "答案正确卡渐变终点"
+        }
+      },
+      "glass": {
+        "white-08": {
+          "value": "rgba(255,255,255,.08)",
+          "type": "color",
+          "comment": "玻璃态 chip / pill 极淡白透 · 仅 hover 态"
+        },
+        "white-10": {
+          "value": "rgba(255,255,255,.10)",
+          "type": "color",
+          "comment": "玻璃态 chip / 02 subj 默认 / rh-sub-chip · 标准白透"
+        },
+        "white-12": {
+          "value": "rgba(255,255,255,.12)",
+          "type": "color",
+          "comment": "玻璃态 tip / eyebrow · 中等白透"
+        },
+        "white-14": {
+          "value": "rgba(255,255,255,.14)",
+          "type": "color",
+          "comment": "玻璃态 mchip metric / rh-btn2 · 中重白透"
+        },
+        "white-16": {
+          "value": "rgba(255,255,255,.16)",
+          "type": "color",
+          "comment": "玻璃态 streak flame pill / signin pill · 主要白透"
+        },
+        "white-18": {
+          "value": "rgba(255,255,255,.18)",
+          "type": "color",
+          "comment": "玻璃态 shutter outer ring layer 1 · aurora particle"
+        },
+        "white-22": {
+          "value": "rgba(255,255,255,.22)",
+          "type": "color",
+          "comment": "玻璃态 mchip border · landing eyebrow border"
+        },
+        "white-24": {
+          "value": "rgba(255,255,255,.24)",
+          "type": "color",
+          "comment": "玻璃态 streakbar flame border · rh-btn2 border"
+        },
+        "white-30": {
+          "value": "rgba(255,255,255,.30)",
+          "type": "color",
+          "comment": "玻璃态 signin border / msg.unread dot"
+        },
+        "white-35": {
+          "value": "rgba(255,255,255,.35)",
+          "type": "color",
+          "comment": "玻璃态 avatar outer ring"
+        },
+        "white-78": {
+          "value": "rgba(255,255,255,.78)",
+          "type": "color",
+          "comment": "玻璃态 tabbar bg (04 result) / nav blur"
+        },
+        "white-86": {
+          "value": "rgba(242,242,247,.86)",
+          "type": "color",
+          "comment": "玻璃态 tabbar bg (01 home) · 注意是 bg-light tint"
+        },
+        "white-92": {
+          "value": "rgba(255,255,255,.92)",
+          "type": "color",
+          "comment": "玻璃态 cta-dock fade · 02 subj.on bg"
+        },
+        "black-35": {
+          "value": "rgba(0,0,0,.35)",
+          "type": "color",
+          "comment": "玻璃态 control-btn (02 camera 内黑半透按钮) · low alpha"
+        },
+        "black-40": {
+          "value": "rgba(0,0,0,.40)",
+          "type": "color",
+          "comment": "玻璃态 nav icon-btn (02 camera 顶部) "
+        },
+        "black-45": {
+          "value": "rgba(0,0,0,.45)",
+          "type": "color",
+          "comment": "玻璃态 02 camera nav icon-btn 默认"
+        },
+        "black-55": {
+          "value": "rgba(0,0,0,.55)",
+          "type": "color",
+          "comment": "玻璃态 02 camera detect badge"
+        }
+      },
+      "brand": {
+        "wechat": {
+          "value": "#07C160",
+          "type": "color",
+          "comment": "WeChat green — IRON RULE 1 EXCEPTION (registered as 'wechat-brand'). Used ONLY on P00 login '微信一键登录' button. WeChat brand color is part of product context. Contrast on white text = 2.95:1 (large text only).",
+          "contrast_on_light": "2.95:1",
+          "white_text_on_this": "2.95:1",
+          "_iron_rule_1_exception": "wechat-brand",
+          "_usage_constraint": "ONLY on P00 login button; mockup must include data-iron-rule-1-exception='wechat-brand'"
         }
       }
     },
@@ -177,10 +543,8 @@
         "value": "#C41E3A",
         "type": "color",
         "css_var": "--tkn-subject-math",
-        "comment": "EXCEPTION 1 — Carmine red. High-energy, distinct from physics/chemistry/english. For math subject chips, tags, left-bars.",
+        "comment": "EXCEPTION 1 — Carmine red. archive 学科色（_archive 通用），用于 02 subj / 04 thumb / 10 calendar dot / 11 event-detail",
         "contrast_on_light": "5.84:1",
-        "contrast_on_dark": "3.59:1",
-        "white_text_on_this": "5.84:1",
         "rationale": "tag_taxonomy requires >=4 visually distinct subject colors; math classically red"
       },
       "physics": {
@@ -189,29 +553,21 @@
         "css_var": "--tkn-subject-physics",
         "comment": "EXCEPTION 1 — Cobalt blue. Physical world / science association.",
         "contrast_on_light": "6.89:1",
-        "contrast_on_dark": "3.05:1",
-        "white_text_on_this": "6.89:1",
-        "rationale": "Distinct from primary-DEFAULT (#0071e3) in both hue and luminance"
+        "rationale": "Distinct from primary (#007AFF) in both hue and luminance"
       },
       "chemistry": {
         "value": "#1A6B3A",
         "type": "color",
         "css_var": "--tkn-subject-chemistry",
-        "comment": "EXCEPTION 1 — Forest green. Lab / organic chemistry association.",
-        "contrast_on_light": "6.55:1",
-        "contrast_on_dark": "3.21:1",
-        "white_text_on_this": "6.55:1",
-        "rationale": "Green not used anywhere else in core palette; unambiguous"
+        "comment": "EXCEPTION 1 — Forest green.",
+        "contrast_on_light": "6.55:1"
       },
       "english": {
         "value": "#9C4F00",
         "type": "color",
         "css_var": "--tkn-subject-english",
-        "comment": "EXCEPTION 1 — Amber / copper. Warm language / literary association.",
-        "contrast_on_light": "5.95:1",
-        "contrast_on_dark": "3.53:1",
-        "white_text_on_this": "5.95:1",
-        "rationale": "Warm orange avoids both red (math) and blue (physics) territory; meets 4.5:1 on light"
+        "comment": "EXCEPTION 1 — Amber / copper.",
+        "contrast_on_light": "5.95:1"
       }
     }
   }

@@ -1,8 +1,10 @@
 # Apple-base Decision Summary
 
-**Sd Task**: sd-t02-tokens-from-apple-design-md  
-**Author**: Design Agent (Claude Sonnet 4.6)  
-**Date**: 2026-04-22
+> **⚠️ 已废 v1.0 · reference-only（2026-05-02 标注）**：本决策基于纯 Apple HIG（`#0071e3`），但 archive 真相是 iOS HIG（`#007AFF`）。当前权威 = `design/system/STYLE-TRUTH.md`。本文仅作历史决策记录。
+
+**Sd Task**: sd-t02-tokens-from-apple-design-md
+**Author**: Design Agent (Claude Sonnet 4.6)
+**Date**: 2026-04-22 · **Superseded**: 2026-05-02 by STYLE-TRUTH.md
 
 ## Why Apple
 

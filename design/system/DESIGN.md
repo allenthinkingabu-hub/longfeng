@@ -1,10 +1,12 @@
-# AI 错题本 · Design System v1.0
+# AI 错题本 · Design System v2.0 (archive-aligned)
 
-> **角色定位**：本文档是 tokens / components / molecules / pages 四级体系的总宪法。
+> **⚠️ v2.0 重大对齐**：v1.0 的 "warm/cool/celebrate 三分法 + aurora 极光 + #2C2A26 暖棕字 + #0071e3 macOS 蓝" 体系**已废**。当前真相 = `design/system/STYLE-TRUTH.md`（反推自 `design/mockups/wrongbook/_archive/` 19 张原版 mockup）。
+>
+> **角色定位**：本文档是 tokens / components / molecules / pages 四级体系的总宪法 · STYLE-TRUTH.md 是其权威依据。
 > **服务对象**：UI/UX 设计师 + AI 实施代理（fe-preflight / fe-builder / fe-accept skill 链）+ 前端工程师 + QA。
-> **使用约束**：与本文档冲突的任何 mockup / 组件 / 代码均视为缺陷。
+> **使用约束**：与本文档冲突的任何 mockup / 组件 / 代码均视为缺陷。**本文档与 STYLE-TRUTH.md 冲突时，以 STYLE-TRUTH.md 为准**。
 > **修订原则**：本文档变更 = 大版本变更，需重新走"设计评审 → 全量 mockup 同步 → spec 同步"三步。
-> **版本**：v1.0 · 2026-05-02 · 作者 Longfeng 设计组 · 评审通过
+> **版本**：v2.0 · 2026-05-02 · archive 对齐 + iOS HIG 真相反推
 
 ---
 
@@ -46,7 +48,7 @@
 > 每条配 ✅ 应做 / ❌ 禁做 / 🤖 AI 校验点。fe-accept-mock skill 自动跑这 8 条 lint，违反 = 验收 fail。
 
 ### 铁律 1 · 单一蓝是唯一可点击色
-**所有可点击元素**用 `--tkn-color-primary-DEFAULT` (#0071e3) 或深底变体 `--tkn-color-primary-dark` (#2997ff)。
+**所有可点击元素**用 `--tkn-color-primary-DEFAULT` (iOS Blue #007AFF) 或深底变体 `--tkn-color-primary-dark` (#2997ff)。
 
 - ✅ 主 CTA 蓝底白字、链接 #0066cc 下划线、Tab Bar 激活态蓝、复选框选中蓝、focus ring 蓝
 - ❌ 学科色当 CTA、暖色当 CTA、庆祝色当 CTA、4 种颜色区分按钮重要性
@@ -56,12 +58,25 @@
   - `self-grading` —— P08 复习执行底部三按钮使用 `--tkn-color-mastery-{forgot|partial|mastered}`，因语义是"自评判断"非"前进操作"
 - 任何新增例外必须在本铁律节追加并经设计 lead 批准
 
-### 铁律 2 · 冷暖分层不混用
-默认走 Apple 冷调（白 / 浅灰 / 黑）。**只在情感时刻**切换到暖中性 + 庆祝色，且**整段一致**。
+### 铁律 2 · Mood 5 类一致性（v2.0 替代旧 cool/warm/celebrate 三分法）
+每个 section 必须明确归类 5 类 mood 之一（详见 STYLE-TRUTH.md §3）：
 
-- ✅ P-HOME hero 极光蓝紫渐变（情感时刻），下方信息区切到暖米白；P09 庆祝页全屏暖绿渐变
-- ❌ 一个卡片里同时出现冷灰背景 + 暖橙文字、Apple 蓝按钮和庆祝绿按钮并排、暖色卡片配冷灰边
-- 🤖 每个 section 标 `data-mood="cool|warm|celebrate"`，子元素颜色必须与 mood 一致（用映射表校验）
+| Mood | 适用页 | 视觉特征 |
+|---|---|---|
+| **A** `hero+overlap` | P-HOME / P-LANDING / P-GUEST-CAPTURE / P-WELCOMEBACK | 深蓝 hero 240-380px (`hero-stop-2/4/5` 渐变) + 米白 scroll overlap (24-26px 圆角) + 3 层 radial blob (purple/cyan/pink) blur 18-28px |
+| **B** `pure-warm` | P04 / P05 / P06 / P07 / P10 / P11 / P12 / P13 | 米白底 #F2F2F7 + 白卡 + iOS nav 玻璃态 (`backdrop-filter blur(22px) saturate(180%)`) |
+| **C** `dark-camera` | P02 / P15 / P03 (analyzing 沿用) | 全屏 #0B0F1A 实色（不是渐变）+ viewfinder 内模拟纸面 + 黄色检测元素（brackets / scan / detect badge） |
+| **D** `celebrate-green` | P09 | 绿渐变 hero `linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%)` + confetti 粒子 + pulse 脉冲环 |
+| **E** `teal-observer` | P11 / P16 / P18 | 青绿主题 + identity card · 深蓝 hero 变体 |
+
+- ✅ 一个 section 数据归到一个 mood · 子元素颜色严格按本 mood 的 token 池
+- ❌ 一个卡片里混 hero+overlap 的深蓝按钮 + pure-warm 的白按钮、Mood A 内出现 `--tkn-color-warm-*` 旧 token、Mood B 内出现 `linear-gradient` aurora
+- 🤖 每个 section 标 `data-mood="A|B|C|D|E"`（v2.0 命名），grep 校验：
+  - Mood A 必须有 hero-stop + blob token
+  - Mood B 禁止 hero gradient 全屏
+  - Mood C 必须用 `--tkn-color-bg-camera` 而非 `gradient-focus-night`
+  - Mood D 必须含 confetti motion
+  - 旧 `data-mood="cool|warm|celebrate"` 视为遗留，需迁移
 
 ### 铁律 3 · 庆祝有节制
 仅 4 个白名单时刻允许"高强度庆祝"：
@@ -110,97 +125,193 @@
 
 ---
 
-## 2. Token 三层架构
+## 2. Token 三层架构（v2.0 archive-aligned）
 
-### 2.1 三层结构总览
+> **⚠️ 与 v1.0 的关键差异**：v1.0 用"L2 暖意层"承载 hero gradients + warm 棕字；v2.0 把所有 archive 真相 token 收编到 L1 (color.json)，**L2 warmth.json 已 deprecated**（仅保留 migration map）。
+
+### 2.1 v2.0 双层结构总览
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  Layer 1 · Apple 基础层（保留 · 不动）                          │
-│  --tkn-color-* (Apple Blue / Light gray / Dark surfaces)       │
+│  Layer 1 · iOS HIG + archive 真相（v2.0 收编完整体系）          │
+│  --tkn-color-* (iOS HIG 9 色 + 灰阶 + Hero stops + Blob       │
+│                + Em 渐变 + KP 棕字 + Glass 白透 + 学科色)       │
 │  --tkn-font-* / --tkn-type-* / --tkn-spacing-* / --tkn-radius-*│
-│  --tkn-shadow-* / --tkn-motion-*                               │
-│  → 决定页面骨架与系统语言（Apple HIG 节奏）                     │
+│  --tkn-shadow-* (archive 实测 18 类 · 几乎无阴影特征)           │
+│  --tkn-motion-* (Apple HIG ease + 90/150/250/400ms)            │
+│  → 决定页面骨架 + 系统语言 + archive 装饰系统                   │
 └────────────────────────────────────────────────────────────────┘
-       ↑ 共存 · 不污染 · 通过 mood 切换
+       ↑ 唯一主层 · 所有视觉值都在这里
 ┌────────────────────────────────────────────────────────────────┐
-│  Layer 2 · 学生暖意层（新增 · warmth.json）                     │
-│  --tkn-color-warm-* (暖米白 / 暖文字 / 暖分隔线)                │
-│  --tkn-color-encouragement-* (鼓励橙)                          │
-│  --tkn-gradient-* (4 种 hero 渐变)                             │
-│  --tkn-shadow-warm-*                                           │
-│  → 决定情感时刻的色温与节奏                                     │
+│  Layer 2 · ⛔️ DEPRECATED (warmth.json)                         │
+│  原 --tkn-color-warm-* / --tkn-gradient-aurora / ...           │
+│  → 仅保留 migration map · 不允许新代码引用                      │
 └────────────────────────────────────────────────────────────────┘
-       ↑ 仅在 mood ≠ cool 时触发
+       ↑ 已废 · 详见 warmth.json#_meta.migration_map
 ┌────────────────────────────────────────────────────────────────┐
-│  Layer 3 · 庆祝语义层（新增 · celebration.json）                │
+│  Layer 3 · 庆祝语义层（保留 · celebration.json v2.0）           │
 │  --tkn-color-mastery-* (掌握三态色)                            │
 │  --tkn-color-celebrate-confetti-* (5 色粒子)                   │
+│  --tkn-color-celebrate-celebrate-green-stop-{1,2,3} (P09 hero) │
+│  --tkn-gradient-celebrate-hero (P09 175deg 实测)               │
 │  --tkn-color-streak-fire (火焰)                                │
 │  --tkn-motion-celebrate-* (粒子动效专用时长)                    │
 │  → 仅在 4 个白名单庆祝时刻调用                                  │
 └────────────────────────────────────────────────────────────────┘
        ↑ 独立命名空间
 ┌────────────────────────────────────────────────────────────────┐
-│  EXCEPTION · 学科色板（保留 · 独立）                            │
+│  EXCEPTION · 学科色板 + 微信品牌（保留 · 独立）                 │
 │  --tkn-subject-{math|physics|chemistry|english}                │
-│  → 仅 chip / 左色条 / icon 三种用法                             │
+│  --tkn-color-brand-wechat                                      │
+│  → 仅 chip / 左色条 / icon / 微信按钮 4 种用法                  │
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Layer 1 · Apple 基础层（保留）
+### 2.2 Layer 1 · iOS HIG + archive 真相（v2.0 主层）
 
-现有 7 份 token JSON 全部保留：`color.json` / `typography.json` / `spacing.json` / `radius.json` / `shadow.json` / `motion.json` + 学科色作为 EXCEPTION。
+现有 token JSON：`color.json` (v2.0 重写) / `typography.json` / `spacing.json` / `radius.json` (v2.0 重写) / `shadow.json` (v2.0 重写) / `motion.json`。完整定义详见各 JSON · 也可在 `STYLE-TRUTH.md §2` 一览。
 
-维护清单：
-1. 在 `color.json` 加 `_meta.layered = "L1-apple-base"` 标记
-2. 把现有 `success` / `warning` / `danger` / `info` 重命名为 `system-success` / `system-warning` / `system-danger` / `system-info`（防止与新增 `mastery-*` / `encouragement-*` 混淆）
-3. 在 `color.json` 新增 `brand` 子组：`--tkn-color-brand-wechat = #07C160`，仅供 P00 登录页"微信一键登录"按钮使用（铁律 1 唯一例外项的 token 化承载）
+**v2.0 关键修正**（vs v1.0）：
 
-### 2.3 Layer 2 · 学生暖意层（新增 18 个 token · `warmth.json`）
+| Token | v1.0 错值 | v2.0 archive 真相 |
+|---|---|---|
+| `--tkn-color-primary-DEFAULT` | `#0071e3` (macOS) | `#007AFF` (iOS HIG) |
+| `--tkn-color-text-primary` | `#1d1d1f` 或 `#2C2A26` | `#1C1C1E` (iOS HIG) |
+| `--tkn-color-text-secondary` | `rgba(0,0,0,.80)` 或 `rgba(44,42,38,.72)` | `#636366` (iOS HIG) |
+| `--tkn-color-text-tertiary` | `rgba(0,0,0,.48)` | `#8E8E93` (iOS HIG) |
+| `--tkn-color-bg-light` | `#f5f5f7` (Apple HIG) | `#F2F2F7` (iOS HIG) |
+| `--tkn-color-sep` | (无) | `rgba(60,60,67,.14)` (iOS HIG · 新增) |
 
-#### 暖中性面板（6 个）
+### 2.3 Layer 1 关键 token 清单（v2.0 收编 archive 真相）
+
+#### iOS HIG 9 色（color.json#tkn.color.system）
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--tkn-color-warm-bg` | `#FAF8F4` | 信息流页面默认底色（P05 列表、P06 详情、P-HOME 信息区） |
-| `--tkn-color-warm-elevated` | `#FFFFFF` | 暖底上的卡片纯白 |
-| `--tkn-color-warm-sunken` | `#F2EDE3` | 暖底里的凹陷区（搜索框、输入框背景） |
-| `--tkn-color-warm-text-primary` | `#2C2A26` | 暖底主文字（对比 16.2:1） |
-| `--tkn-color-warm-text-secondary` | `rgba(44,42,38,0.72)` | 暖底次文字 |
-| `--tkn-color-warm-divider` | `rgba(44,42,38,0.08)` | 暖底分隔线、卡片细边 |
+| `--tkn-color-primary-DEFAULT` | `#007AFF` | 主交互色 / CTA / 焦点环 |
+| `--tkn-color-system-red` | `#FF3B30` | 错误 / forgot / wrong / exam |
+| `--tkn-color-system-orange` | `#FF9500` | 警告 / partial-mastery / weak-KP |
+| `--tkn-color-system-green` | `#34C759` | 成功 / mastered / streak / sparkline |
+| `--tkn-color-system-indigo` | `#5856D6` | KP / message-icon / blob-purple base |
+| `--tkn-color-system-yellow` | `#FFCC00` | 02_capture 检测 brackets / scan / mode tab |
+| `--tkn-color-system-purple` | `#AF52DE` | settings / preferences |
+| `--tkn-color-system-teal` | `#30B0C7` | 系统通知 / 16_shared / 18_observer |
+| `--tkn-color-system-pink` | `#FF2D55` | 考试事件 / family share / blob-pink |
 
-#### 鼓励橙（情感激励，3 个）
-
-| Token | 值 | 用途 |
-|---|---|---|
-| `--tkn-color-encouragement-DEFAULT` | `#E8741C` | 倒计时 soon 状态、连击数字、薄弱 KP 高亮、复习"部分掌握"按钮 |
-| `--tkn-color-encouragement-soft` | `rgba(232,116,28,0.10)` | 鼓励背景色 |
-| `--tkn-color-encouragement-on` | `#FFFFFF` | 鼓励底上的文字 |
-
-#### Hero 渐变（4 个，仅情感时刻）
+#### 灰阶（color.json#tkn.color.text + bg）
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--tkn-gradient-aurora` | `linear-gradient(135deg, #4F6FFF 0%, #7B5FFF 50%, #B85FFF 100%)` | P-HOME / P-WELCOMEBACK 顶部极光问候 |
-| `--tkn-gradient-focus-night` | `linear-gradient(180deg, #0A0E1A 0%, #1A1F2E 100%)` | P00 / P02 / P03 / P-LANDING 第一段 全屏专注暗色 |
-| `--tkn-gradient-result-warm` | `linear-gradient(180deg, #FFF8E7 0%, #FAF8F4 100%)` | P04 AI 结果页温暖入场 |
-| `--tkn-gradient-today-blue` | `linear-gradient(160deg, #1F3A93 0%, #4A6FE3 100%)` | P07 今日复习 hero（沉稳深蓝→明亮蓝） |
+| `--tkn-color-text-primary` | `#1C1C1E` | 主文字 |
+| `--tkn-color-text-secondary` | `#636366` | 次文字 |
+| `--tkn-color-text-tertiary` | `#8E8E93` | 三级 / 禁用 |
+| `--tkn-color-bg-light` | `#F2F2F7` | iOS Light bg / Mood B 默认底 |
+| `--tkn-color-bg-camera` | `#0B0F1A` | Mood C dark-camera 实色（替代旧 gradient-focus-night） |
+| `--tkn-color-card` | `#FFFFFF` | 卡片纯白 |
+| `--tkn-color-sep` | `rgba(60,60,67,.14)` | iOS 分割线 |
 
-#### Hero 装饰透明度（2 个）
-
-| Token | 值 | 用途 |
-|---|---|---|
-| `--tkn-color-aurora-particle` | `rgba(255,255,255,0.18)` | hero 上漂浮的极光粒子 |
-| `--tkn-color-aurora-blur` | `rgba(255,255,255,0.06)` | hero 模糊光斑 |
-
-#### 暖底卡阴影（3 个）
+#### Hero 渐变 stops（color.json#tkn.color.hero-stop · v2.0 archive 真相）
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--tkn-shadow-warm-card` | `0 1px 2px rgba(44,42,38,0.04), 0 4px 12px rgba(44,42,38,0.06)` | 暖底卡片标准浮起 |
-| `--tkn-shadow-warm-card-pressed` | `0 0 0 transparent` | 卡片按压瞬间，配合 scale(0.97) |
-| `--tkn-shadow-warm-hero` | `0 8px 24px rgba(31,58,147,0.20)` | hero 区下方过渡阴影 |
+| `--tkn-color-hero-stop-1` | `#0F1A3D` | reviewhero card 起点 / landing 起点 |
+| `--tkn-color-hero-stop-2` | `#1E3A8A` | 01_home hero 起点（推荐） |
+| `--tkn-color-hero-stop-3` | `#1F3C8C` | reviewhero 中段 / landing 中段 |
+| `--tkn-color-hero-stop-4` | `#3B5BDB` | 01_home hero 中段 |
+| `--tkn-color-hero-stop-5` | `#5B8DEF` | 01_home hero 终点（亮） |
+| `--tkn-color-hero-stop-6` | `#5F5BDB` | reviewhero 终点 / landing 紫色段 |
+| `--tkn-color-hero-stop-7` | `#8B87F6` | landing 终点（最亮紫） |
+
+**Hero 渐变组装示例**（不再用单一 `--tkn-gradient-aurora` token，改为 css 直接组装 stops）：
+
+```css
+/* Mood A · 01_home hero 240px */
+.hero-home {
+  background: linear-gradient(180deg, var(--tkn-color-hero-stop-2) 0%, var(--tkn-color-hero-stop-4) 45%, var(--tkn-color-hero-stop-5) 100%);
+}
+
+/* Mood A · 14_landing hero 380px */
+.hero-landing {
+  background: linear-gradient(170deg, var(--tkn-color-hero-stop-1) 0%, var(--tkn-color-hero-stop-3) 40%, var(--tkn-color-hero-stop-6) 80%, var(--tkn-color-hero-stop-7) 100%);
+}
+
+/* Mood A · reviewhero card */
+.reviewhero {
+  background: linear-gradient(135deg, var(--tkn-color-hero-stop-1) 0%, var(--tkn-color-hero-stop-3) 60%, var(--tkn-color-hero-stop-6) 100%);
+}
+```
+
+#### Hero 装饰 blob（color.json#tkn.color.blob · 灵魂级别 · 必须 3 层）
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `--tkn-color-blob-purple` | `rgba(88,86,214,.55)` | hero `::before` 紫右上 · blur 20-28px |
+| `--tkn-color-blob-cyan` | `rgba(88,214,255,.55)` | hero `::after` 青左下 · blur 20-24px |
+| `--tkn-color-blob-cyan-soft` | `rgba(88,214,255,.45)` | 01_home hero ::after |
+| `--tkn-color-blob-pink` | `rgba(255,45,85,.35)` | hero `.blob` 粉中央偏左 · blur 18px |
+| `--tkn-color-blob-coral` | `rgba(255,107,107,.45)` | reviewhero / 14 landing top-right · blur 28px |
+| `--tkn-color-blob-mint` | `rgba(79,209,217,.35)` | reviewhero ::after / 04 hero card 内底 |
+| `--tkn-color-blob-gold` | `rgba(255,209,102,.40)` | 14 landing 中央 · blur 22px |
+
+#### Em 强调字渐变（color.json#tkn.color.em）
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `--tkn-color-em-from-gold` | `#FFD166` | 渐变起点 gold |
+| `--tkn-color-em-to-coral` | `#FF6B6B` | landing hero title em 终点 |
+| `--tkn-color-em-to-amber` | `#FFB454` | 01_home hero name em 终点（柔和） |
+
+```css
+/* Em 渐变字示例 */
+em {
+  background: linear-gradient(90deg, var(--tkn-color-em-from-gold) 0%, var(--tkn-color-em-to-coral) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+```
+
+#### KP 鼓励卡（color.json#tkn.color.kp · 替代旧 encouragement-soft 单色）
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `--tkn-color-kp-bg-from` | `#FFF4E6` | KP 卡渐变起点（暖米） |
+| `--tkn-color-kp-bg-to` | `#FFE0C2` | KP 卡渐变终点（暖橙） |
+| `--tkn-color-kp-border` | `rgba(255,149,0,.25)` | KP 卡 border |
+| `--tkn-color-kp-text-title` | `#8B4513` | KP 卡标题棕色 |
+| `--tkn-color-kp-text-body` | `#A0522D` | KP 卡正文棕色 |
+| `--tkn-color-kp-text-em` | `#6B2C0F` | KP 卡强调棕色 |
+
+#### 玻璃态白透（color.json#tkn.color.glass · 14 档透明度）
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `--tkn-color-glass-white-08` | `rgba(255,255,255,.08)` | hero 装饰极淡 |
+| `--tkn-color-glass-white-10` | `rgba(255,255,255,.10)` | 02 subj 默认 / rh-sub-chip |
+| `--tkn-color-glass-white-12` | `rgba(255,255,255,.12)` | tip / eyebrow |
+| `--tkn-color-glass-white-14` | `rgba(255,255,255,.14)` | mchip metric / rh-btn2 |
+| `--tkn-color-glass-white-16` | `rgba(255,255,255,.16)` | streak flame pill / signin pill |
+| `--tkn-color-glass-white-18` | `rgba(255,255,255,.18)` | shutter outer ring layer 1 |
+| `--tkn-color-glass-white-22` | `rgba(255,255,255,.22)` | mchip border |
+| `--tkn-color-glass-white-78` | `rgba(255,255,255,.78)` | tabbar 04 result / nav blur |
+| `--tkn-color-glass-white-86` | `rgba(242,242,247,.86)` | tabbar 01 home (bg-light tint) |
+| `--tkn-color-glass-white-92` | `rgba(255,255,255,.92)` | cta-dock fade / 02 subj.on |
+| `--tkn-color-glass-black-{35,40,45,55}` | `rgba(0,0,0,.35-.55)` | 02 camera 黑半透按钮 |
+
+#### 阴影体系（shadow.json · v2.0 archive 实测 18 类）
+
+阴影哲学：**几乎无阴影是关键特征**。卡片基线极轻 (0 1px 2px) · hero card 上限 (0 10px 30px) · 不允许 `0 12px 32%` 之类中等深阴影。
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `--tkn-shadow-card` | `0 1px 2px rgba(0,0,0,.04)` | 卡片基线 |
+| `--tkn-shadow-card-deep` | `0 1px 2px rgba(0,0,0,.04), 0 8px 22px rgba(40,50,90,.06)` | 04 hero / 14 sample 双层 |
+| `--tkn-shadow-hero-card` | `0 10px 30px rgba(31,60,140,.25)` | **本系统阴影上限** · reviewhero |
+| `--tkn-shadow-cta-blue` | `0 10px 24px rgba(0,122,255,.28)` | primary CTA 蓝色发光 |
+| `--tkn-shadow-cta-deep` | `0 12px 30px -6px rgba(31,60,140,.4), inset 0 1px 0 rgba(255,255,255,.25)` | landing 深蓝主 CTA |
+| `--tkn-shadow-shutter` | `0 0 0 4px rgba(255,255,255,.18), 0 0 0 8px rgba(255,255,255,.10), 0 14px 28px rgba(0,0,0,.35)` | 02_capture 三层环 |
+| `--tkn-shadow-focus` | `0 0 0 2px #007AFF` | 焦点环（修正自 #0071e3） |
+| (其他完整列表) | | 详见 shadow.json |
 
 ### 2.4 Layer 3 · 庆祝语义层（新增 12 个 token · `celebration.json`）
 
@@ -456,36 +567,36 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 
 ## 5. 19 页面设计意图与 Sprint 计划
 
-### 5.0 19 张页面 Mockup 主控矩阵
+### 5.0 19 张页面 Mockup 主控矩阵（v2.0 archive-aligned · Mood 5 类）
 
-| # | Page ID | 页面名 | Mood | Hero | 关键 Molecules | 情感锚点 | Sprint |
+| # | Page ID | 页面名 | Mood (v2.0) | Hero | 关键 Molecules | 情感锚点 | Sprint |
 |---|---|---|---|---|---|---|---|
-| 1 | P02 | 拍题相机 | cool 全屏沉浸 | `gradient-focus-night` | 取景器 + SubjectChip | 专注 → 期待 | **S1** |
-| 2 | P03 | AI 分析中 | cool 暗底等待 | 同 P02 顺接 | AnalyzingPipeline | 略焦虑 → 被看见 | **S1** |
-| 3 | P04 | AI 分析结果 | warm 温和入场 | `gradient-result-warm` | QuestionCard + 3-step + MemoryCurve | 惊喜 → 满足 | **S1** |
-| 4 | P08 | 复习执行 | cool 专注白底 | 无 hero | 题干 Hero 卡 + Mastery 三按钮 | 挑战 → 自评 | **S1** |
-| 5 | P09 | 复习完成 | celebrate 庆祝 | `gradient-celebrate-green` + Confetti | CelebrateHero + MemoryCurve | 成就 → 持续动力 | **S1** |
-| 6 | P-HOME | 今日聚合首页 | celebrate hero + warm 信息流 | `gradient-aurora` 极光 | GreetingHero + TodayReviewCard + WeekStrip | 期待 → 控制感 | **S2** |
-| 7 | P05 | 错题本列表 | warm 卡片信息流 | 无 hero · 大标题 | SubjectChip + MasteryStatusCard + QuestionListCard | 掌控感 | **S2** |
-| 8 | P06 | 错题详情 | warm 档案页 | 原图缩略图卡 | MemoryCurve + RadarChart | 沉淀 → 进步可见 | **S2** |
-| 9 | P07 | 今日待复习 | celebrate hero + warm 时段卡 | `gradient-today-blue` | TodayReviewCard + 时段分组卡 | 整装 → 出发 | **S2** |
-| 10 | P-LANDING | 访客落地 | warm 价值橱窗 | 双段 hero | HeroProductShot + 3 样例 + 双 CTA | 好奇 → 信任 | **S3** |
-| 11 | P-GUEST-CAPTURE | 游客拍题 | cool 同 P02 + 配额 banner | 同 P02 | P02 + GuestQuotaBanner | 试探 → 体验 | **S3** |
-| 12 | P-SHARED | 分享只读 | warm 脱敏卡 | 无 hero · 顶部分享者 | QuestionCard(脱敏) + UpgradeCTA | 好奇 → 升级欲 | **S3** |
-| 13 | P00 | 登录 | cool Apple 黑底 | `gradient-focus-night` | LogoMark + 微信一键 + 协议 | 干净 → 决断 | **S3** |
-| 14 | P10 | 日历月视图 | warm 网格 | 无 hero | MonthGrid + LegendBar | 全局 → 计划 | **S4** |
-| 15 | P11 | 事件详情双形态 | warm 卡片 | 形态条带 | EventHeroCard + 关联项列表 | 上下文 → 行动 | **S4** |
-| 16 | P12 | 通知中心 | warm 列表 | 无 hero | TimelineGroup + NotificationCard | 整理 | **S4** |
-| 17 | P13 | 设置 / 我的 | warm 列表 + 头像区 | 暖色头像区 | AvatarBlock + SettingRow + DangerZone | 控制 | **S4** |
-| 18 | P-WELCOMEBACK | 回流唤起 | celebrate hero · 数字脉冲 | `gradient-aurora` | WelcomeBackHero + 数字脉冲 + CTA | 被惦记 → 回归 | **S5** |
-| 19 | P-OBSERVER | 观察者会话 | warm 只读 | 无 hero · 顶部观察者 banner | ReadOnlyBanner + 错题列表(只读) | 信任 → 安心 | **S5** |
+| 1 | P02 | 拍题相机 | **C** dark-camera 全屏 #0B0F1A 实色 | viewfinder 内模拟纸面 + 黄色检测 brackets/scan | 取景器 + SubjectChip 玻璃态 | 专注 → 期待 | **S1** |
+| 2 | P03 | AI 分析中 | **C** dark-camera 沿用 #0B0F1A | 同 P02 顺接 | AnalyzingPipeline | 略焦虑 → 被看见 | **S1** |
+| 3 | P04 | AI 分析结果 | **B** pure-warm 米白 #F2F2F7 | 题干缩略图卡（无 hero gradient） | QuestionCard + 答案对错卡 + 3-step + MemoryCurve | 惊喜 → 满足 | **S1** |
+| 4 | P08 | 复习执行 | **B** pure-warm 米白 | 无 hero | 题干 Hero 卡 + Mastery 三按钮 | 挑战 → 自评 | **S1** |
+| 5 | P09 | 复习完成 | **D** celebrate-green | `linear-gradient(175deg, #0F7F3E, #1FAE5C, #34C759)` + Confetti | CelebrateHero + MemoryCurve | 成就 → 持续动力 | **S1** |
+| 6 | P-HOME | 今日聚合首页 | **A** hero+overlap 240px | 深蓝 `linear-gradient(180deg, hero-stop-2/4/5)` + 3 blob (purple/cyan/pink) | GreetingHero + TodayReviewCard + WeekStrip | 期待 → 控制感 | **S2** |
+| 7 | P05 | 错题本列表 | **B** pure-warm 米白 | 无 hero · 大标题 | SubjectChip + MasteryStatusCard + QuestionListCard | 掌控感 | **S2** |
+| 8 | P06 | 错题详情 | **B** pure-warm 档案页 | 原图缩略图卡 | MemoryCurve + RadarChart | 沉淀 → 进步可见 | **S2** |
+| 9 | P07 | 今日待复习 | **A** hero+overlap | 深蓝渐变变体（today-blue 待 archive 详查）+ 气泡粒子 | TodayReviewCard + 时段分组卡 | 整装 → 出发 | **S2** |
+| 10 | P-LANDING | 访客落地 | **A** hero+overlap 380px | 深蓝 `linear-gradient(170deg, hero-stop-1/3/6/7)` + 3 blob (coral/cyan/gold) blur 22-28px | HeroProductShot + 3 样例 + 双 CTA | 好奇 → 信任 | **S3** |
+| 11 | P-GUEST-CAPTURE | 游客拍题 | **C** dark-camera + 配额 banner | 同 P02 | P02 + GuestQuotaBanner | 试探 → 体验 | **S3** |
+| 12 | P-SHARED | 分享只读 | **B** pure-warm 脱敏卡 | 无 hero · 顶部分享者 | QuestionCard(脱敏) + UpgradeCTA | 好奇 → 升级欲 | **S3** |
+| 13 | P00 | 登录 | **A** hero+overlap (archive 缺 · 按 STYLE-TRUTH §6 建议) | 深蓝 hero + 微信品牌按钮 + 玻璃态登录卡 | LogoMark + 微信一键 + 协议 | 干净 → 决断 | **S3** |
+| 14 | P10 | 日历月视图 | **B** pure-warm 网格 | 无 hero | MonthGrid + LegendBar | 全局 → 计划 | **S4** |
+| 15 | P11 | 事件详情双形态 | **E** teal-observer / **B** pure-warm | 形态条带 | EventHeroCard + 关联项列表 | 上下文 → 行动 | **S4** |
+| 16 | P12 | 通知中心 | **B** pure-warm 列表 | 无 hero | TimelineGroup + NotificationCard | 整理 | **S4** |
+| 17 | P13 | 设置 / 我的 | **B** pure-warm 列表 + 头像区 | 暖色头像区 | AvatarBlock + SettingRow + DangerZone | 控制 | **S4** |
+| 18 | P-WELCOMEBACK | 回流唤起 | **A** hero+overlap 460px · 数字脉冲 | 深蓝 hero `linear-gradient(135deg, #4F6FFF, #7B5FFF, #B85FFF)` + memory curve preview SVG | WelcomeBackHero + 数字脉冲 + CTA | 被惦记 → 回归 | **S5** |
+| 19 | P-OBSERVER | 观察者会话 | **E** teal-observer 只读 | 无 hero · 顶部观察者 banner | ReadOnlyBanner + 错题列表(只读) | 信任 → 安心 | **S5** |
 
 ### 5.1 Sprint 1 · 学习闭环 5 张
 
 学生完成"一道错题"端到端的 5 张关键页面。情感曲线：专注 → 被看见 → 满足 → 挑战 → 成就。
 
 #### P02 · 拍题相机
-- 全屏 `gradient-focus-night` 暗底，70% 高度相机预览
+- 全屏 `var(--tkn-color-bg-camera)` #0B0F1A 实色，viewfinder 70% 高度内含模拟纸面 + 黄色 4 角检测 brackets + 黄色扫描线
 - 顶部 SubjectChip 横滚（4 学科色），当前学科 1px 内描边
 - 底部 78px 圆形快门，左右图库 / 闪光灯小图标
 - **整页禁止暖色 / 庆祝色**
@@ -498,7 +609,7 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 - 取消按钮灰色 pill，最下方
 
 #### P04 · AI 分析结果
-- **从 P03 暗底切到 `gradient-result-warm` 米黄米白**——情感曲线最关键转折
+- **从 P03 暗底切到 Mood B pure-warm 米白 #F2F2F7**——情感曲线最关键转折（无 hero gradient · 直接 page-level 米白底）
 - Hero 题干卡白底 + 公式 chip 高亮
 - 错解 / 正解双列：左卡 mastery-forgot 红 1px 内描边，右卡 mastery-mastered 绿 1px 内描边（**不用大色块**）
 - 错因区左侧 4px mastery-forgot 红条 + warm-text-primary 文字
@@ -529,7 +640,7 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 学生每日开启的高频心智入口。情感曲线：期待 → 掌控 → 沉淀 → 出发。
 
 #### P-HOME · 今日聚合首页
-- 顶部 hero `gradient-aurora` 蓝紫极光 + 漂浮粒子
+- 顶部 hero **深蓝渐变** `linear-gradient(180deg, var(--tkn-color-hero-stop-2) 0%, var(--tkn-color-hero-stop-4) 45%, var(--tkn-color-hero-stop-5) 100%)` + 3 层 radial blob (purple/cyan/pink) blur 18-20px
 - TodayReviewCard 焦点：圆环进度大占 40%，学科 chip 横排，"全部开始"蓝 pill
 - 切到暖米白后 6 个 block 平铺（WeeklySparkline / WeekStrip / MessagesList / WeakKPHint / QuickEntries）
 - 每个 block 独立 skeleton，互不阻塞
@@ -562,7 +673,7 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 冷启动 + 增长漏斗，三条 KPI（访客→游客 ≥35% / 游客→注册 ≥25% / 分享→注册 ≥15%）的视觉承载。
 
 #### P-LANDING · 访客落地页
-- **第一段 hero**：暗底 `gradient-focus-night`，display-hero 大字"AI 帮你拍下错题，不再做无用功"，下方真实拍题 Lottie / GIF loop
+- **第一段 hero**：深蓝 `linear-gradient(170deg, hero-stop-1/3/6/7)` 380px + 3 blob (coral/cyan/gold) blur 22-28px，display-hero 32px 大字"AI 帮你拍下错题，不再做无用功"（em 用 gold→coral 渐变），下方真实拍题 Lottie / GIF loop
 - 双 CTA："试一试（白 pill 突出）" + "登录（蓝 pill 主操作）"
 - **第二段切到 warm 米白**：3 张样例卡横滚（数学应用题 / 物理力学 / 英语完形），点击展开看完整 AI 分析
 - 底部价值数字（"已分析 100w+ 错题 / 7 日留存 47%"）+ 二次 CTA
@@ -578,7 +689,7 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 - 底部固定 CTA："注册查看 + 拥有自己的错题本"蓝 pill 大按钮
 
 #### P00 · 登录
-- 全屏 `gradient-focus-night` 暗底
+- 全屏 `var(--tkn-color-bg-camera)` #0B0F1A 实色暗底
 - 顶部 1/3 区域中心 LogoMark（白色 SVG）+ 1 句 slogan（display-hero）
 - 中部"微信一键登录"按钮使用 `--tkn-color-brand-wechat` (#07C160) 微信绿（铁律 1 唯一例外，需 `data-iron-rule-1-exception="wechat-brand"` 标注）+ "其他方式"灰色链接
 - 底部协议勾选 + micro 文字
@@ -609,7 +720,7 @@ mockup CSS 中**任何一处**：颜色（hex/rgb/hsl）/ 字号（px/rem/em）/
 ### 5.5 Sprint 5 · P1 复合功能 2 张
 
 #### P-WELCOMEBACK · 回流唤起
-- 复用 P-HOME 的 `gradient-aurora` hero
+- 复用 P-HOME 的深蓝 hero 渐变（`linear-gradient(180deg, hero-stop-2/4/5)`）
 - 中央数字脉冲："还剩 N 个待复习"（数字使用 display-hero 字号，N 数字应用 streak-bump 弹跳）
 - 双 CTA："一键回登（蓝 pill）" + "看看新功能（灰链接）"
 
@@ -702,47 +813,131 @@ Day 5: fe-accept-e2e A 轨真实后端联调（每 sprint 末跑一次）
 
 ---
 
-## 附录 A · 完整 Token 清单（Layer 2 + 3 新增）
+## 附录 A · 完整 Token 清单（v2.0 · archive-aligned）
 
-### Layer 2 新增（18 个 · `warmth.json`）
+> **权威清单见 `STYLE-TRUTH.md §2`** + 各 token JSON 文件。本附录列关键 v2.0 变更点。
+
+### v2.0 修正：Layer 1 实际值（替代 v1.0 错值）
 
 ```
---tkn-color-warm-bg                 #FAF8F4
---tkn-color-warm-elevated           #FFFFFF
---tkn-color-warm-sunken             #F2EDE3
---tkn-color-warm-text-primary       #2C2A26
---tkn-color-warm-text-secondary     rgba(44,42,38,0.72)
---tkn-color-warm-divider            rgba(44,42,38,0.08)
-
---tkn-color-encouragement-DEFAULT   #E8741C
---tkn-color-encouragement-soft      rgba(232,116,28,0.10)
---tkn-color-encouragement-on        #FFFFFF
-
---tkn-gradient-aurora               linear-gradient(135deg, #4F6FFF 0%, #7B5FFF 50%, #B85FFF 100%)
---tkn-gradient-focus-night          linear-gradient(180deg, #0A0E1A 0%, #1A1F2E 100%)
---tkn-gradient-result-warm          linear-gradient(180deg, #FFF8E7 0%, #FAF8F4 100%)
---tkn-gradient-today-blue           linear-gradient(160deg, #1F3A93 0%, #4A6FE3 100%)
-
---tkn-color-aurora-particle         rgba(255,255,255,0.18)
---tkn-color-aurora-blur             rgba(255,255,255,0.06)
-
---tkn-shadow-warm-card              0 1px 2px rgba(44,42,38,0.04), 0 4px 12px rgba(44,42,38,0.06)
---tkn-shadow-warm-card-pressed      0 0 0 transparent
---tkn-shadow-warm-hero              0 8px 24px rgba(31,58,147,0.20)
+变更项                           v1.0 错值                       v2.0 archive 真相
+--tkn-color-primary-DEFAULT      #0071e3 (macOS)                  #007AFF (iOS HIG)
+--tkn-color-text-primary         #1d1d1f                          #1C1C1E (iOS HIG)
+--tkn-color-text-secondary       rgba(0,0,0,.80)                  #636366 (iOS HIG)
+--tkn-color-text-tertiary        rgba(0,0,0,.48)                  #8E8E93 (iOS HIG)
+--tkn-color-bg-light             #f5f5f7                          #F2F2F7 (iOS HIG)
+--tkn-color-sep                  (无)                              rgba(60,60,67,.14) (iOS HIG · 新增)
+--tkn-shadow-focus               0 0 0 2px #0071e3                0 0 0 2px #007AFF
 ```
 
-### Layer 3 新增（12 个 · `celebration.json`）
+### Layer 1 新增（archive 收编 · color.json v2.0）
+
+```
+# iOS HIG 9 色系统
+--tkn-color-system-red               #FF3B30
+--tkn-color-system-orange            #FF9500
+--tkn-color-system-green             #34C759
+--tkn-color-system-indigo            #5856D6
+--tkn-color-system-yellow            #FFCC00     (02_capture 检测用)
+--tkn-color-system-purple            #AF52DE
+--tkn-color-system-teal              #30B0C7
+--tkn-color-system-pink              #FF2D55
+--tkn-color-system-danger-DEFAULT    #C0392B     (重命名自 danger)
+
+# Hero 渐变 stops（深蓝 hero 7 档）
+--tkn-color-hero-stop-{1..7}         #0F1A3D / #1E3A8A / #1F3C8C / #3B5BDB / #5B8DEF / #5F5BDB / #8B87F6
+
+# Hero 装饰 blob（7 色 · 灵魂级别 · 必须 3 层）
+--tkn-color-blob-purple              rgba(88,86,214,.55)
+--tkn-color-blob-cyan                rgba(88,214,255,.55)
+--tkn-color-blob-cyan-soft           rgba(88,214,255,.45)
+--tkn-color-blob-pink                rgba(255,45,85,.35)
+--tkn-color-blob-coral               rgba(255,107,107,.45)
+--tkn-color-blob-mint                rgba(79,209,217,.35)
+--tkn-color-blob-gold                rgba(255,209,102,.40)
+
+# Em 强调字渐变（gold→coral / amber）
+--tkn-color-em-from-gold             #FFD166
+--tkn-color-em-to-coral              #FF6B6B
+--tkn-color-em-to-amber              #FFB454
+
+# KP 鼓励卡（暖米橙 + 棕字 · 替代旧 encouragement-soft 单色）
+--tkn-color-kp-bg-from               #FFF4E6
+--tkn-color-kp-bg-to                 #FFE0C2
+--tkn-color-kp-border                rgba(255,149,0,.25)
+--tkn-color-kp-text-title            #8B4513
+--tkn-color-kp-text-body             #A0522D
+--tkn-color-kp-text-em               #6B2C0F
+
+# 答案对错卡（04_result）
+--tkn-color-ans-{wrong,right}-from   #FFE8E6 / #E4F7EA
+--tkn-color-ans-{wrong,right}-to     #FFFFFF
+
+# 玻璃态白透 14 档
+--tkn-color-glass-white-{08|10|12|14|16|18|22|24|30|35|78|86|92}
+--tkn-color-glass-black-{35|40|45|55}
+
+# Camera 暗底（替代旧 gradient-focus-night）
+--tkn-color-bg-camera                #0B0F1A   (Mood C 实色 · 不是 linear gradient)
+```
+
+### Layer 1 阴影（shadow.json v2.0 · 18 类 archive 实测）
+
+```
+--tkn-shadow-card-light              0 1px 0 rgba(0,0,0,.03)        L0 极轻
+--tkn-shadow-card                    0 1px 2px rgba(0,0,0,.04)      L0 卡片基线（最常用）
+--tkn-shadow-card-deep               0 1px 2px rgba(0,0,0,.04), 0 8px 22px rgba(40,50,90,.06)
+--tkn-shadow-hero-card               0 10px 30px rgba(31,60,140,.25)   ← 系统阴影上限
+--tkn-shadow-phone                   inset 0 0 0 6px #111, 0 24px 64px rgba(0,0,0,.22)
+--tkn-shadow-phone-deep              0 40px 100px -20px rgba(30,40,80,.35), 0 8px 24px rgba(20,30,60,.12), inset 0 0 0 6px #111
+--tkn-shadow-cta-blue                0 10px 24px rgba(0,122,255,.28)
+--tkn-shadow-cta-deep                0 12px 30px -6px rgba(31,60,140,.4), inset 0 1px 0 rgba(255,255,255,.25)
+--tkn-shadow-cta-orange              0 4px 10px rgba(255,149,0,.28)
+--tkn-shadow-step-num                0 4px 10px rgba(0,122,255,.3)
+--tkn-shadow-rh-btn                  0 6px 18px rgba(255,255,255,.2)
+--tkn-shadow-shutter                 0 0 0 4px rgba(255,255,255,.18), 0 0 0 8px rgba(255,255,255,.10), 0 14px 28px rgba(0,0,0,.35)
+--tkn-shadow-glass-active            0 6px 18px rgba(0,0,0,.18)
+--tkn-shadow-glow-yellow             0 0 8px #FFD166
+--tkn-shadow-glow-pulse              0 0 0 6px rgba(255,204,0,.18)
+--tkn-shadow-avatar                  0 0 0 2px rgba(255,255,255,.35), inset 0 0 0 2px rgba(0,0,0,.08)
+--tkn-shadow-logo                    inset 0 0 0 1.5px rgba(255,255,255,.25), 0 4px 12px rgba(0,0,0,.25)
+--tkn-shadow-paper                   0 30px 70px rgba(0,0,0,.55), 0 4px 12px rgba(0,0,0,.4)
+--tkn-shadow-focus                   0 0 0 2px #007AFF
+--tkn-shadow-nav-glass               backdrop-filter: saturate(180%) blur(20px)
+```
+
+### Layer 1 圆角（radius.json v2.0 · 13 档 archive 实测）
+
+```
+--tkn-radius-phone                   54px
+--tkn-radius-phone-camera            55px
+--tkn-radius-scroll-overlap          26px       landing scroll
+--tkn-radius-scroll-overlap-sm       24px       home / welcomeback scroll
+--tkn-radius-hero-card               22px       reviewhero / hero card
+--tkn-radius-card-lg                 18px       weekly / weekcard / msgs / kpcard ← 主卡片
+--tkn-radius-card-sm                 16px       sample / qcard / cta-try / btn 主按钮
+--tkn-radius-btn                     14px       rh-btn / kpbtn
+--tkn-radius-cell                    12px       weekstrip wd / how-step
+--tkn-radius-ic-md                   11px       qcard ic
+--tkn-radius-ic-sm                   10px       msg ic / 02 nav icon-btn / logo 方块
+--tkn-radius-sm                      8px        Apple 标准按钮
+--tkn-radius-xs                      6px        sample chip / qno
+--tkn-radius-micro                   4px        mini sep
+--tkn-radius-tiny                    3px        home indicator
+--tkn-radius-pill                    999px      streak / chip / signin
+--tkn-radius-circle                  50%        avatar / shutter / dots
+```
+
+### Layer 3（celebration.json v2.0）
 
 ```
 --tkn-color-mastery-forgot          #C0392B
 --tkn-color-mastery-partial         #E8741C
 --tkn-color-mastery-mastered        #34A853
 
---tkn-color-celebrate-confetti-1    #FFD60A
---tkn-color-celebrate-confetti-2    #FF375F
---tkn-color-celebrate-confetti-3    #34A853
---tkn-color-celebrate-confetti-4    #5E5CE6
---tkn-color-celebrate-confetti-5    #FF9500
+--tkn-color-celebrate-confetti-{1..5}    #FFD60A / #FF375F / #34A853 / #5E5CE6 / #FF9500
+--tkn-color-celebrate-celebrate-green-stop-{1,2,3}  #0F7F3E / #1FAE5C / #34C759
+--tkn-gradient-celebrate-hero       linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%)
 
 --tkn-color-streak-fire             #FF6B35
 
@@ -751,20 +946,23 @@ Day 5: fe-accept-e2e A 轨真实后端联调（每 sprint 末跑一次）
 --tkn-motion-celebrate-streak-bump  400ms
 ```
 
-### Layer 1 重命名 + 新增清单（兼容性变更）
+### Layer 2 ⛔️ DEPRECATED · warmth.json
+
+> 原 v1.0 token 名（`--tkn-color-warm-bg / -elevated / -text-primary / -text-secondary / -divider` + `--tkn-gradient-aurora / -focus-night / -result-warm` + `--tkn-shadow-warm-*`）**全部已废**。
+> 详见 `warmth.json#_meta.migration_map` 字段。
+> 下游引用迁移规则见 README.md。
+
+### EXCEPTION 命名空间
 
 ```
-旧                              →  新
---tkn-color-success-DEFAULT     →  --tkn-color-system-success-DEFAULT
---tkn-color-warning-DEFAULT     →  --tkn-color-system-warning-DEFAULT
---tkn-color-danger-DEFAULT      →  --tkn-color-system-danger-DEFAULT
---tkn-color-info-DEFAULT        →  --tkn-color-system-info-DEFAULT
-
-新增（brand 子组 · 1 个）：
---tkn-color-brand-wechat        #07C160   仅 P00 登录"微信一键登录"按钮
+--tkn-subject-math                   #C41E3A
+--tkn-subject-physics                #0057B7
+--tkn-subject-chemistry              #1A6B3A
+--tkn-subject-english                #9C4F00
+--tkn-color-brand-wechat             #07C160     (铁律 1 例外 wechat-brand)
 ```
 
-迁移：一次性 sed 替换所有 mockup CSS + components.md + 现有代码。
+迁移：一次性 sed 替换所有 mockup CSS + components.md + 现有代码 + 19 page spec.md（Loop 2 待执行）。
 
 ---
 

@@ -1,162 +1,301 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>登录页 · 通用日历</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="design-spec" content="P00.spec.md@v1" />
+<title>P00 · 登录 · AI 错题本</title>
 <style>
-:root{
-  --blue:#007AFF; --blue2:#0A84FF;
-  --gray1:#8E8E93; --gray2:#AEAEB2; --gray3:#C7C7CC; --gray4:#D1D1D6; --gray5:#E5E5EA; --gray6:#F2F2F7;
-  --label:#000000D9; --label2:#3C3C434D; --label3:#3C3C434D;
-  --bg:#FFFFFF; --bg2:#F2F2F7;
-  --radius-card:22px; --radius-btn:14px; --radius-input:12px;
-  --shadow-card:0 1px 3px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08);
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font);-webkit-font-smoothing:antialiased}
-body{background:linear-gradient(180deg,#EAF1FB 0%,#F7F6FA 55%,#FDF1F4 100%);display:grid;place-items:center;padding:40px;color:var(--label)}
-.phone{
-  position:relative;width:393px;height:852px;background:#fff;border-radius:55px;
-  box-shadow:0 40px 100px -20px rgba(30,40,80,.35),0 8px 24px rgba(20,30,60,.12),inset 0 0 0 6px #111;
-  overflow:hidden;
-}
-.phone::before{
-  content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);
-  width:125px;height:37px;background:#000;border-radius:20px;z-index:20;
-}
-.status{
-  position:absolute;inset:0 0 auto 0;height:54px;padding:18px 34px 0;display:flex;justify-content:space-between;align-items:flex-start;
-  font-size:17px;font-weight:600;letter-spacing:-.2px;z-index:15;color:#000;
-}
-.status .right{display:flex;gap:6px;align-items:center}
-.status .right svg{display:block}
-.screen{position:absolute;inset:0;padding-top:54px;padding-bottom:34px;background:
-  radial-gradient(120% 60% at 50% -10%, #E8F1FF 0%, transparent 60%),
-  linear-gradient(180deg,#FFFFFF 0%,#F7F7FB 100%);
-  display:flex;flex-direction:column;align-items:center;}
-.logo-wrap{margin-top:62px;position:relative}
-.logo{
-  width:92px;height:92px;border-radius:24px;
-  background:linear-gradient(135deg,#3BA6FF 0%,#0A84FF 60%,#0060DF 100%);
-  display:grid;place-items:center;
-  box-shadow:0 20px 40px -10px rgba(10,132,255,.45),0 6px 16px rgba(10,132,255,.25);
-  position:relative;overflow:hidden;
-}
-.logo::after{content:"";position:absolute;top:-30%;left:-10%;width:140%;height:70%;
-  background:linear-gradient(180deg,rgba(255,255,255,.35),transparent);transform:rotate(-8deg);border-radius:50%;}
-.logo svg{position:relative;z-index:1}
-.app-title{margin-top:22px;font-size:28px;font-weight:700;letter-spacing:-.4px}
-.app-sub{margin-top:6px;color:#3C3C4399;font-size:15px;font-weight:400}
-.app-sub b{color:#0A84FF;font-weight:500}
-.card{
-  width:333px;margin-top:30px;padding:14px;
-  background:rgba(255,255,255,.78);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
-  border:.5px solid rgba(60,60,67,.08);border-radius:var(--radius-card);box-shadow:var(--shadow-card);
-}
-.field{
-  display:flex;align-items:center;gap:10px;padding:13px 14px;background:#F2F2F7;border-radius:var(--radius-input);margin-bottom:8px;
-}
-.field svg{color:#8E8E93;flex:0 0 18px}
-.field input{
-  flex:1;border:0;background:transparent;font:500 16px var(--font);color:#000;outline:none;letter-spacing:-.1px;
-}
-.field input::placeholder{color:#8E8E9399;font-weight:400}
-.row-foot{display:flex;justify-content:space-between;align-items:center;padding:8px 4px 4px;font-size:13px;color:#3C3C4399}
-.chk{display:flex;align-items:center;gap:8px}
-.chk .box{width:18px;height:18px;border-radius:6px;background:var(--blue);display:grid;place-items:center}
-.chk .box svg{color:#fff}
-.forget{color:var(--blue);font-weight:500}
-.btn{
-  width:333px;height:50px;margin-top:14px;border-radius:var(--radius-btn);border:0;
-  font:600 16px var(--font);letter-spacing:-.1px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
-}
-.btn.primary{background:linear-gradient(180deg,#1E94FF 0%,#0A84FF 100%);color:#fff;
-  box-shadow:0 10px 24px -8px rgba(10,132,255,.5),inset 0 1px 0 rgba(255,255,255,.25);}
-.btn.apple{background:#000;color:#fff;margin-top:10px}
-.btn.wechat{background:#fff;color:#1F1F1F;margin-top:10px;border:.5px solid rgba(60,60,67,.12)}
-.btn.wechat svg{color:#07C160}
-.divider{width:333px;display:flex;align-items:center;gap:10px;margin-top:22px;color:#8E8E9399;font-size:12px;letter-spacing:.5px}
-.divider::before,.divider::after{content:"";flex:1;height:.5px;background:rgba(60,60,67,.18)}
-.foot{
-  position:absolute;bottom:44px;left:0;right:0;text-align:center;font-size:12px;color:#8E8E93;letter-spacing:.1px;
-}
-.foot a{color:var(--blue);text-decoration:none}
-.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#000;opacity:.8}
+  /* ── Design tokens (mirrors design/system/tokens/*.json) ─────────────── */
+  :root {
+    /* L1 Apple base · color */
+    --tkn-color-white:               #ffffff;
+    --tkn-color-primary-DEFAULT:     #0071e3;
+    --tkn-color-primary-link:        #0066cc;  /* 亮底链接 */
+    --tkn-color-brand-wechat:        #07C160;  /* IRON RULE 1 EXCEPTION · wechat-brand · ONLY for B3 wechat CTA */
+    /* L1 typography */
+    --tkn-font-display: 'SF Pro Display','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-font-text:    'SF Pro Text','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-type-display-hero-size:    36px;
+    --tkn-type-display-hero-weight:  600;
+    --tkn-type-body-size:            17px;
+    --tkn-type-body-emphasis-weight: 600;
+    --tkn-type-link-size:            14px;
+    --tkn-type-micro-size:           12px;
+    /* L1 spacing (4pt grid) */
+    --tkn-spacing-xs:  4px;
+    --tkn-spacing-sm:  8px;
+    --tkn-spacing-12:  12px;
+    --tkn-spacing-md:  16px;
+    --tkn-spacing-lg:  24px;
+    --tkn-spacing-xl:  32px;
+    --tkn-spacing-2xl: 48px;
+    /* L1 radius */
+    --tkn-radius-sm:   8px;
+    --tkn-radius-md:   16px;
+    --tkn-radius-pill: 980px;
+    /* L1 shadow */
+    --tkn-shadow-focus: 0 0 0 2px #0071e3;
+    /* L1 motion */
+    --tkn-motion-ease-standard: cubic-bezier(0.25,0.46,0.45,0.94);
+    --tkn-motion-dur-fast:      150ms;
+    --tkn-motion-dur-base:      250ms;
+    /* L2 warmth */
+    --tkn-gradient-aurora:        linear-gradient(135deg, #4F6FFF 0%, #7B5FFF 50%, #B85FFF 100%);
+    --tkn-color-warm-elevated:    #ffffff;
+    --tkn-color-warm-text-primary:   #1d1d1f;                    /* near-black */
+    --tkn-color-warm-text-secondary: rgba(29,29,31,0.64);
+    --tkn-color-warm-text-tertiary:  rgba(29,29,31,0.48);
+    --tkn-shadow-warm-card:       0 1px 2px rgba(44,42,38,0.06), 0 8px 24px rgba(31,58,147,0.18);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  html,body{
+    background:#e5e5ea;
+    font-family:var(--tkn-font-text);
+    color:var(--tkn-color-warm-text-primary);
+  }
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 0;}
+
+  /* ── Phone shell 393×852 ──────────────────────────────────────────── */
+  .phone{
+    position:relative;width:393px;height:852px;
+    background:#000;
+    border-radius:54px;
+    box-shadow:inset 0 0 0 6px #111, 0 30px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+  }
+  .phone::before{
+    content:"";position:absolute;left:50%;top:11px;
+    transform:translateX(-50%);width:126px;height:37px;
+    background:#000;border-radius:20px;z-index:50;
+  }
+
+  /* ── B1 Status bar ─────────────────────────────────────────────────── */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:54px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 var(--tkn-spacing-xl);
+    font-size:var(--tkn-type-body-size);font-weight:var(--tkn-type-body-emphasis-weight);
+    z-index:40;color:var(--tkn-color-warm-text-primary);
+  }
+  .statusbar .time{margin-top:12px;font-family:var(--tkn-font-display);}
+  .statusbar .icons{margin-top:12px;display:flex;gap:6px;align-items:center;font-size:13px;}
+
+  /* ── Page background — gradient-aurora ─────────────────────────────── */
+  .page{
+    position:absolute;inset:0;
+    background:var(--tkn-gradient-aurora);
+    z-index:10;
+    display:flex;flex-direction:column;
+    padding:54px var(--tkn-spacing-lg) var(--tkn-spacing-xl);
+  }
+  /* aurora 上层柔光 + 暖光，让极光层次更丰富 */
+  .page::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.18), transparent 40%),
+      radial-gradient(circle at 20% 80%, rgba(255,200,140,0.14), transparent 45%);
+    pointer-events:none;z-index:1;
+  }
+
+  /* ── B2 Logo zone (top 1/3) ────────────────────────────────────── */
+  .logo-zone{
+    flex:0 0 auto;
+    margin-top:80px;
+    display:flex;flex-direction:column;align-items:center;
+    gap:var(--tkn-spacing-md);
+    z-index:20;
+    position:relative;
+  }
+  .logo-mark{
+    width:64px;height:64px;
+    background:var(--tkn-color-warm-elevated);
+    border-radius:var(--tkn-radius-md);
+    box-shadow:var(--tkn-shadow-warm-card);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .logo-mark svg{width:40px;height:40px;}
+  .logo-title{
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-display-hero-size);
+    font-weight:var(--tkn-type-display-hero-weight);
+    letter-spacing:-0.02em;line-height:1.1;
+    color:var(--tkn-color-warm-text-primary);
+    margin-top:var(--tkn-spacing-sm);
+  }
+  .logo-slogan{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.024em;
+    margin-top:var(--tkn-spacing-xs);
+  }
+
+  /* ── B3 WeChat CTA — IRON RULE 1 EXCEPTION ──────────────────── */
+  .cta-zone{
+    flex:1 1 auto;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:var(--tkn-spacing-md);
+    z-index:20;
+    position:relative;
+  }
+  .wechat-cta{
+    width:100%;height:52px;
+    background:var(--tkn-color-brand-wechat);
+    color:var(--tkn-color-white);
+    border:none;border-radius:var(--tkn-radius-pill);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:-0.024em;
+    display:flex;align-items:center;justify-content:center;gap:var(--tkn-spacing-sm);
+    transition:transform var(--tkn-motion-dur-fast) var(--tkn-motion-ease-standard);
+    cursor:pointer;
+    min-height:44px;
+    box-shadow:0 4px 16px rgba(7,193,96,0.28);
+  }
+  .wechat-cta:active{transform:scale(0.97);}
+  .wechat-cta:disabled,
+  .wechat-cta[aria-disabled="true"]{
+    opacity:0.4;cursor:not-allowed;
+  }
+  .wechat-cta:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+  .wechat-cta .wxicon{width:22px;height:22px;flex:none;}
+
+  /* ── B4 Other methods link ───────────────────────────────────── */
+  .other-methods{
+    text-align:center;
+    margin-top:var(--tkn-spacing-12);
+  }
+  .other-methods a{
+    color:var(--tkn-color-primary-link);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-link-size);
+    font-weight:400;
+    letter-spacing:-0.224px;
+    text-decoration:none;
+    line-height:1.43;
+    padding:var(--tkn-spacing-sm) var(--tkn-spacing-md);
+    display:inline-block;
+    min-height:44px;
+    min-width:44px;
+  }
+  .other-methods a:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);border-radius:var(--tkn-radius-sm);}
+
+  /* ── B5 Consent bar ──────────────────────────────────────────── */
+  .consent-bar{
+    flex:0 0 auto;
+    display:flex;align-items:flex-start;gap:var(--tkn-spacing-sm);
+    padding:var(--tkn-spacing-md) var(--tkn-spacing-xs);
+    z-index:20;
+    position:relative;
+  }
+  .consent-checkbox{
+    width:20px;height:20px;flex:none;
+    border:1.5px solid rgba(29,29,31,0.32);
+    border-radius:var(--tkn-radius-sm);
+    background:rgba(255,255,255,0.6);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    margin-top:2px;
+    transition:background var(--tkn-motion-dur-fast) var(--tkn-motion-ease-standard);
+    /* expand hit area to 44 */
+    position:relative;
+  }
+  .consent-checkbox::after{
+    content:"";position:absolute;inset:-12px;
+  }
+  .consent-checkbox[aria-checked="true"]{
+    background:var(--tkn-color-primary-DEFAULT);
+    border-color:var(--tkn-color-primary-DEFAULT);
+  }
+  .consent-checkbox svg{width:12px;height:12px;display:none;}
+  .consent-checkbox[aria-checked="true"] svg{display:block;}
+  .consent-checkbox:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+
+  .consent-text{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-micro-size);
+    color:var(--tkn-color-warm-text-secondary);
+    line-height:1.5;
+    letter-spacing:-0.12px;
+  }
+  .consent-text a{
+    color:var(--tkn-color-primary-link);
+    text-decoration:none;
+    font-weight:500;
+  }
+  .consent-text a:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);border-radius:2px;}
+
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="status">
-    <span>9:41</span>
-    <div class="right">
-      <!-- signal -->
-      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="-2" width="3" height="14" rx="1" opacity=".35"/></svg>
-      <!-- wifi -->
-      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2c3.5 0 6.6 1.4 8.5 3.5l-1.5 1.3C13.9 5 11.3 3.8 8.5 3.8S3.1 5 1.5 6.8L0 5.5C1.9 3.4 5 2 8.5 2zm0 3c2.4 0 4.5 1 6 2.5L13 8.8c-1.2-1.1-2.8-1.8-4.5-1.8S5.2 7.7 4 8.8L2.5 7.5C4 6 6.1 5 8.5 5zm0 3c1.3 0 2.5.5 3.4 1.3L8.5 13 5.1 9.3C6 8.5 7.2 8 8.5 8z"/></svg>
-      <!-- battery -->
-      <svg width="28" height="12" viewBox="0 0 28 12" fill="none"><rect x=".5" y=".5" width="24" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="26" y="4" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".5"/><rect x="2.5" y="2.5" width="20" height="7" rx="1.5" fill="currentColor"/></svg>
-    </div>
-  </div>
 
-  <div class="screen">
-    <div class="logo-wrap">
-      <div class="logo">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="7" y="10" width="34" height="31" rx="7" fill="#fff" opacity=".98"/>
-          <rect x="7" y="10" width="34" height="10" rx="4" fill="#FFFFFF"/>
-          <rect x="13" y="6" width="2.6" height="8" rx="1.3" fill="#fff"/>
-          <rect x="32.4" y="6" width="2.6" height="8" rx="1.3" fill="#fff"/>
-          <circle cx="16" cy="27" r="2" fill="#0A84FF"/>
-          <circle cx="24" cy="27" r="2" fill="#FF9500"/>
-          <circle cx="32" cy="27" r="2" fill="#34C759"/>
-          <circle cx="16" cy="34" r="2" fill="#C7C7CC"/>
-          <circle cx="24" cy="34" r="2" fill="#0A84FF"/>
-          <circle cx="32" cy="34" r="2" fill="#C7C7CC"/>
+<div class="phone" data-mood="warm">
+  <!-- B1 Status bar -->
+  <header class="statusbar" data-testid="p00-statusbar" role="banner">
+    <span class="time">9:41</span>
+    <span class="icons">●●● ▮▮ 100%</span>
+  </header>
+
+  <!-- Page (single section · warm · gradient-aurora) -->
+  <section class="page" data-mood="warm" data-section="login">
+    <!-- B2 Logo zone -->
+    <div class="logo-zone" data-testid="p00-logo-zone">
+      <div class="logo-mark" data-testid="p00-logo-zone-logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect x="6" y="8" width="28" height="24" rx="5" stroke="#1d1d1f" stroke-width="2"/>
+          <path d="M11 16 L18 16 M11 21 L25 21 M11 26 L21 26" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="29" cy="11" r="3.2" fill="#7B5FFF"/>
         </svg>
       </div>
-    </div>
-    <div class="app-title">日历</div>
-    <div class="app-sub">统一 <b>学习 · 任务 · 提醒 · 备忘</b></div>
-
-    <div class="card">
-      <div class="field">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
-        <input type="email" placeholder="邮箱或手机号" value="allen@longfeng.io"/>
-      </div>
-      <div class="field">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <input type="password" placeholder="密码" value="••••••••••"/>
-      </div>
-      <div class="row-foot">
-        <div class="chk">
-          <div class="box"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span>记住我</span>
-        </div>
-        <span class="forget">忘记密码？</span>
-      </div>
+      <h1 class="logo-title" data-testid="p00-logo-zone-title">AI 错题本</h1>
+      <p class="logo-slogan" data-testid="p00-logo-zone-slogan" aria-label="AI 错题本 · 让每一道错题都被看见">让每一道错题都被看见</p>
     </div>
 
-    <button class="btn primary">登录</button>
+    <!-- B3/B4 CTA zone -->
+    <div class="cta-zone" data-testid="p00-cta-zone">
+      <!-- B3 WeChat CTA · IRON RULE 1 EXCEPTION -->
+      <button
+        class="wechat-cta"
+        data-testid="p00-wechat-cta-btn"
+        data-iron-rule-1-exception="wechat-brand"
+        aria-label="使用微信一键登录"
+        aria-disabled="false">
+        <svg class="wxicon" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+          <path d="M9 4C5.13 4 2 6.69 2 10c0 1.84.97 3.49 2.5 4.6L4 17l2.6-1.4C7.4 15.85 8.18 16 9 16c.5 0 .98-.05 1.45-.14C10.16 15.27 10 14.65 10 14c0-2.76 2.69-5 6-5 .35 0 .69.03 1.02.08C16.4 6.34 13.04 4 9 4zm-2 4.5a1 1 0 110 2 1 1 0 010-2zm4 0a1 1 0 110 2 1 1 0 010-2zM16 10c-3.31 0-6 2.24-6 5s2.69 5 6 5c.76 0 1.49-.13 2.16-.36L20 20.5l-.4-2.04C20.84 17.7 22 16.46 22 15c0-2.76-2.69-5-6-5zm-2 4a1 1 0 110 2 1 1 0 010-2zm4 0a1 1 0 110 2 1 1 0 010-2z"/>
+        </svg>
+        <span>微信一键登录</span>
+      </button>
 
-    <div class="divider">或使用</div>
-
-    <button class="btn apple">
-      <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor"><path d="M13.4 13.7c-.5 1.2-.8 1.7-1.5 2.8-1 1.5-2.4 3.4-4.1 3.4-1.5 0-1.9-1-4-1-2 0-2.5 1-4 1-1.7 0-3-1.7-4-3.2C-6.5 13.3-7 7.6-4.1 4.6c1-1 2.4-1.6 3.7-1.6 1.6 0 2.6 1 3.9 1 1.3 0 2-1 3.9-1 1.5 0 3 .8 4 2.2-3.5 1.9-3 6.9.6 8.5zM9.1-1.9C9.8-2.8 10.3-4 10.2-5.2c-1 .1-2.3.7-3 1.5-.7.7-1.4 2-1.2 3.1 1.1.1 2.3-.6 3.1-1.3z" transform="translate(4 3)"/></svg>
-      使用 Apple 账号继续
-    </button>
-    <button class="btn wechat">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3C5 3 1.5 5.9 1.5 9.5c0 2 1.1 3.8 2.9 5l-.7 2.2 2.6-1.3c.9.2 1.9.4 2.8.3-.2-.6-.3-1.3-.3-2C8.8 10.1 12 7 16 7c.2 0 .5 0 .7.1C16 4.7 13 3 9.5 3zM7 7.2c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1S5.9 9 5.9 8.3 6.4 7.2 7 7.2zm5 0c.6 0 1.1.5 1.1 1.1s-.5 1.1-1.1 1.1S11 9 11 8.3s.4-1.1 1-1.1zm4 1.6c-3.9 0-7 2.7-7 5.9 0 3.3 3.1 5.9 7 5.9.8 0 1.6-.1 2.4-.3l2.2 1.1-.6-1.8c1.6-1.1 2.6-2.7 2.6-4.5 0-3.2-3-6.3-6.6-6.3zm-2.3 4.2c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm4.5 0c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9z"/></svg>
-      使用微信登录
-    </button>
-
-    <div class="foot">
-      登录即表示同意 <a>服务条款</a> 与 <a>隐私政策</a>
+      <!-- B4 Other methods -->
+      <div class="other-methods" data-testid="p00-other-methods">
+        <a href="#phone" data-testid="p00-other-methods-link">其他登录方式</a>
+      </div>
     </div>
-  </div>
 
-  <div class="homebar"></div>
+    <!-- B5 Consent bar -->
+    <div class="consent-bar" data-testid="p00-consent-bar">
+      <button
+        class="consent-checkbox"
+        data-testid="p00-consent-bar-checkbox"
+        role="checkbox"
+        aria-checked="true"
+        aria-label="同意用户协议和隐私政策">
+        <svg viewBox="0 0 12 12" fill="none">
+          <path d="M2 6 L5 9 L10 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <p class="consent-text" data-testid="p00-consent-bar-text">
+        我已阅读并同意
+        <a href="#tos" data-testid="p00-consent-bar-link-tos">《用户协议》</a>
+        和
+        <a href="#privacy" data-testid="p00-consent-bar-link-privacy">《隐私政策》</a>
+      </p>
+    </div>
+  </section>
 </div>
+
 </body>
 </html>

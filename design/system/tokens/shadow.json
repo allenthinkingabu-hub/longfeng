@@ -1,31 +1,131 @@
 {
   "$metadata": {
-    "source": "getdesign.md/apple/design-md",
-    "saved_local": "design/system/inspiration/apple.design.md",
-    "generated_by": "ui-ux-pro-max-skill v2.5.0"
+    "source": "design/mockups/wrongbook/_archive/ + design/system/STYLE-TRUTH.md §2.5",
+    "version": "v2.0 (archive-aligned)",
+    "previous_source": "getdesign.md/apple/design-md (pure Apple HIG · stripped down)",
+    "generated_by": "ui-ux-pro-max-skill v2.5.0 + STYLE-TRUTH.md reverse-engineering"
+  },
+  "_meta": {
+    "description": "Shadow tokens — 完全反推自 archive · 几乎无阴影是关键特征 · 卡片基线极轻 (0 1px 2px) · hero card 上限 (0 10px 30px) · CTA 蓝色发光",
+    "philosophy": "archive 设计精髓：阴影做到几乎不可见。最深也只有 0 10px 30px rgba(31,60,140,.25) (hero card)。绝不出现 0 12px 32% 之类中等深阴影。",
+    "deprecated_values": {
+      "focus": "原 0 0 0 2px #0071e3 → 改 0 0 0 2px #007AFF (iOS HIG)"
+    }
   },
   "tkn": {
     "shadow": {
-      "card": {
-        "value": "rgba(0,0,0,0.22) 3px 5px 30px 0px",
+      "card-light": {
+        "value": "0 1px 0 rgba(0,0,0,.03)",
         "type": "shadow",
-        "comment": "Soft, diffused elevation for product cards. Mimics studio light on a physical object. Applied sparingly — most elements have NO shadow.",
-        "wechat_override": "rgba(0,0,0,0.26) 3px 5px 30px 0px"
+        "comment": "L0 · 几乎不可见 · 04_result reason / step / kp 等不需要明显抬升的卡"
+      },
+      "card": {
+        "value": "0 1px 2px rgba(0,0,0,.04)",
+        "type": "shadow",
+        "comment": "L0 · 卡片基线 · 01_home weekly/weekcard/msgs/qcard 等 · 最常用",
+        "wechat_override": "0 1px 2px rgba(0,0,0,.06)"
+      },
+      "card-deep": {
+        "value": "0 1px 2px rgba(0,0,0,.04), 0 8px 22px rgba(40,50,90,.06)",
+        "type": "shadow",
+        "comment": "L0+ · 04_result hero (题干卡) / 14_landing sample 横滑卡 · 双层叠加增加深度",
+        "wechat_override": "0 1px 2px rgba(0,0,0,.06), 0 8px 22px rgba(40,50,90,.08)"
+      },
+      "hero-card": {
+        "value": "0 10px 30px rgba(31,60,140,.25)",
+        "type": "shadow",
+        "comment": "L1 · Hero card 浮起 · 01_home reviewhero · 深蓝氛围投影 · **本页面最大阴影上限**",
+        "wechat_override": "0 10px 30px rgba(31,60,140,.30)"
+      },
+      "phone": {
+        "value": "inset 0 0 0 6px #111, 0 24px 64px rgba(0,0,0,.22)",
+        "type": "shadow",
+        "comment": "L2 · Phone 整机壳 · home/landing/result 标准"
+      },
+      "phone-deep": {
+        "value": "0 40px 100px -20px rgba(30,40,80,.35), 0 8px 24px rgba(20,30,60,.12), inset 0 0 0 6px #111",
+        "type": "shadow",
+        "comment": "L2 · Phone 整机壳深阴影版 · 02_capture / 04_result · 用于 stage 展示态"
+      },
+      "cta-blue": {
+        "value": "0 10px 24px rgba(0,122,255,.28)",
+        "type": "shadow",
+        "comment": "L3 · primary CTA 蓝色发光 · 04_result btn.primary"
+      },
+      "cta-deep": {
+        "value": "0 12px 30px -6px rgba(31,60,140,.4), inset 0 1px 0 rgba(255,255,255,.25)",
+        "type": "shadow",
+        "comment": "L3 · landing 深蓝主 CTA · 14_landing cta-try"
+      },
+      "cta-orange": {
+        "value": "0 4px 10px rgba(255,149,0,.28)",
+        "type": "shadow",
+        "comment": "L3 · KP 鼓励卡橙色按钮 · 01_home kpbtn.pr"
+      },
+      "step-num": {
+        "value": "0 4px 10px rgba(0,122,255,.3)",
+        "type": "shadow",
+        "comment": "L3 · 04_result steps n 蓝色数字圆"
+      },
+      "rh-btn": {
+        "value": "0 6px 18px rgba(255,255,255,.2)",
+        "type": "shadow",
+        "comment": "L3 · 01_home reviewhero 内白底主按钮 · 白色发光（在深蓝底上）"
+      },
+      "shutter": {
+        "value": "0 0 0 4px rgba(255,255,255,.18), 0 0 0 8px rgba(255,255,255,.10), 0 14px 28px rgba(0,0,0,.35)",
+        "type": "shadow",
+        "comment": "L4 · 02_capture shutter 三层环 · 4px+8px 白色环 + 14px 深投影"
+      },
+      "glass-active": {
+        "value": "0 6px 18px rgba(0,0,0,.18)",
+        "type": "shadow",
+        "comment": "L4 · 02_capture .subj.on 选中态阴影 · 玻璃 chip 深色版浮起"
+      },
+      "glow-yellow": {
+        "value": "0 0 8px #FFD166",
+        "type": "shadow",
+        "comment": "L5 · 14_landing eyebrow 黄色光点 glow"
+      },
+      "glow-pulse": {
+        "value": "0 0 0 6px rgba(255,204,0,.18)",
+        "type": "shadow",
+        "comment": "L5 · 02_capture detect badge 黄点 pulse 外环"
+      },
+      "avatar": {
+        "value": "0 0 0 2px rgba(255,255,255,.35), inset 0 0 0 2px rgba(0,0,0,.08)",
+        "type": "shadow",
+        "comment": "L6 · 01_home avatar 双环 · 外白透 + 内黑透"
+      },
+      "logo": {
+        "value": "inset 0 0 0 1.5px rgba(255,255,255,.25), 0 4px 12px rgba(0,0,0,.25)",
+        "type": "shadow",
+        "comment": "L6 · 14_landing logo 方块 · inner highlight + 外投影"
+      },
+      "paper": {
+        "value": "0 30px 70px rgba(0,0,0,.55), 0 4px 12px rgba(0,0,0,.4)",
+        "type": "shadow",
+        "comment": "L9 · 02_capture viewfinder 内模拟纸面双层投影"
+      },
+      "paper-thumb": {
+        "value": "inset 0 0 0 1px rgba(0,0,0,.05)",
+        "type": "shadow",
+        "comment": "04_result hero 缩略图 thumb · 极淡 inset 边"
       },
       "nav-glass": {
         "value": "backdrop-filter: saturate(180%) blur(20px)",
         "type": "shadow",
-        "comment": "Not a box-shadow — this is the CSS backdrop-filter applied to rgba(0,0,0,0.80) nav background. Creates the Apple translucent glass navbar. Falls back to solid #1c1c1e in WeChat miniprogram (no backdrop-filter support)."
+        "comment": "Not a box-shadow — backdrop-filter for nav/tabbar translucent glass. Falls back to solid #1c1c1e in WeChat miniprogram (no backdrop-filter support)."
       },
       "focus": {
-        "value": "0 0 0 2px #0071e3",
+        "value": "0 0 0 2px #007AFF",
         "type": "shadow",
-        "comment": "Focus ring for keyboard navigation. Applied to ALL interactive elements without exception."
+        "comment": "Focus ring for keyboard navigation. Applied to ALL interactive elements without exception. iOS HIG #007AFF (修正自 #0071e3)."
       },
       "none": {
         "value": "none",
         "type": "shadow",
-        "comment": "Explicit no-shadow. Apple's default — most elements have no shadow at all."
+        "comment": "Explicit no-shadow. archive 默认 — 大部分元素无阴影。"
       }
     }
   }

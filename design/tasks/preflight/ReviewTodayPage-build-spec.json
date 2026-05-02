@@ -1,0 +1,208 @@
+{
+  "page": "ReviewTodayPage",
+  "mockup_source": "design/mockups/wrongbook/07_review_today.html",
+  "business_analysis": "design/analysis/s8-business-analysis.yml",
+  "generated_at": "2026-04-28T00:00:00+08:00",
+  "ac_scope": ["SC-08.AC-1"],
+  "blocks": [
+    {
+      "id": "nav-bar",
+      "label": "顶部导航栏",
+      "ui_kit_component": "NavBar",
+      "ui_kit_props": {
+        "title": "今日复习",
+        "onBack": "navigate('/')",
+        "right": "<SortToggleButton />",
+        "testIdPrefix": "review.today"
+      },
+      "tokens": {
+        "background": "--tkn-color-bg-light",
+        "background_opacity_note": "0.78 · backdrop-filter blur(22px) saturate(180%) · mockup rgba(242,242,247,.78) Δ4.2",
+        "border_bottom": "REVIEW_REQUIRED · rgba(60,60,67,.14) · no border token"
+      },
+      "custom_css": false,
+      "testids": ["review.today.root"],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "iOS glass effect · 返回「首页」+ 右侧「排序 · 时间」文字按钮 · 大标题 34px 固定在 nav 内"
+    },
+    {
+      "id": "hero-summary-card",
+      "label": "今日汇总英雄卡",
+      "ui_kit_component": "custom",
+      "ui_kit_props": {},
+      "tokens": {
+        "gradient_start": "REVIEW_REQUIRED · #0F1A3D · no token · 深海军蓝",
+        "gradient_mid": "REVIEW_REQUIRED · #1F3C8C · no token · 皇家蓝",
+        "gradient_end": "REVIEW_REQUIRED · #5F5BDB · no token · 靛紫",
+        "text_primary": "--tkn-color-white",
+        "bubble_bg": "--tkn-color-white",
+        "bubble_bg_opacity": "0.10",
+        "stat_card_bg": "--tkn-color-white",
+        "stat_card_bg_opacity": "0.10",
+        "stat_card_border": "--tkn-color-white",
+        "stat_card_border_opacity": "0.14",
+        "progress_track": "--tkn-color-white",
+        "progress_track_opacity": "0.18",
+        "live_dot_fill": "REVIEW_REQUIRED · #FFCC00 · no yellow token · --tkn-color-warning-default=#b45309 色差大",
+        "live_dot_glow": "REVIEW_REQUIRED · rgba(255,204,0,.28) · no token",
+        "card_shadow": "REVIEW_REQUIRED · rgba(30,40,120,.28) · no token"
+      },
+      "custom_css": true,
+      "testids": [
+        "review.today.hero",
+        "review.today.hero-progress-bar",
+        "review.today.stats-done",
+        "review.today.stats-progress",
+        "review.today.stats-pending"
+      ],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "深色渐变卡 · glassmorphism 统计子卡 · 进度条 38% · 掌握度文字 · live dot 黄色脉冲 · 无对应 Card variant"
+    },
+    {
+      "id": "time-slot-label",
+      "label": "时段分组标签",
+      "ui_kit_component": "custom",
+      "ui_kit_props": {},
+      "tokens": {
+        "icon_bg_now": "REVIEW_REQUIRED · rgba(255,204,0,.28) 黄色 · 无 yellow token",
+        "icon_text_now": "REVIEW_REQUIRED · #7A3B3B 深棕 · 无 token · 建议 --tkn-color-warning-default",
+        "icon_bg_afternoon": "REVIEW_REQUIRED · rgba(0,122,255,.14) 蓝色 · 建议 rgba(--tkn-color-primary-default, .14)",
+        "icon_text_afternoon": "REVIEW_REQUIRED · #007AFF · 建议 --tkn-color-primary-default",
+        "icon_bg_evening": "REVIEW_REQUIRED · rgba(88,86,214,.14) 靛紫 · 无 indigo token",
+        "icon_text_evening": "REVIEW_REQUIRED · #5856D6 · 无 indigo token",
+        "title_text": "--tkn-color-text-primary",
+        "count_text": "REVIEW_REQUIRED · #8E8E93 · 无 text-tertiary token",
+        "separator": "REVIEW_REQUIRED · rgba(60,60,67,.14) · 无 border token",
+        "spacing_label_height": "--tkn-spacing-9",
+        "icon_size": "--tkn-spacing-9",
+        "radius_icon_bg": "--tkn-radius-sm"
+      },
+      "custom_css": true,
+      "testids": [
+        "review.today.slot-now",
+        "review.today.slot-afternoon",
+        "review.today.slot-evening"
+      ],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "22×22 图标容器 + 时段名 + flex-1 分割线 + 题数 · 三色图标背景需 3 个 token 或允许 custom"
+    },
+    {
+      "id": "item-card",
+      "label": "复习项目卡片（含学科色竖条）",
+      "ui_kit_component": "Card",
+      "ui_kit_props": {
+        "variant": "default",
+        "padding": 0,
+        "testIdPrefix": "review.today"
+      },
+      "tokens": {
+        "background": "--tkn-color-white",
+        "shadow_subtle": "--tkn-color-black",
+        "shadow_subtle_opacity": "0.03",
+        "left_bar_width": "--tkn-spacing-1",
+        "left_bar_math": "--tkn-subject-math",
+        "left_bar_physics": "REVIEW_REQUIRED · mockup=#FF9500(橙) vs --tkn-subject-physics=#0057b7(蓝) · 学科色冲突",
+        "left_bar_chemistry": "REVIEW_REQUIRED · mockup=#5856D6(靛紫) vs --tkn-subject-chemistry=#1a6b3a(绿) · 学科色冲突",
+        "left_bar_english": "REVIEW_REQUIRED · mockup=#34C759(绿) vs --tkn-subject-english=#9c4f00(琥珀) · 学科色冲突",
+        "time_text": "--tkn-color-text-primary",
+        "time_font_size_note": "22px · --tkn-spacing-9 近似",
+        "level_badge_bg": "REVIEW_REQUIRED · rgba(0,122,255,.10) · 建议 rgba(--tkn-color-primary-default, .10)",
+        "level_badge_text": "REVIEW_REQUIRED · #007AFF · 建议 --tkn-color-primary-default",
+        "subject_text_math": "--tkn-subject-math",
+        "subject_text_physics": "REVIEW_REQUIRED · #FF9500 vs --tkn-subject-physics",
+        "subject_text_chemistry": "REVIEW_REQUIRED · #5856D6 vs --tkn-subject-chemistry",
+        "subject_text_english": "REVIEW_REQUIRED · #34C759 vs --tkn-subject-english",
+        "stem_text": "--tkn-color-text-primary",
+        "tag_bg_default": "REVIEW_REQUIRED · rgba(88,86,214,.08) 靛紫 · 无 token",
+        "tag_border_default": "REVIEW_REQUIRED · rgba(88,86,214,.18) 靛紫 · 无 token",
+        "tag_text_default": "REVIEW_REQUIRED · #5856D6 · 无 indigo token",
+        "tag_bg_difficulty": "REVIEW_REQUIRED · rgba(255,149,0,.10) 橙 · 无 token",
+        "tag_border_difficulty": "REVIEW_REQUIRED · rgba(255,149,0,.22) 橙 · 无 token",
+        "tag_text_difficulty": "REVIEW_REQUIRED · #FF9500 · 无 orange token",
+        "countdown_now_bg": "--tkn-color-danger-default",
+        "countdown_now_text": "--tkn-color-white",
+        "countdown_soon_bg": "REVIEW_REQUIRED · rgba(255,149,0,.15) 橙 · 无 token",
+        "countdown_soon_text": "REVIEW_REQUIRED · #FF9500 · 无 orange token",
+        "countdown_wait_bg": "--tkn-color-bg-light",
+        "countdown_wait_text": "REVIEW_REQUIRED · #8E8E93 · 无 text-tertiary token",
+        "arrow_color": "REVIEW_REQUIRED · #C7C7CC → --tkn-color-overlay-media Δ19.1 · 偏差大",
+        "separator_vertical": "REVIEW_REQUIRED · rgba(60,60,67,.14) · 无 border token",
+        "padding_inner": "--tkn-spacing-6",
+        "gap_inner": "--tkn-spacing-6",
+        "radius_card": "--tkn-radius-lg",
+        "margin_bottom": "--tkn-spacing-5"
+      },
+      "custom_css": true,
+      "testids": [
+        "review.today.item-card",
+        "review.today.item-countdown"
+      ],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "左侧 3px 学科色竖条（Card 无此 slot 需自定义） · 时间列 + 层级 badge · 题干 2 行截断 · tags + 倒计时 + 箭头"
+    },
+    {
+      "id": "empty-state",
+      "label": "空状态（今日无待复习）",
+      "ui_kit_component": "Empty",
+      "ui_kit_props": {
+        "testIdPrefix": "review.today"
+      },
+      "tokens": {},
+      "custom_css": false,
+      "testids": ["review.today.empty"],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "mockup 未设计空状态图 · Empty 组件兜底 · 文案「今日无复习任务」待确认"
+    },
+    {
+      "id": "cta-start-all",
+      "label": "「全部开始」浮动 CTA",
+      "ui_kit_component": "custom",
+      "ui_kit_props": {},
+      "tokens": {
+        "gradient_top": "REVIEW_REQUIRED · #5FA8FF · 建议 --tkn-color-primary-dark",
+        "gradient_bottom": "REVIEW_REQUIRED · #007AFF · 建议 --tkn-color-primary-default",
+        "text": "--tkn-color-white",
+        "shadow_1": "REVIEW_REQUIRED · rgba(0,122,255,.32) · 无 token",
+        "shadow_2": "REVIEW_REQUIRED · rgba(0,122,255,.22) · 无 token",
+        "badge_bg": "--tkn-color-white",
+        "badge_bg_opacity": "0.20",
+        "radius": "--tkn-radius-lg",
+        "height": "REVIEW_REQUIRED · 54px · 无 --tkn-spacing-* 精确匹配",
+        "position_bottom": "REVIEW_REQUIRED · 104px（tabbar 84px + 20px gap） · custom layout"
+      },
+      "custom_css": true,
+      "testids": ["review.today.cta-start-all"],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "fixed 定位 bottom:104px · 渐变蓝色 · Button 无 FAB/gradient variant · 右侧题数 badge · play 图标"
+    },
+    {
+      "id": "tab-bar",
+      "label": "底部 Tab 导航",
+      "ui_kit_component": "TabBar",
+      "ui_kit_props": {
+        "items": [
+          { "key": "home", "label": "首页" },
+          { "key": "wrongbook", "label": "错题本" },
+          { "key": "capture", "label": "拍题" },
+          { "key": "review", "label": "复习", "badge": "{todayCount}" },
+          { "key": "profile", "label": "我的" }
+        ],
+        "activeKey": "review",
+        "testIdPrefix": "review.today"
+      },
+      "tokens": {
+        "background": "--tkn-color-white",
+        "background_opacity": "0.78",
+        "active_icon_color": "REVIEW_REQUIRED · #007AFF · 建议 --tkn-color-primary-default",
+        "inactive_icon_color": "REVIEW_REQUIRED · #8E8E93 · 无 text-tertiary token",
+        "badge_bg": "--tkn-color-danger-default",
+        "badge_border": "--tkn-color-white",
+        "border_top": "REVIEW_REQUIRED · rgba(60,60,67,.14) · 无 border token"
+      },
+      "custom_css": false,
+      "testids": ["review.today.tabbar-review-badge"],
+      "ac": "SC-08.AC-1",
+      "mockup_notes": "复习 Tab active · badge 显示今日待复习总数 · glass effect 背景"
+    }
+  ]
+}

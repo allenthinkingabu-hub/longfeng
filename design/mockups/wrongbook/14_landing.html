@@ -3,260 +3,527 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="design-spec" content="P-LANDING.spec.md@v1" />
 <title>P-LANDING · 访客落地页 · AI 错题本</title>
 <style>
-  :root{
-    --bg:#F2F2F7; --card:#FFFFFF; --sep:rgba(60,60,67,.14);
-    --text:#1C1C1E; --sec:#636366; --ter:#8E8E93;
-    --blue:#007AFF; --red:#FF3B30; --orange:#FF9500; --green:#34C759;
-    --indigo:#5856D6; --yellow:#FFCC00; --purple:#AF52DE; --teal:#30B0C7; --pink:#FF2D55;
-    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC",sans-serif;
+  /* ── Design tokens (mirrors design/system/tokens/*.json) ─────────────── */
+  :root {
+    /* L1 Apple base · color */
+    --tkn-color-black:               #000000;
+    --tkn-color-white:               #ffffff;
+    --tkn-color-text-on-dark:        #ffffff;
+    --tkn-color-text-primary:        #1d1d1f;
+    --tkn-color-primary-DEFAULT:     #0071e3;
+    --tkn-color-primary-dark:        #2997ff;
+
+    /* L1 typography */
+    --tkn-font-display: 'SF Pro Display','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-font-text:    'SF Pro Text','PingFang SC','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --tkn-type-display-hero-size:    34px;
+    --tkn-type-display-hero-weight:  600;
+    --tkn-type-section-heading-size: 24px;
+    --tkn-type-sub-heading-size:     21px;
+    --tkn-type-body-size:            17px;
+    --tkn-type-body-emphasis-weight: 600;
+    --tkn-type-caption-size:         14px;
+    --tkn-type-micro-size:           12px;
+    --tkn-type-letterspacing-body:   -0.024em;
+    --tkn-type-letterspacing-display:-0.028em;
+
+    /* L1 spacing (4pt grid) */
+    --tkn-spacing-xs:  4px;
+    --tkn-spacing-sm:  8px;
+    --tkn-spacing-12:  12px;
+    --tkn-spacing-md:  16px;
+    --tkn-spacing-lg:  24px;
+    --tkn-spacing-xl:  32px;
+    --tkn-spacing-2xl: 48px;
+
+    /* L1 radius */
+    --tkn-radius-sm:   8px;
+    --tkn-radius-md:   11px;
+    --tkn-radius-lg:   12px;
+    --tkn-radius-pill: 980px;
+    --tkn-radius-circle: 50%;
+
+    /* L1 shadow */
+    --tkn-shadow-card:  rgba(0,0,0,0.22) 3px 5px 30px 0px;
+    --tkn-shadow-focus: 0 0 0 2px #0071e3;
+
+    /* L1 motion */
+    --tkn-motion-ease-standard: cubic-bezier(0.25,0.46,0.45,0.94);
+    --tkn-motion-dur-fast:      150ms;
+    --tkn-motion-dur-base:      250ms;
+
+    /* L2 warmth */
+    --tkn-color-warm-bg:             #FAF8F4;
+    --tkn-color-warm-elevated:       #FFFFFF;
+    --tkn-color-warm-text-primary:   #2C2A26;
+    --tkn-color-warm-text-secondary: rgba(44,42,38,0.72);
+    --tkn-color-warm-divider:        rgba(44,42,38,0.08);
+    --tkn-color-encouragement-DEFAULT: #E8741C;
+    --tkn-color-encouragement-soft:    rgba(232,116,28,0.10);
+    --tkn-gradient-focus-night:        linear-gradient(180deg, #0A0E1A 0%, #1A1F2E 100%);
+    --tkn-gradient-aurora:             linear-gradient(135deg, #4F6FFF 0%, #7B5FFF 50%, #B85FFF 100%);
+    --tkn-color-aurora-blur:           rgba(255,255,255,0.06);
+    --tkn-shadow-warm-card:            0 1px 2px rgba(44,42,38,0.04), 0 4px 12px rgba(44,42,38,0.06);
+
+    /* EXCEPTION · subject palette (B4 only · 4px left bar) */
+    --tkn-subject-math:    #C41E3A;
+    --tkn-subject-physics: #0057B7;
+    --tkn-subject-english: #9C4F00;
   }
+
   *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
-  html,body{background:#E5E5EA;font-family:var(--font);color:var(--text);}
+  html,body{
+    background:#e5e5ea;
+    font-family:var(--tkn-font-text);
+  }
   body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 0;}
-  .phone{position:relative;width:393px;height:852px;background:var(--bg);border-radius:54px;box-shadow:inset 0 0 0 6px #111,0 24px 64px rgba(0,0,0,.22);overflow:hidden;}
-  .phone::before{content:"";position:absolute;left:50%;top:11px;transform:translateX(-50%);width:126px;height:37px;background:#000;border-radius:20px;z-index:50;}
-  .statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-size:17px;font-weight:600;z-index:40;color:#fff;}
-  .statusbar .time{margin-top:12px;}
-  .statusbar .icons{margin-top:12px;display:flex;gap:6px;align-items:center;color:#fff;}
 
-  /* Hero — aurora gradient, full-bleed top */
-  .hero{position:absolute;top:0;left:0;right:0;height:380px;background:linear-gradient(170deg,#0F1A3D 0%,#1F3C8C 40%,#5F5BDB 80%,#8B87F6 100%);overflow:hidden;z-index:5;}
-  .hero::before{content:"";position:absolute;width:360px;height:360px;border-radius:50%;top:-140px;right:-140px;background:radial-gradient(circle,rgba(255,107,107,.45),transparent 70%);filter:blur(28px);}
-  .hero::after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;bottom:-80px;left:-70px;background:radial-gradient(circle,rgba(88,214,255,.55),transparent 70%);filter:blur(24px);}
-  .hero .blob{position:absolute;width:160px;height:160px;border-radius:50%;top:28%;left:58%;background:radial-gradient(circle,rgba(255,209,102,.4),transparent 70%);filter:blur(22px);}
+  /* ── Phone shell 393×852 ──────────────────────────────────────────── */
+  .phone{
+    position:relative;width:393px;height:852px;
+    background:var(--tkn-color-black);
+    border-radius:54px;
+    box-shadow:inset 0 0 0 6px #111, 0 30px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+  }
+  .phone::before{
+    content:"";position:absolute;left:50%;top:11px;
+    transform:translateX(-50%);width:126px;height:37px;
+    background:var(--tkn-color-black);border-radius:20px;z-index:50;
+  }
 
-  /* Anonymous Shell nav — no Tab Bar, just Logo + Sign-in */
-  .anon-nav{position:absolute;top:62px;left:18px;right:18px;z-index:30;display:flex;align-items:center;justify-content:space-between;}
-  .brand{display:flex;align-items:center;gap:10px;}
-  .brand .logo{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 210deg,#FF5A4F,#FFB454,#F6D84C,#3CD47B,#4C9BFF,#8B87F6,#FF5A4F);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25),0 4px 12px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.4);}
-  .brand .logo::after{content:"AI";}
-  .brand .nm{font-size:14px;font-weight:800;color:#fff;letter-spacing:.1px;}
-  .signin{padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:700;letter-spacing:.2px;}
+  /* ── Scrollable canvas inside phone ────────────────────────────── */
+  .canvas{
+    position:absolute;inset:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .canvas::-webkit-scrollbar{display:none;}
 
-  /* Hero text */
-  .hero-copy{position:absolute;top:118px;left:20px;right:20px;z-index:20;color:#fff;}
-  .eyebrow{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.92);}
-  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#FFD166;box-shadow:0 0 8px #FFD166;}
-  .hero-title{margin-top:14px;font-size:32px;font-weight:800;letter-spacing:-.6px;line-height:1.12;}
-  .hero-title em{font-style:normal;background:linear-gradient(90deg,#FFD166 0%,#FF6B6B 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
-  .hero-sub{margin-top:10px;font-size:13px;font-weight:500;line-height:1.55;color:rgba(255,255,255,.82);letter-spacing:.1px;max-width:320px;}
+  /* ── B1 Status bar ─────────────────────────────────────────────── */
+  .statusbar{
+    position:sticky;top:0;left:0;right:0;height:54px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 var(--tkn-spacing-xl);
+    font-size:var(--tkn-type-body-size);font-weight:var(--tkn-type-body-emphasis-weight);
+    z-index:40;color:var(--tkn-color-text-on-dark);
+    background:transparent;
+    pointer-events:none;
+  }
+  .statusbar .time{margin-top:12px;font-family:var(--tkn-font-display);}
+  .statusbar .icons{margin-top:12px;display:flex;gap:6px;align-items:center;font-size:13px;}
 
-  /* Metric row — 3 chips */
-  .metrics{position:absolute;top:300px;left:20px;right:20px;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-  .mchip{padding:10px 8px;border-radius:14px;background:rgba(255,255,255,.14);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.22);text-align:center;color:#fff;}
-  .mchip .n{font-size:17px;font-weight:800;letter-spacing:-.3px;line-height:1;}
-  .mchip .n em{font-style:normal;font-size:10px;font-weight:600;color:rgba(255,255,255,.7);margin-left:2px;}
-  .mchip .l{margin-top:4px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.72);letter-spacing:.3px;line-height:1.3;}
+  /* ── Section 1 · Landing Hero (cool · gradient-focus-night) ─── */
+  .hero{
+    position:relative;
+    margin-top:-54px;
+    min-height:560px;
+    background:var(--tkn-gradient-focus-night);
+    color:var(--tkn-color-text-on-dark);
+    padding:72px var(--tkn-spacing-lg) var(--tkn-spacing-2xl);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .glow{
+    position:absolute;width:280px;height:280px;border-radius:var(--tkn-radius-circle);
+    background:var(--tkn-color-aurora-blur);
+    filter:blur(60px);
+    pointer-events:none;
+  }
+  .glow-1{top:80px;left:-100px;}
+  .glow-2{bottom:60px;right:-120px;}
 
-  /* Scroll area (below hero) */
-  .scroll{position:absolute;top:370px;left:0;right:0;bottom:0;overflow:auto;padding:0 14px 28px;z-index:20;background:var(--bg);border-top-left-radius:26px;border-top-right-radius:26px;}
+  .hero-top{
+    position:relative;z-index:2;
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:var(--tkn-spacing-xl);
+  }
+  .hero-logo{
+    display:flex;align-items:center;gap:var(--tkn-spacing-sm);
+    color:var(--tkn-color-text-on-dark);
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-body-size);
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:var(--tkn-type-letterspacing-body);
+  }
+  .hero-logo svg{width:28px;height:28px;}
+  .hero-login-link{
+    color:var(--tkn-color-primary-dark);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    text-decoration:none;
+    padding:var(--tkn-spacing-sm) var(--tkn-spacing-md);
+    min-height:44px;min-width:44px;
+    display:inline-flex;align-items:center;
+  }
+  .hero-login-link:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);border-radius:var(--tkn-radius-sm);}
 
-  /* Sample card strip */
-  .sec{margin:18px 4px 10px;display:flex;align-items:baseline;justify-content:space-between;}
-  .sec .t{font-size:15px;font-weight:800;letter-spacing:.2px;}
-  .sec .m{font-size:11px;color:var(--ter);font-weight:600;}
-  .samples{display:flex;gap:10px;overflow-x:auto;padding:2px 0 10px;scroll-snap-type:x mandatory;}
-  .samples::-webkit-scrollbar{display:none;}
-  .sample{flex:0 0 188px;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 20px rgba(10,20,50,.06);scroll-snap-align:start;position:relative;}
-  .sample .thumb{height:108px;position:relative;overflow:hidden;}
-  .sample .thumb.s-math{background:linear-gradient(140deg,#E3ECFF 0%,#C7DAFF 100%);}
-  .sample .thumb.s-phys{background:linear-gradient(140deg,#FFEAE4 0%,#FFD0C6 100%);}
-  .sample .thumb.s-eng{background:linear-gradient(140deg,#E4F7EA 0%,#BAE7C5 100%);}
-  .sample .thumb .chip{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;backdrop-filter:blur(6px);}
-  .sample .thumb.s-math .chip{background:rgba(0,122,255,.15);color:var(--blue);}
-  .sample .thumb.s-phys .chip{background:rgba(255,59,48,.15);color:var(--red);}
-  .sample .thumb.s-eng .chip{background:rgba(52,199,89,.18);color:var(--green);}
-  .sample .thumb .formula{position:absolute;bottom:10px;left:10px;right:10px;font-family:"Times New Roman",serif;font-size:15px;color:#1C1C1E;font-weight:600;letter-spacing:.1px;line-height:1.25;}
-  .sample .body{padding:10px 12px 12px;}
-  .sample .body .err{font-size:10px;font-weight:700;color:var(--red);letter-spacing:.2px;margin-bottom:3px;}
-  .sample .body .kp{font-size:11.5px;font-weight:600;color:var(--text);line-height:1.35;margin-bottom:6px;}
-  .sample .body .t0{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:var(--indigo);background:rgba(88,86,214,.09);padding:3px 6px;border-radius:4px;}
+  .hero-headline{
+    position:relative;z-index:2;
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-display-hero-size);
+    font-weight:var(--tkn-type-display-hero-weight);
+    letter-spacing:var(--tkn-type-letterspacing-display);
+    line-height:1.12;
+    color:var(--tkn-color-text-on-dark);
+    margin-bottom:var(--tkn-spacing-md);
+  }
+  .hero-subhead{
+    position:relative;z-index:2;
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    color:rgba(255,255,255,0.72);
+    letter-spacing:var(--tkn-type-letterspacing-body);
+    line-height:1.47;
+    margin-bottom:var(--tkn-spacing-lg);
+  }
 
-  /* Value prop — 3 feature rows */
-  .features{margin-top:14px;background:var(--card);border-radius:18px;padding:6px 4px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-  .feat{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:.5px solid var(--sep);}
-  .feat:last-child{border-bottom:0;}
-  .feat .ico{width:36px;height:36px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;}
-  .feat .ico.a{background:linear-gradient(135deg,#4C9BFF,#5856D6);}
-  .feat .ico.b{background:linear-gradient(135deg,#FF9500,#FF3B30);}
-  .feat .ico.c{background:linear-gradient(135deg,#34C759,#30B0C7);}
-  .feat .t{font-size:13.5px;font-weight:700;letter-spacing:.1px;}
-  .feat .d{font-size:11.5px;color:var(--sec);margin-top:2px;line-height:1.45;}
+  /* Demo media placeholder · aurora blur background */
+  .hero-demo{
+    position:relative;z-index:2;
+    height:200px;
+    border-radius:var(--tkn-radius-lg);
+    background:var(--tkn-gradient-aurora);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:var(--tkn-spacing-lg);
+    overflow:hidden;
+  }
+  .hero-demo::before{
+    content:"";position:absolute;inset:0;
+    background:rgba(0,0,0,0.18);
+  }
+  .hero-demo-frame{
+    position:relative;z-index:1;
+    width:160px;height:160px;
+    border:2px dashed rgba(255,255,255,0.4);
+    border-radius:var(--tkn-radius-md);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:var(--tkn-spacing-sm);
+    color:var(--tkn-color-text-on-dark);
+  }
+  .hero-demo-icon{width:48px;height:48px;}
+  .hero-demo-label{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    letter-spacing:-0.224px;
+    opacity:0.85;
+  }
 
-  /* Social proof row */
-  .social{margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,rgba(255,149,0,.08),rgba(255,59,48,.06));border:1px solid rgba(255,149,0,.18);border-radius:14px;display:flex;align-items:center;gap:10px;}
-  .stack{display:flex;}
-  .stack .av{width:22px;height:22px;border-radius:50%;border:1.5px solid #fff;margin-left:-6px;}
-  .stack .av:first-child{margin-left:0;}
-  .stack .av:nth-child(1){background:conic-gradient(from 0deg,#FF6B6B,#FFD166);}
-  .stack .av:nth-child(2){background:conic-gradient(from 90deg,#4C9BFF,#8B87F6);}
-  .stack .av:nth-child(3){background:conic-gradient(from 180deg,#3CD47B,#4FD1D9);}
-  .stack .av:nth-child(4){background:#F2F2F7;color:var(--sec);font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-  .social .txt{font-size:11.5px;color:var(--text);font-weight:600;}
-  .social .txt em{font-style:normal;color:var(--orange);font-weight:800;}
+  .hero-cta-row{
+    position:relative;z-index:2;
+    display:flex;gap:var(--tkn-spacing-12);
+  }
+  .hero-cta{
+    flex:1;height:52px;
+    border:none;border-radius:var(--tkn-radius-pill);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:var(--tkn-type-letterspacing-body);
+    cursor:pointer;
+    min-height:44px;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:transform var(--tkn-motion-dur-fast) var(--tkn-motion-ease-standard);
+  }
+  .hero-cta:active{transform:scale(0.97);}
+  .hero-cta:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+  .hero-cta--secondary{
+    background:var(--tkn-color-white);
+    color:var(--tkn-color-text-primary);
+  }
+  .hero-cta--primary{
+    background:var(--tkn-color-primary-DEFAULT);
+    color:var(--tkn-color-white);
+  }
 
-  /* How it works */
-  .how{margin-top:16px;background:var(--card);border-radius:18px;padding:14px 14px 12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-  .how-title{font-size:12px;font-weight:800;color:var(--text);letter-spacing:.2px;margin-bottom:10px;text-transform:uppercase;color:var(--ter);}
-  .how-row{display:flex;gap:10px;}
-  .how-step{flex:1;position:relative;padding:10px 8px;background:var(--bg);border-radius:12px;text-align:center;}
-  .how-step .n{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#fff;border:1.5px solid var(--blue);color:var(--blue);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-  .how-step .ic{font-size:20px;margin-top:8px;}
-  .how-step .lb{font-size:10px;font-weight:700;color:var(--text);margin-top:3px;letter-spacing:.1px;}
+  /* ── Section 2 · Warm content (mood=warm) ──────────────────── */
+  .warm-section{
+    position:relative;
+    background:var(--tkn-color-warm-bg);
+    padding:var(--tkn-spacing-2xl) var(--tkn-spacing-lg) 100px;
+    color:var(--tkn-color-warm-text-primary);
+  }
+  .section-title{
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-section-heading-size);
+    font-weight:var(--tkn-type-display-hero-weight);
+    letter-spacing:var(--tkn-type-letterspacing-display);
+    line-height:1.18;
+    color:var(--tkn-color-warm-text-primary);
+    margin-bottom:var(--tkn-spacing-md);
+  }
+  .section-sub{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.224px;
+    line-height:1.43;
+    margin-bottom:var(--tkn-spacing-lg);
+  }
 
-  /* Bottom CTA dock — sticky */
-  .cta-dock{position:absolute;bottom:0;left:0;right:0;padding:14px 16px 22px;background:linear-gradient(180deg,rgba(242,242,247,0),rgba(242,242,247,.92) 30%,rgba(242,242,247,1) 100%);z-index:45;display:flex;flex-direction:column;gap:8px;}
-  .cta-try{height:52px;border-radius:16px;background:linear-gradient(135deg,#1F3C8C 0%,#5F5BDB 100%);color:#fff;font-size:15px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 30px -6px rgba(31,60,140,.4),inset 0 1px 0 rgba(255,255,255,.25);position:relative;overflow:hidden;}
-  .cta-try::after{content:"";position:absolute;top:-40%;left:-20%;width:140%;height:80%;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);transform:rotate(-4deg);pointer-events:none;}
-  .cta-try .k{padding:3px 8px;border-radius:6px;background:rgba(255,209,102,.2);color:#FFD166;font-size:9px;font-weight:800;letter-spacing:.6px;}
-  .cta-login{height:44px;border-radius:14px;background:rgba(0,0,0,.04);border:.5px solid rgba(60,60,67,.12);color:var(--text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
-  .cta-hint{text-align:center;font-size:10px;font-weight:500;color:var(--ter);letter-spacing:.2px;margin-top:2px;}
+  /* B4 sample cards (3 vertical cards) */
+  .samples{
+    display:flex;flex-direction:column;gap:var(--tkn-spacing-md);
+    margin-bottom:var(--tkn-spacing-2xl);
+  }
+  .sample-card{
+    position:relative;
+    background:var(--tkn-color-warm-elevated);
+    border-radius:var(--tkn-radius-lg);
+    padding:var(--tkn-spacing-md) var(--tkn-spacing-md) var(--tkn-spacing-md) var(--tkn-spacing-lg);
+    box-shadow:var(--tkn-shadow-warm-card);
+    border:1px solid var(--tkn-color-warm-divider);
+    overflow:hidden;
+  }
+  .sample-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;
+    width:4px;
+  }
+  .sample-card[data-subject="math"]::before    {background:var(--tkn-subject-math);}
+  .sample-card[data-subject="physics"]::before {background:var(--tkn-subject-physics);}
+  .sample-card[data-subject="english"]::before {background:var(--tkn-subject-english);}
 
-  .homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#000;opacity:.8;z-index:60;}
+  .sample-chip{
+    display:inline-flex;align-items:center;
+    height:24px;padding:0 var(--tkn-spacing-sm);
+    border-radius:var(--tkn-radius-pill);
+    color:var(--tkn-color-white);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-micro-size);
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:-0.12px;
+    margin-bottom:var(--tkn-spacing-sm);
+  }
+  .sample-card[data-subject="math"] .sample-chip    {background:var(--tkn-subject-math);}
+  .sample-card[data-subject="physics"] .sample-chip {background:var(--tkn-subject-physics);}
+  .sample-card[data-subject="english"] .sample-chip {background:var(--tkn-subject-english);}
+
+  .sample-stem{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    color:var(--tkn-color-warm-text-primary);
+    letter-spacing:var(--tkn-type-letterspacing-body);
+    line-height:1.47;
+    margin-bottom:var(--tkn-spacing-sm);
+  }
+  .sample-ai{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    color:var(--tkn-color-warm-text-secondary);
+    line-height:1.43;
+    letter-spacing:-0.224px;
+    margin-bottom:var(--tkn-spacing-12);
+    padding:var(--tkn-spacing-sm) var(--tkn-spacing-12);
+    background:var(--tkn-color-warm-bg);
+    border-radius:var(--tkn-radius-sm);
+    border-left:2px solid var(--tkn-color-encouragement-DEFAULT);
+  }
+  .sample-link{
+    color:var(--tkn-color-primary-DEFAULT);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    text-decoration:none;
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:-0.224px;
+    display:inline-flex;align-items:center;gap:var(--tkn-spacing-xs);
+    min-height:44px;min-width:44px;
+    padding:var(--tkn-spacing-sm) 0;
+  }
+  .sample-link:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);border-radius:var(--tkn-radius-sm);}
+
+  /* B5 KPI banner (encouragement-soft) */
+  .kpi{
+    background:var(--tkn-color-encouragement-soft);
+    border-radius:var(--tkn-radius-lg);
+    padding:var(--tkn-spacing-lg);
+    display:flex;justify-content:space-between;gap:var(--tkn-spacing-md);
+    margin-bottom:var(--tkn-spacing-xl);
+  }
+  .kpi-cell{flex:1;}
+  .kpi-num{
+    font-family:var(--tkn-font-display);
+    font-size:var(--tkn-type-display-hero-size);
+    font-weight:var(--tkn-type-display-hero-weight);
+    color:var(--tkn-color-encouragement-DEFAULT);
+    letter-spacing:var(--tkn-type-letterspacing-display);
+    line-height:1.05;
+    margin-bottom:var(--tkn-spacing-xs);
+  }
+  .kpi-label{
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-caption-size);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.224px;
+    line-height:1.43;
+  }
+
+  /* B6 secondary CTA + parent entry */
+  .cta-bottom-block{
+    display:flex;flex-direction:column;align-items:stretch;
+    gap:var(--tkn-spacing-md);
+  }
+  .cta-bottom-btn{
+    width:100%;height:52px;
+    background:var(--tkn-color-primary-DEFAULT);
+    color:var(--tkn-color-white);
+    border:none;border-radius:var(--tkn-radius-pill);
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-body-size);
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    letter-spacing:var(--tkn-type-letterspacing-body);
+    cursor:pointer;
+    min-height:44px;
+    transition:transform var(--tkn-motion-dur-fast) var(--tkn-motion-ease-standard);
+  }
+  .cta-bottom-btn:active{transform:scale(0.97);}
+  .cta-bottom-btn:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);}
+  .parent-entry{
+    text-align:center;
+    font-family:var(--tkn-font-text);
+    font-size:var(--tkn-type-micro-size);
+    color:var(--tkn-color-warm-text-secondary);
+    letter-spacing:-0.12px;
+    line-height:1.5;
+  }
+  .parent-entry a{
+    color:var(--tkn-color-primary-DEFAULT);
+    text-decoration:none;
+    font-weight:var(--tkn-type-body-emphasis-weight);
+    padding:var(--tkn-spacing-xs);
+  }
+  .parent-entry a:focus-visible{outline:none;box-shadow:var(--tkn-shadow-focus);border-radius:var(--tkn-radius-sm);}
+
+  /* prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce){
+    .hero-cta,.cta-bottom-btn{transition:none;}
+  }
+
+  /* whitelist keyframes (none used here) */
 </style>
 </head>
 <body>
+
 <div class="phone">
-  <div class="statusbar">
-    <span class="time">9:41</span>
-    <div class="icons">
-      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="-2" width="3" height="14" rx="1" opacity=".45"/></svg>
-      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2c3.5 0 6.6 1.4 8.5 3.5l-1.5 1.3C13.9 5 11.3 3.8 8.5 3.8S3.1 5 1.5 6.8L0 5.5C1.9 3.4 5 2 8.5 2zm0 3c2.4 0 4.5 1 6 2.5L13 8.8c-1.2-1.1-2.8-1.8-4.5-1.8S5.2 7.7 4 8.8L2.5 7.5C4 6 6.1 5 8.5 5zm0 3c1.3 0 2.5.5 3.4 1.3L8.5 13 5.1 9.3C6 8.5 7.2 8 8.5 8z"/></svg>
-      <svg width="28" height="12" viewBox="0 0 28 12" fill="none"><rect x=".5" y=".5" width="24" height="11" rx="3" stroke="currentColor" opacity=".55"/><rect x="26" y="4" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".5"/><rect x="2.5" y="2.5" width="20" height="7" rx="1.5" fill="currentColor"/></svg>
-    </div>
+  <div class="canvas">
+
+    <!-- B1 Status bar -->
+    <header class="statusbar" data-testid="p-landing-statusbar" role="banner">
+      <span class="time">9:41</span>
+      <span class="icons">●●● ▮▮ 100%</span>
+    </header>
+
+    <!-- ─── Section 1 · Hero (cool / gradient-focus-night) ─── -->
+    <section class="hero" data-mood="cool" data-section="hero" data-testid="landing-hero" role="banner">
+      <div class="glow glow-1" aria-hidden="true"></div>
+      <div class="glow glow-2" aria-hidden="true"></div>
+
+      <!-- top bar: logo + login link -->
+      <div class="hero-top">
+        <div class="hero-logo" data-testid="landing-hero-logo" aria-label="AI 错题本">
+          <svg viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect x="3" y="5" width="22" height="18" rx="4" stroke="#fff" stroke-width="2"/>
+            <path d="M8 11 L14 11 M8 15 L18 15 M8 19 L16 19" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="22" cy="8" r="2.5" fill="#2997ff"/>
+          </svg>
+          <span>AI 错题本</span>
+        </div>
+        <a href="#login" class="hero-login-link" data-testid="landing-hero-login-link" aria-label="已有账号登录">已有账号登录 →</a>
+      </div>
+
+      <!-- headline (display-hero) -->
+      <h1 class="hero-headline" data-testid="landing-hero-headline">AI 帮你拍下错题，不再做无用功</h1>
+
+      <!-- subtitle -->
+      <p class="hero-subhead" data-testid="landing-hero-subhead">拍一张照，3 秒分析 · 自动排好艾宾浩斯复习</p>
+
+      <!-- demo media placeholder (Lottie/GIF area · aurora bg + overlay) -->
+      <div class="hero-demo" data-testid="landing-hero-demo" aria-label="拍题演示动画占位">
+        <div class="hero-demo-frame" aria-hidden="true">
+          <svg class="hero-demo-icon" viewBox="0 0 48 48" fill="none">
+            <rect x="6" y="14" width="36" height="26" rx="4" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="24" cy="27" r="6" stroke="#fff" stroke-width="2.5"/>
+            <rect x="18" y="10" width="12" height="4" rx="1.5" fill="#fff"/>
+          </svg>
+          <span class="hero-demo-label">▶ 拍题 · OCR · 分析</span>
+        </div>
+      </div>
+
+      <!-- dual CTA -->
+      <div class="hero-cta-row" data-testid="landing-hero-cta-row">
+        <button class="hero-cta hero-cta--secondary"
+                data-testid="landing-hero-cta-try"
+                aria-label="无需登录，先试一试">试一试</button>
+        <button class="hero-cta hero-cta--primary"
+                data-testid="landing-hero-cta-login"
+                aria-label="使用账号登录">登录</button>
+      </div>
+    </section>
+
+    <!-- ─── Section 2 · Warm content ─── -->
+    <main class="warm-section" data-mood="warm" data-section="content" role="main">
+
+      <!-- B4 Samples -->
+      <h2 class="section-title" data-testid="landing-samples-title">看看 AI 怎么帮你</h2>
+      <p class="section-sub" data-testid="landing-samples-sub">3 个学科真实样例 · 点击展开看完整 AI 分析</p>
+
+      <div class="samples" data-testid="landing-samples">
+
+        <!-- sample card 1 · math -->
+        <article class="sample-card" data-subject="math" data-testid="landing-samples-card-1">
+          <span class="sample-chip" data-testid="landing-samples-card-1-chip">数学应用题</span>
+          <p class="sample-stem" data-testid="landing-samples-card-1-stem">小明从家到学校，骑车 12 分钟，步行 30 分钟。骑车比步行快 6 km/h，求两地距离。</p>
+          <p class="sample-ai" data-testid="landing-samples-card-1-ai">AI 摘要：相遇追及类 · 已识别 2 个未知量 · 建议从速度差列方程。</p>
+          <a href="#sample1" class="sample-link" data-testid="landing-samples-card-1-cta">查看完整分析 →</a>
+        </article>
+
+        <!-- sample card 2 · physics -->
+        <article class="sample-card" data-subject="physics" data-testid="landing-samples-card-2">
+          <span class="sample-chip" data-testid="landing-samples-card-2-chip">物理力学</span>
+          <p class="sample-stem" data-testid="landing-samples-card-2-stem">质量 2kg 物体在斜面下滑，斜面倾角 30°，动摩擦因数 0.2，求加速度。</p>
+          <p class="sample-ai" data-testid="landing-samples-card-2-ai">AI 摘要：斜面动力学 · 关键 KP 摩擦力分解 · 易错点 重力沿斜面分量。</p>
+          <a href="#sample2" class="sample-link" data-testid="landing-samples-card-2-cta">查看完整分析 →</a>
+        </article>
+
+        <!-- sample card 3 · english -->
+        <article class="sample-card" data-subject="english" data-testid="landing-samples-card-3">
+          <span class="sample-chip" data-testid="landing-samples-card-3-chip">英语完形</span>
+          <p class="sample-stem" data-testid="landing-samples-card-3-stem">The author ___ the importance of patience throughout the passage. (A) downplays (B) emphasizes (C) ignores (D) doubts</p>
+          <p class="sample-ai" data-testid="landing-samples-card-3-ai">AI 摘要：作者态度题 · 上下文情感词指向正向 · 选 B emphasizes。</p>
+          <a href="#sample3" class="sample-link" data-testid="landing-samples-card-3-cta">查看完整分析 →</a>
+        </article>
+
+      </div>
+
+      <!-- B5 KPI banner -->
+      <div class="kpi" data-testid="landing-kpi" role="region" aria-label="社区脱敏数据">
+        <div class="kpi-cell">
+          <div class="kpi-num" data-testid="landing-kpi-total">100w+</div>
+          <div class="kpi-label" data-testid="landing-kpi-total-label">已分析错题</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-num" data-testid="landing-kpi-retention">47%</div>
+          <div class="kpi-label" data-testid="landing-kpi-retention-label">7 日留存</div>
+        </div>
+      </div>
+
+      <!-- B6 bottom CTA + parent entry -->
+      <div class="cta-bottom-block" data-testid="landing-cta-bottom">
+        <button class="cta-bottom-btn"
+                data-testid="landing-cta-bottom-btn"
+                aria-label="立即体验 AI 错题本">立即体验</button>
+        <p class="parent-entry" data-testid="landing-cta-bottom-parent" role="contentinfo">
+          家长 / 老师入口
+          <a href="#parent" data-testid="landing-cta-bottom-parent-link">了解陪伴模式 →</a>
+        </p>
+      </div>
+
+    </main>
+
   </div>
-
-  <div class="hero">
-    <span class="blob"></span>
-  </div>
-
-  <!-- Anonymous Shell top bar: Logo + Sign-in only (no Tab Bar) -->
-  <div class="anon-nav">
-    <div class="brand">
-      <div class="logo"></div>
-      <span class="nm">AI 错题本</span>
-    </div>
-    <div class="signin">登录</div>
-  </div>
-
-  <div class="hero-copy">
-    <div class="eyebrow"><span class="dot"></span>0 注册成本 · 先看看值不值</div>
-    <h1 class="hero-title">拍一张错题<br/>AI 给你一条<em>记忆曲线</em></h1>
-    <p class="hero-sub">多模态识别题干 · 诊断错因 · 自动排 6 次艾宾浩斯复习 · 到点全平台提醒。无需登录即可试一次。</p>
-  </div>
-
-  <div class="metrics">
-    <div class="mchip"><div class="n">4.2<em>s</em></div><div class="l">AI 分析 P95</div></div>
-    <div class="mchip"><div class="n">T0–T6</div><div class="l">7 节点自动排期</div></div>
-    <div class="mchip"><div class="n">98<em>%</em></div><div class="l">到点触达率</div></div>
-  </div>
-
-  <div class="scroll">
-    <div class="sec">
-      <div class="t">真实样例 · 匿名脱敏</div>
-      <div class="m">滑动查看 →</div>
-    </div>
-    <div class="samples">
-      <div class="sample">
-        <div class="thumb s-math">
-          <span class="chip">数学 · 高一</span>
-          <div class="formula">求 lim<sub>x→0</sub> (sin 3x)/x</div>
-        </div>
-        <div class="body">
-          <div class="err">错因：未识别等价无穷小</div>
-          <div class="kp">知识点 · 极限计算 / 等价无穷小替换</div>
-          <div class="t0">T1 · 1h 后复习</div>
-        </div>
-      </div>
-      <div class="sample">
-        <div class="thumb s-phys">
-          <span class="chip">物理 · 高二</span>
-          <div class="formula">斜面 θ=30° 滑块受力...</div>
-        </div>
-        <div class="body">
-          <div class="err">错因：分解方向选错</div>
-          <div class="kp">知识点 · 共点力 / 斜面受力分解</div>
-          <div class="t0">T2 · 1d 后复习</div>
-        </div>
-      </div>
-      <div class="sample">
-        <div class="thumb s-eng">
-          <span class="chip">英语 · 初三</span>
-          <div class="formula">If I ___ you, I would ...</div>
-        </div>
-        <div class="body">
-          <div class="err">错因：虚拟语气时态</div>
-          <div class="kp">知识点 · 虚拟语气 / 与现在事实相反</div>
-          <div class="t0">T3 · 3d 后复习</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="features">
-      <div class="feat">
-        <div class="ico a">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
-        <div>
-          <div class="t">拍照即识别，多模态同时在线</div>
-          <div class="d">qwen-vl-max / gpt-4o-mini 双模热备 · 支持公式、手写、几何图形</div>
-        </div>
-      </div>
-      <div class="feat">
-        <div class="ico b">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-        </div>
-        <div>
-          <div class="t">艾宾浩斯 6 次复习自动排期</div>
-          <div class="d">T1 1h · T2 1d · T3 3d · T4 7d · T5 15d · T6 30d · 自评驱动自适应推进</div>
-        </div>
-      </div>
-      <div class="feat">
-        <div class="ico c">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-        </div>
-        <div>
-          <div class="t">到点多渠道触达，不再遗忘</div>
-          <div class="d">微信订阅消息 / APP / 邮件 / 站内 · 免打扰时段 · 跨端进度同步</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="social">
-      <div class="stack">
-        <div class="av"></div><div class="av"></div><div class="av"></div>
-        <div class="av">+2.4k</div>
-      </div>
-      <div class="txt">本周已有 <em>2,471</em> 位同学用 AI 错题本巩固知识</div>
-    </div>
-
-    <div class="how">
-      <div class="how-title">三步 · 看清曲线</div>
-      <div class="how-row">
-        <div class="how-step"><div class="n">1</div><div class="ic">📸</div><div class="lb">拍一题</div></div>
-        <div class="how-step"><div class="n">2</div><div class="ic">🧠</div><div class="lb">AI 诊断</div></div>
-        <div class="how-step"><div class="n">3</div><div class="ic">📅</div><div class="lb">自动排期</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sticky CTA dock — anonymous shell only -->
-  <div class="cta-dock">
-    <button class="cta-try">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      试一次 · 无需注册
-      <span class="k">免费 · 1 题</span>
-    </button>
-    <button class="cta-login">
-      已有账号？
-      <span style="color:var(--blue);font-weight:800;">直接登录</span>
-    </button>
-    <div class="cta-hint">点击「试一次」即表示同意 <a style="color:var(--blue);">未成年人保护条款</a> · 结果保留 24 小时</div>
-  </div>
-
-  <div class="homebar"></div>
 </div>
+
 </body>
 </html>

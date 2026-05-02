@@ -1,8 +1,10 @@
 {
   "$metadata": {
-    "source": "getdesign.md/apple/design-md",
+    "source": "getdesign.md/apple/design-md (Apple HIG 大字号体系) + archive 实测补充",
+    "version": "v2.0 partial-aligned (Apple HIG 主体保留 + archive 小字号补充)",
     "saved_local": "design/system/inspiration/apple.design.md",
-    "generated_by": "ui-ux-pro-max-skill v2.5.0"
+    "generated_by": "ui-ux-pro-max-skill v2.5.0",
+    "archive_alignment_note": "archive 19 张 mockup 实际用更小字号（手机 393px 适配）：hero-title 28-32px / hero-card-title 24px / section-title 15px / body 13-13.5px / caption 11px / stat-number 22px / mode-tab 20px / kicker 9-10px UPPERCASE。原 Apple HIG 大字号（56/40/28/21）适合 web landing page · 不直接用在 mobile mockup · 但保留作 reference"
   },
   "tkn": {
     "font": {

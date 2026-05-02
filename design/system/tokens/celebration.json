@@ -1,0 +1,151 @@
+{
+  "$metadata": {
+    "source": "design/system/DESIGN.md §2.4 Layer 3 庆祝语义层 + archive 09_review_done.html 实测",
+    "layered": "L3-celebration",
+    "version": "2.0 (archive-aligned 2026-05-02)",
+    "created": "2026-05-02",
+    "rationale": "Celebration moments are critical for K12 retention; isolated namespace prevents accidental use outside whitelisted moments",
+    "archive_alignment_notes": {
+      "mastery-mastered #34A853": "archive 01_home stat.g 等用 iOS HIG --green #34C759，本 token 保留 Material Mint #34A853 仅作语义 mastered 区分；mockup 引用时优先用 var(--tkn-color-system-green) #34C759",
+      "celebrate-green hero gradient": "archive 09_review_done 实测 linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%) - 已添加为本文件新 token celebrate-green-stop-{1,2,3}"
+    }
+  },
+  "_meta": {
+    "description": "Layer 3 celebration tokens — mastery 3-state + confetti palette + streak fire + celebration motion + 09 hero gradient stops",
+    "see_also": [
+      "design/system/tokens/color.json (L1 - system status / iOS HIG)",
+      "design/system/tokens/warmth.json (L2 - DEPRECATED · old aurora 体系)",
+      "design/system/STYLE-TRUTH.md (权威真相 § Mood D celebrate-green)"
+    ],
+    "usage_constraints": {
+      "mastery": "Learning state ONLY. NEVER use for system status (use color.json system.* for that)",
+      "confetti": "ONLY inside ConfettiBurst SVG component. Whitelisted celebration moments only (see iron rule 3)",
+      "streak_fire": "ONLY for streak SVG icon (StreakBar molecule). Never as button color or background.",
+      "motion": "Celebration durations are independent from system motion (--tkn-motion-duration-*) to allow fine-tuning without affecting other transitions"
+    },
+    "iron_rule_3_whitelist": [
+      "P04 first-question-saved (single mastered checkmark)",
+      "P09 single-question-completed",
+      "P09 today-all-completed (full ConfettiBurst)",
+      "P-HOME / P09 streak-milestone (7/30/100 days)"
+    ]
+  },
+  "tkn": {
+    "color": {
+      "mastery": {
+        "forgot": {
+          "value": "#C0392B",
+          "type": "color",
+          "comment": "P08 '未掌握' button, P06/P09 forgot-node dot. Same hex as system-danger but DIFFERENT semantic namespace — meaning is 'I forgot' not 'system error'.",
+          "contrast_on_warm_bg": "5.18:1",
+          "white_text_on_this": "5.44:1",
+          "_iron_rule_1_exception": "self-grading"
+        },
+        "partial": {
+          "value": "#E8741C",
+          "type": "color",
+          "comment": "P08 '部分掌握' button, P06/P09 partial-node dot. Same hex as encouragement-DEFAULT — semantic alignment intentional ('still encouraging, almost there').",
+          "contrast_on_warm_bg": "4.62:1",
+          "white_text_on_this": "4.62:1",
+          "_iron_rule_1_exception": "self-grading"
+        },
+        "mastered": {
+          "value": "#34A853",
+          "type": "color",
+          "comment": "P08 '已掌握' button, P06/P09 mastered-node dot, P09 celebration accent. Brighter / more friendly than system-success #1A7D34. Material Design mint.",
+          "contrast_on_warm_bg": "3.45:1",
+          "white_text_on_this": "3.45:1",
+          "_warning": "Below-AA for body text. Use as accent/background only.",
+          "_iron_rule_1_exception": "self-grading"
+        }
+      },
+      "celebrate": {
+        "confetti-1": {
+          "value": "#FFD60A",
+          "type": "color",
+          "comment": "Gold particle (Apple Yellow). ONLY inside ConfettiBurst SVG."
+        },
+        "confetti-2": {
+          "value": "#FF375F",
+          "type": "color",
+          "comment": "Pink particle (Apple Pink). ONLY inside ConfettiBurst SVG."
+        },
+        "confetti-3": {
+          "value": "#34A853",
+          "type": "color",
+          "comment": "Mint particle (Material Mint, same as mastery-mastered). ONLY inside ConfettiBurst SVG."
+        },
+        "confetti-4": {
+          "value": "#5E5CE6",
+          "type": "color",
+          "comment": "Purple particle (Apple Indigo). ONLY inside ConfettiBurst SVG."
+        },
+        "confetti-5": {
+          "value": "#FF9500",
+          "type": "color",
+          "comment": "Orange particle (Apple Orange). ONLY inside ConfettiBurst SVG."
+        }
+      },
+      "streak": {
+        "fire": {
+          "value": "#FF6B35",
+          "type": "color",
+          "comment": "Streak 🔥 icon fill (StreakBar molecule). Use SVG fill, NOT emoji. Distinct from encouragement-DEFAULT (#E8741C) — fire color is more saturated/red, evoking actual flame."
+        }
+      },
+      "celebrate-green-stop": {
+        "1": {
+          "value": "#0F7F3E",
+          "type": "color",
+          "comment": "P09_review_done hero 渐变 stop 1 (175deg 起点 · 深森林绿) · 实测自 archive/09_review_done.html"
+        },
+        "2": {
+          "value": "#1FAE5C",
+          "type": "color",
+          "comment": "P09_review_done hero 渐变 stop 2 (40% · 中绿)"
+        },
+        "3": {
+          "value": "#34C759",
+          "type": "color",
+          "comment": "P09_review_done hero 渐变 stop 3 (终点 · iOS HIG green) · 与 --tkn-color-system-green 同色 · 衔接系统色"
+        }
+      }
+    },
+    "gradient": {
+      "celebrate-hero": {
+        "value": "linear-gradient(175deg, #0F7F3E 0%, #1FAE5C 40%, #34C759 100%)",
+        "type": "gradient",
+        "comment": "P09_review_done 全屏 hero 渐变 · archive 实测 · Mood D celebrate-green 唯一渐变",
+        "wechat_fallback": "#1FAE5C"
+      }
+    },
+    "motion": {
+      "celebrate": {
+        "confetti": {
+          "value": "1200ms",
+          "type": "duration",
+          "comment": "P09 'today all done' ConfettiBurst total duration. After 1200ms particles fade, page reaches READY state."
+        },
+        "checkmark": {
+          "value": "800ms",
+          "type": "duration",
+          "comment": "P08 → P09 single-question completion checkmark animation. Pop-in + scale + settle."
+        },
+        "streak-bump": {
+          "value": "400ms",
+          "type": "duration",
+          "comment": "Streak number bump on milestone (7/30/100 days). Brief scale pulse + color shift to streak-fire."
+        }
+      }
+    },
+    "ease": {
+      "celebrate": {
+        "bounce-out": {
+          "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+          "type": "cubicBezier",
+          "comment": "Slight overshoot easing for checkmark pop and streak bump. Adds 'pop' feel without being childish."
+        }
+      }
+    }
+  }
+}

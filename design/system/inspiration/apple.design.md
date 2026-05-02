@@ -1,5 +1,16 @@
 # Design System Inspired by Apple
 
+> **⚠️ 文档定位（2026-05-02 更新）**：本文是早期 Apple 官网设计语言研究的参考资料（reference-only），描述 Apple 网站使用的色值（如 macOS `#0071e3` / 近黑 `#1d1d1f` / 蓝灰底 `#f5f5f7`）。
+>
+> **本文中的 hex 值不是本项目的设计 token**。本项目实际使用 iOS HIG 完整调色板：
+> - 主色 `#007AFF`（不是 macOS `#0071e3`）
+> - 主文字 `#1C1C1E`（不是 `#1d1d1f`）
+> - 浅底 `#F2F2F7`（不是 `#f5f5f7`）
+>
+> **当前权威**：`design/system/STYLE-TRUTH.md` + `design/system/DESIGN.md v2.0` + `design/system/tokens/color.json v2.0`。
+>
+> 阅读本文时，把它当作 "Apple 设计语言研究笔记"，而不是 "项目设计规范"。
+
 ## 1. Visual Theme & Atmosphere
 
 Apple's website is a masterclass in controlled drama — vast expanses of pure black and near-white serve as cinematic backdrops for products that are photographed as if they were sculptures in a gallery. The design philosophy is reductive to its core: every pixel exists in service of the product, and the interface itself retreats until it becomes invisible. This is not minimalism as aesthetic preference; it is minimalism as reverence for the object.
