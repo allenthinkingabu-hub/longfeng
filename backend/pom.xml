@@ -152,5 +152,6 @@
     <module>review-plan-service</module>
     <module>file-service</module>
     <module>anonymous-service</module>
+    <module>integration-test</module>
   </modules>
 </project>
