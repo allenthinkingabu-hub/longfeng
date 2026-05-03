@@ -14,11 +14,13 @@ export class WrongbookListPage extends BasePage {
   async open() { await this.goto(WrongbookListPage.route); }
 
   async getItemCount(): Promise<number> {
-    return await this.page.getByTestId('wrongbook.list.item-card').count();
+    // 实际 List page 用 question-list-card-{N} (root) + 子 testid 加后缀如 -subject-bar/-thumbnail
+    // 用 regex 仅匹配根节点 (question-list-card-数字结尾 · 不含其他后缀)
+    return await this.page.getByTestId(/^question-list-card-\d+$/).count();
   }
 
   async openItem(index = 0) {
-    await this.page.getByTestId('wrongbook.list.item-card').nth(index).click();
+    await this.page.getByTestId(/^question-list-card-\d+$/).nth(index).click();
     await this.page.waitForLoadState('networkidle');
   }
 
