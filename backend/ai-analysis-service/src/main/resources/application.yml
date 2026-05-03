@@ -37,6 +37,40 @@ spring:
 feature:
   llm-provider: ${FEATURE_LLM_PROVIDER:dashscope}
 
+# S3 BE-07-ai · D-AI longfeng.ai.* (TDD §10.2)
+longfeng:
+  ai:
+    provider: ${LONGFENG_AI_PROVIDER:qianwen}
+    timeout-sync: 8s
+    timeout-stream: 15s
+    fallback-chain: ${LONGFENG_AI_FALLBACK_CHAIN:qianwen,openai,zhipu}
+    max-retries: 1
+    temperature: 0.2
+    qianwen:
+      api-key: ${LONGFENG_QIANWEN_KEY:sk-qwen-test}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model: qwen-vl-max
+    zhipu:
+      api-key: ${LONGFENG_ZHIPU_KEY:sk-zhipu-test}
+      base-url: https://open.bigmodel.cn/api/paas/v4
+      model: glm-4v-plus
+    local-vllm:
+      api-key: not-needed
+      base-url: http://localhost:8000/v1
+      model: bge-llava
+    safeguard:
+      enabled: true
+      injection-detect-mode: heuristic
+    pii:
+      face-mask: ${LONGFENG_FACE_MASK:false}
+      nsfw-block-threshold: 0.85
+      nsfw-enabled: ${LONGFENG_NSFW_ENABLED:false}
+    spool:
+      tmp-dir: ${LONGFENG_AI_SPOOL:/var/lib/longfeng/ai-spool}
+      max-size-mb: 20
+    cost-cap:
+      daily-cents-per-tenant: 50000
+
 rocketmq:
   name-server: ${ROCKETMQ_NAMESRV:localhost:9876}
   consumer:
