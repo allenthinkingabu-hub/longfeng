@@ -1,0 +1,294 @@
+/**
+ * P03 Analyzing · Mood C dark-camera (沿用 P02 暗底，视觉无缝衔接)
+ * STYLE-TRUTH §3 Mood C
+ *
+ * 原型参考: design/mockups/wrongbook/03_analyzing.html
+ * 颜色:
+ *   --cam-bg        : #0B0F1A (camera-screen)
+ *   --surface-dark  : #28282a (surface-dark-3)
+ *   --surface-dark1 : #272729 (surface-dark-1)
+ *   --blue          : #007AFF
+ *   --green-step    : #34C759 (mastery-mastered ≈ step-done)
+ */
+
+/* ─── Root ──────────────────────────────────────────────────────── */
+.root {
+  --cam-bg: #0B0F1A;
+  --surface-dark: #28282a;
+  --surface-dark1: #272729;
+  --blue: #007AFF;
+  --blue-light: #2997ff;
+  --green-step: #34C759;
+  --red-step: #FF3B30;
+
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  background: linear-gradient(180deg, #0A0E1A 0%, #1A1F2E 100%);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* ─── Status bar ─────────────────────────────────────────────── */
+.statusbar {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 32px 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  flex: 0 0 auto;
+  z-index: 30;
+}
+
+/* ─── Page body ──────────────────────────────────────────────── */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px 16px;
+  overflow: auto;
+}
+
+/* ─── B2 · Thumb card + model badge ─────────────────────────── */
+.thumbCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-dark);
+  border-radius: 11px;
+  padding: 12px;
+  margin-bottom: 16px;
+  flex: 0 0 auto;
+}
+.thumbImg {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1c2436 0%, #0a0d18 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+.thumbImg svg {
+  width: 32px;
+  height: 32px;
+}
+.thumbInfo {
+  flex: 1;
+  min-width: 0;
+}
+.thumbTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.224px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-dark1);
+  color: var(--blue-light);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 12px;
+}
+.modelBadge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-step);
+  flex: 0 0 6px;
+}
+
+/* ─── B3 · 4-step pipeline ───────────────────────────────────── */
+.pipeline {
+  background: var(--surface-dark);
+  border-radius: 12px;
+  padding: 16px 16px 12px;
+  margin-bottom: 16px;
+  flex: 0 0 auto;
+}
+.pipelineStep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.pipelineStep + .pipelineStep {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.stepCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 250ms ease;
+}
+
+/* done */
+.stepDone .stepCircle {
+  background: var(--green-step);
+  color: #fff;
+}
+/* now */
+.stepNow .stepCircle {
+  background: var(--blue-light);
+  color: #fff;
+  animation: ssePulse 1500ms ease-in-out infinite;
+}
+/* wait */
+.stepWait .stepCircle {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.4);
+}
+/* fail */
+.stepFail .stepCircle {
+  background: var(--red-step);
+  color: #fff;
+}
+
+@keyframes ssePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(41, 151, 255, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(41, 151, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(41, 151, 255, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stepNow .stepCircle { animation: none; }
+}
+
+.stepLabel {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: -0.224px;
+}
+.stepWait .stepLabel {
+  opacity: 0.5;
+}
+.stepMeta {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.stepNow .stepMeta {
+  color: var(--blue-light);
+}
+.stepDone .stepMeta {
+  color: var(--green-step);
+}
+.stepFail .stepMeta {
+  color: var(--red-step);
+}
+
+/* ─── B4 · JSON stream ───────────────────────────────────────── */
+.jsonStream {
+  flex: 1 1 auto;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 11px;
+  padding: 12px;
+  overflow: auto;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  letter-spacing: -0.224px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 180px;
+  min-height: 80px;
+}
+.jsonKey   { color: var(--blue-light); }
+.jsonStr   { color: var(--green-step); }
+.jsonPunc  { color: rgba(255, 255, 255, 0.5); }
+.streamCursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--blue-light);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .streamCursor { animation: none; opacity: 0.5; }
+}
+
+/* ─── B5 · Cancel button ─────────────────────────────────────── */
+.cancelBtn {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 48px;
+  min-height: 44px;
+  background: rgba(44, 42, 38, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.cancelBtn:active { transform: scale(0.97); }
+.cancelBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #007AFF;
+}
+
+/* ─── Banners (slow / error) ─────────────────────────────────── */
+.banner {
+  flex: 0 0 auto;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bannerSlow {
+  background: rgba(255, 204, 0, 0.15);
+  border: 0.5px solid rgba(255, 204, 0, 0.4);
+  color: #FFCC00;
+}
+.bannerError {
+  background: rgba(255, 59, 48, 0.15);
+  border: 0.5px solid rgba(255, 59, 48, 0.4);
+  color: #FF3B30;
+}
+
+/* ─── Desktop clamp ──────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .root {
+    max-width: 414px;
+    margin: 0 auto;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    min-height: 100vh;
+  }
+}

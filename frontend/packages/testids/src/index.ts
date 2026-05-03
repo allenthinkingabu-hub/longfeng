@@ -3,7 +3,81 @@
 // 见 design/system/testid-convention.md · 双端同名（H5 data-testid / miniapp data-test-id）
 
 export const TEST_IDS = {
-  // P03 Capture · SC-01 + SC-07
+  // P02 Capture · SC-01 · Mood C dark-camera
+  p02: {
+    root: 'p02-root',
+    topbar: 'p02-topbar',
+    topbarBack: 'p02-topbar-back',
+    topbarFlash: 'p02-topbar-flash-btn',
+    viewfinder: 'p02-viewfinder',
+    detectBadge: 'p02-detect-badge',
+    tipCard: 'p02-tip-card',
+    paper: 'p02-paper',
+    subjects: 'p02-subjects',
+    subjectMath: 'p02-subject-math',
+    subjectPhysics: 'p02-subject-physics',
+    subjectChemistry: 'p02-subject-chemistry',
+    subjectEnglish: 'p02-subject-english',
+    shutter: 'p02-shutter-btn',
+    gallery: 'p02-gallery-btn',
+    modes: 'p02-mode-tabs',
+    modePhoto: 'p02-mode-tabs-tab-1',
+    modeMulti: 'p02-mode-tabs-tab-2',
+    modeFile: 'p02-mode-tabs-tab-3',
+    uploadProgress: 'p02-upload-progress',
+    errorBanner: 'p02-error-banner',
+  },
+
+  // P03 Analyzing · SSE 4-step pipeline
+  p03: {
+    root: 'p03-root',
+    statusbar: 'p03-statusbar',
+    thumbCard: 'p03-thumb-card',
+    thumbImage: 'p03-thumb-card-image',
+    thumbTitle: 'p03-thumb-card-title',
+    modelBadge: 'analyzing-pipeline-model-badge',
+    pipeline: 'analyzing-pipeline',
+    step1: 'analyzing-pipeline-step-1',
+    step2: 'analyzing-pipeline-step-2',
+    step3: 'analyzing-pipeline-step-3',
+    step4: 'analyzing-pipeline-step-4',
+    jsonStream: 'analyzing-pipeline-json-stream',
+    cancelBtn: 'analyzing-pipeline-cancel-btn',
+    fallbackBanner: 'p03-fallback-banner',
+    slowBanner: 'p03-slow-banner',
+  },
+
+  // P04 Result · Mood B pure-warm
+  p04: {
+    root: 'p04-root',
+    navbar: 'p04-navbar',
+    questionHero: 'p04-question-hero',
+    answersRow: 'p04-answers-row',
+    answersWrong: 'p04-answers-row-wrong',
+    answersRight: 'p04-answers-row-right',
+    answersWrongText: 'p04-answers-row-wrong-text',
+    answersRightText: 'p04-answers-row-right-text',
+    reasonCard: 'p04-reason-card',
+    reasonText: 'p04-reason-card-text',
+    solutionStepper: 'p04-solution-stepper',
+    step1: 'p04-solution-stepper-step-1',
+    step2: 'p04-solution-stepper-step-2',
+    step3: 'p04-solution-stepper-step-3',
+    metaChips: 'p04-meta-chips',
+    subjectChipMath: 'subject-chip-math',
+    memoryCurve: 'memory-curve',
+    memCurveT1: 'memory-curve-node-T1',
+    memCurveT2: 'memory-curve-node-T2',
+    memCurveT3: 'memory-curve-node-T3',
+    memCurveT4: 'memory-curve-node-T4',
+    memCurveT5: 'memory-curve-node-T5',
+    memCurveT6: 'memory-curve-node-T6',
+    saveCta: 'p04-save-cta',
+    lowConfBanner: 'p04-low-conf-banner',
+    skeleton: 'p04-skeleton',
+  },
+
+  // P03 Capture (legacy key kept for backward compat) · SC-01 + SC-07
   capture: {
     root: 'capture.root',
     form: {

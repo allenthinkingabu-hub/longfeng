@@ -17,6 +17,8 @@ import { ObserverShell } from './shells/ObserverShell';
 
 // ── 现有页面（S7 已实现）──────────────────────────────────────────────────────
 import { CapturePage } from './pages/Capture';
+import { AnalyzingPage } from './pages/Analyzing';
+import { ResultPage } from './pages/Result';
 import { ListPage } from './pages/List';
 import { DetailPage } from './pages/Detail';
 
@@ -28,7 +30,7 @@ const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
   </div>
 );
 
-// 各占位（按 PRD §2A.3.1 页面列表）
+// 各占位（按 PRD §2A.3.1 页面列表 · FE-02/03/06 已写真实页 · 此处仅余未实现）
 const LandingPage = () => <PlaceholderPage name="P-LANDING 访客落地" />;
 const GuestCapturePage = () => <PlaceholderPage name="P-GUEST-CAPTURE 游客拍题" />;
 const SharedPage = () => <PlaceholderPage name="P-SHARED 分享预览" />;
@@ -36,8 +38,6 @@ const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
 const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;
 const AuthPage = () => <PlaceholderPage name="P00 登录" />;
-const AnalyzingPage = () => <PlaceholderPage name="P03 AI 分析中" />;
-const ResultPage = () => <PlaceholderPage name="P04 AI 分析结果" />;
 const ReviewTodayPage = () => <PlaceholderPage name="P07 今日复习" />;
 const ReviewExecPage = () => <PlaceholderPage name="P08 复习执行" />;
 const ReviewDonePage = () => <PlaceholderPage name="P09 复习完成" />;
