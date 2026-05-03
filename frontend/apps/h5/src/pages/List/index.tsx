@@ -157,20 +157,22 @@ export const ListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* AC-WB-LIST-001 · 搜索框凹陷底 */}
-        <button
-          type="button"
+        {/* AC-WB-LIST-001 · 搜索框凹陷底 · 用 div role=button 避免嵌套 button (axe nested-interactive) */}
+        <div
+          role="button"
+          tabIndex={0}
           className={s.search}
           data-testid="p05-page-header-search"
           aria-label="搜索错题"
           onClick={() => {/* TODO 搜索页 */}}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); /* TODO 搜索页 */ } }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
             <path d="m20 20-3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           <span className={s.searchPlaceholder}>二次函数 顶点</span>
-          {/* AC-WB-LIST-010 · AI 语义 Badge */}
+          {/* AC-WB-LIST-010 · AI 语义 Badge · 内嵌真 button 现在合法 (外层是 div role=button) */}
           <button
             className={`${s.searchAi} ${semanticMode ? s.searchAiActive : ''}`}
             type="button"
@@ -181,7 +183,7 @@ export const ListPage: React.FC = () => {
           >
             AI 语义
           </button>
-        </button>
+        </div>
 
         {/* B2 · SubjectChips 学科横滚 */}
         <div

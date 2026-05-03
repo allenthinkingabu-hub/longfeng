@@ -67,7 +67,10 @@ export const AnalyzingPage: React.FC = () => {
   const onDone = useCallback(() => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
-    setTimeout(() => nav(`/question/${qid}/result`), 200);
+    // SC-12: 游客无 lf:token · 不要跳 /question/x/result (登录态页) · 回到 /guest/capture (含 register CTA)
+    const isGuest = typeof localStorage !== 'undefined' && !localStorage.getItem('lf:token');
+    const dest = isGuest ? '/guest/capture' : `/question/${qid}/result`;
+    setTimeout(() => nav(dest), 200);
   }, [nav, qid]);
 
   const onSlow = useCallback(() => {
