@@ -76,6 +76,16 @@ export const wrongbookHandlers = [
     return HttpResponse.json(item);
   }),
 
+  // SC-10 · 软删除 (归档) → 204 · Detail page archiveMut + 5s undo 窗口依赖此 200/204
+  http.delete('/api/v1/wrongbook/items/:id', ({ params }) => {
+    const idx = WRONGBOOK_LIST.findIndex((i) => i.id === params.id);
+    if (idx >= 0) {
+      // soft delete · 标记 status='archived' · 不真删（保支持 undo）
+      WRONGBOOK_LIST[idx] = { ...WRONGBOOK_LIST[idx], status: 'archived' };
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // SC-01: POST /api/v1/wrongbook/items → push 一个 item · 立即可见 in GET list
   // 注：capture.ts 也注册了同一路径 · MSW 按 handler 注册顺序匹配 · 把这条放最后
   // 改用 PUT/save 端点避免冲突 · 但前端实际可能 POST 同路径 · 先并存

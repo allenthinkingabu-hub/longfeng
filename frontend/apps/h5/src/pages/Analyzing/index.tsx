@@ -63,14 +63,19 @@ export const AnalyzingPage: React.FC = () => {
   }, []);
 
   const navigatedRef = useRef(false);
+  const userCancelledRef = useRef(false);
 
   const onDone = useCallback(() => {
     if (navigatedRef.current) return;
+    if (userCancelledRef.current) return; // SC-01 异常: 用户已 cancel · 不要 race nav 到 result
     navigatedRef.current = true;
     // SC-12: 游客无 lf:token · 不要跳 /question/x/result (登录态页) · 回到 /guest/capture (含 register CTA)
     const isGuest = typeof localStorage !== 'undefined' && !localStorage.getItem('lf:token');
     const dest = isGuest ? '/guest/capture' : `/question/${qid}/result`;
-    setTimeout(() => nav(dest), 200);
+    setTimeout(() => {
+      if (userCancelledRef.current) return; // double-check 在 setTimeout 触发瞬间
+      nav(dest);
+    }, 200);
   }, [nav, qid]);
 
   const onSlow = useCallback(() => {
@@ -83,6 +88,8 @@ export const AnalyzingPage: React.FC = () => {
   }, []);
 
   const onCancelled = useCallback(() => {
+    userCancelledRef.current = true;
+    navigatedRef.current = true; // 防再次 nav
     nav('/capture');
   }, [nav]);
 
@@ -102,6 +109,9 @@ export const AnalyzingPage: React.FC = () => {
   }, [status, isFallbackTask]);
 
   const handleCancel = async () => {
+    // 先同步标记 · 防 onDone setTimeout 抢先 nav 到 /result
+    userCancelledRef.current = true;
+    navigatedRef.current = true;
     await cancel();
   };
 

@@ -1,7 +1,7 @@
 // S7 · FE-03 · WrongbookDetail (P06) · 对标 design/mockups/wrongbook/_archive/06_wrongbook_detail.html
 // Mood B · pure-warm · 米白底 + 白卡 + iOS 标准 nav
 // AC 覆盖: AC-WB-DETAIL-001 ~ AC-WB-DETAIL-010
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { wrongbookClient, WrongItemVO } from '@longfeng/api-contracts';
@@ -79,19 +79,41 @@ export const DetailPage: React.FC = () => {
   const currentNode = nodes.find((n) => n.status === 'now');
   const subjectLabel = item ? (SUBJECT_LABEL[item.subject] ?? item.subject) : '';
 
-  // AC-WB-DETAIL-007 · 归档 → POST archive
+  // SC-10 · 归档级联 + 5s undo 窗口
+  // 归档后 5s 内点击 undo → cancel · 不导航 · 否则 5s 后 nav /wrongbook
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const archiveMut = useMutation({
     mutationFn: () => wrongbookClient.softDelete(id),
     onSuccess: () => {
       setArchived(true);
       setArchiving(false);
       qc.invalidateQueries({ queryKey: ['wrongbook'] });
-      setTimeout(() => nav('/wrongbook', { replace: true }), 800);
+      // SC-10: undo 窗口 5s · 内未点 undo 才真离页 · 内点 undo 取消并 unarchive
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = setTimeout(() => {
+        undoTimerRef.current = null;
+        nav('/wrongbook', { replace: true });
+      }, 5000);
     },
     onError: () => {
       setArchiving(false);
     },
   });
+
+  const handleUndoArchive = () => {
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setArchived(false);
+    qc.invalidateQueries({ queryKey: ['wrongbook'] });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
 
   // ── LOADING ─────────────────────────────────────────────────
   if (isLoading) {
@@ -499,6 +521,36 @@ export const DetailPage: React.FC = () => {
           立即复习
         </button>
       </footer>
+
+      {/* SC-10 · 归档后 5s undo toast */}
+      {archived && undoTimerRef.current && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="p06-archive-undo-toast"
+          style={{
+            position: 'fixed', left: 16, right: 16, bottom: 96, zIndex: 50,
+            background: '#1C1C1E', color: '#fff', borderRadius: 12,
+            padding: '12px 16px', display: 'flex', alignItems: 'center',
+            gap: 12, fontSize: 14, fontWeight: 500,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+          }}
+        >
+          <span style={{ flex: 1 }}>已归档 · 5 秒内可撤销</span>
+          <button
+            type="button"
+            onClick={handleUndoArchive}
+            aria-label="撤销归档"
+            style={{
+              background: 'transparent', border: 'none',
+              color: '#5AA9FF', fontSize: 14, fontWeight: 600,
+              padding: '4px 8px', cursor: 'pointer',
+            }}
+          >
+            撤销
+          </button>
+        </div>
+      )}
 
       {/* TabBar */}
       <nav className={s.tabbar} role="navigation" aria-label="底部导航">

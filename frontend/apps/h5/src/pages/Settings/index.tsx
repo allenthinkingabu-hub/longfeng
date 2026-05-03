@@ -298,9 +298,28 @@ export const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<UserProfile>(MOCK_USER);
   const [prefs, setPrefs] = useState<Preferences>(MOCK_PREFS);
 
-  /* SC-16 · 从 /api/v1/me/tier + /api/v1/ai-models 读 tier 和当前选中模型（B 轨 MSW 拦截）*/
+  /* SC-16 · 从 /api/v1/me/tier + /api/v1/ai-models 读 tier 和当前选中模型（B 轨 MSW 拦截）
+   *
+   * MSW handler tier 判定基于 Authorization header（包含 'vipplus' / 'vip' 字串）。
+   * loginAs(NORMAL/VIP/VIP_PLUS) fixture 写 lf:token JWT · 这里取出附到 Authorization。
+   * 兜底：缺 token → 仍发请求（headerless · handler 默认 NORMAL）。
+   * 加速：localStorage `lf_user_tier` 同步存在 · 直接 prime 到 state，避免 fetch 抖动。
+   */
   useEffect(() => {
-    void fetch('/api/v1/me/tier', { headers: { 'Cache-Control': 'no-store' } })
+    let token: string | null = null;
+    let tierHint: UserTier | null = null;
+    try {
+      token = localStorage.getItem('lf:token');
+      const tt = localStorage.getItem('lf_user_tier');
+      if (tt === 'NORMAL' || tt === 'VIP' || tt === 'VIP_PLUS') tierHint = tt;
+    } catch { /* private mode */ }
+    if (tierHint) {
+      setUser((prev) => ({ ...prev, tier: tierHint! }));
+    }
+    const headers: Record<string, string> = { 'Cache-Control': 'no-store' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    void fetch('/api/v1/me/tier', { headers })
       .then((res) => (res.ok ? (res.json() as Promise<{ tier: UserTier }>) : null))
       .then((data) => {
         if (data?.tier) {
@@ -309,7 +328,7 @@ export const SettingsPage: React.FC = () => {
       })
       .catch(() => { /* silently fallback to NORMAL */ });
 
-    void fetch('/api/v1/ai-models', { headers: { 'Cache-Control': 'no-store' } })
+    void fetch('/api/v1/ai-models', { headers })
       .then((res) => (res.ok ? (res.json() as Promise<{ currentModel?: string }>) : null))
       .then((data) => {
         if (data?.currentModel) {

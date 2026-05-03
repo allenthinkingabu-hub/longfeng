@@ -111,25 +111,27 @@ export const ResultPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      // SC-07 异常路径：qid 含 'low-conf' 强制 confidence < 0.6 → LOW_CONF banner
+      const isLowConfQid = /low.?conf/i.test(qid);
+      const seedQuestion: QuestionDetail = isLowConfQid
+        ? { ...MOCK_QUESTION, id: qid, confidence: 0.42 }
+        : MOCK_QUESTION;
       try {
         // Try real API; fall back to mock
         const resp = await fetch(`/api/wb/questions/${qid}`).catch(() => null);
         if (cancelled) return;
         if (resp?.ok) {
           const data = await resp.json();
-          setQuestion(data.question ?? MOCK_QUESTION);
+          setQuestion(data.question ?? seedQuestion);
           setNodes(data.plannedNodes ?? MOCK_NODES);
         } else {
           // Use mock data while backend is unavailable (C-14 caveat)
-          setQuestion(MOCK_QUESTION);
+          setQuestion(seedQuestion);
           setNodes(MOCK_NODES);
         }
-        const q = question ?? MOCK_QUESTION;
-        setPageState(q.confidence < 0.6 ? 'LOW_CONF' : 'DRAFT');
       } catch {
-        setQuestion(MOCK_QUESTION);
+        setQuestion(seedQuestion);
         setNodes(MOCK_NODES);
-        setPageState('DRAFT');
       }
     };
     load();

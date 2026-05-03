@@ -72,6 +72,20 @@ export const GuestCapturePage: React.FC = () => {
     }).catch(() => { /* silently fail */ });
   }, [deviceFp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* SC-12 异常 · mount 时拉取最新 quota · 0 时仅更新 banner 文案 · 不切全屏（保留 camera-preview + banner 可见，e2e POM 依赖）*/
+  useEffect(() => {
+    let cancelled = false;
+    void fetch('/api/guest/quota', { headers: { 'Cache-Control': 'no-store' } })
+      .then((res) => (res.ok ? (res.json() as Promise<{ quotaRemaining?: number }>) : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        const q = typeof data.quotaRemaining === 'number' ? data.quotaRemaining : 1;
+        setQuotaRemaining(q);
+      })
+      .catch(() => { /* silently keep default */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const handleSubjectSelect = (subj: Subject) => {
     setSelectedSubject(subj);
   };
@@ -305,7 +319,10 @@ export const GuestCapturePage: React.FC = () => {
             className={s.quotaTitle}
             data-testid="guest-quota-banner-text"
           >
-            今日还剩 <em>1 次</em> 免费分析
+            {quotaRemaining > 0
+              ? <>今日还剩 <em>{quotaRemaining} 次</em> 免费分析</>
+              : <>今日额度已耗尽 · <em>明天 0 点</em> 重置</>
+            }
           </div>
           <div className={s.quotaDesc}>
             结果保留 <em>24 小时</em> · 注册后可一键 claim

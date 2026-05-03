@@ -28,8 +28,32 @@ const POOL: Record<Tier, Array<{ id: string; name: string; costPerCall?: number;
 
 let currentSelectedModel: string | null = null;
 
+/** base64url → utf-8 (browser-safe; no Node Buffer) */
+function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
+  try {
+    const parts = jwt.split('.');
+    if (parts.length < 2) return null;
+    let p = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (p.length % 4) p += '=';
+    const binStr = atob(p);
+    const bytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+    return JSON.parse(new TextDecoder('utf-8').decode(bytes)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 function tierFromAuth(auth: string | null): Tier {
   if (!auth) return 'NORMAL';
+  // 1) 尝试解 JWT payload.tier（dev login 写入的形态）
+  const m = /^Bearer\s+(.+)$/i.exec(auth);
+  if (m) {
+    const payload = decodeJwtPayload(m[1]);
+    const t = payload?.tier;
+    if (t === 'VIP_PLUS' || t === 'VIP' || t === 'NORMAL') return t;
+  }
+  // 2) 兜底：原始字符串包含 tier 关键词（A 轨真 token 走 dev 路径）
   if (auth.includes('vipplus') || auth.includes('VIP_PLUS')) return 'VIP_PLUS';
   if (auth.includes('vip') || auth.includes('VIP')) return 'VIP';
   return 'NORMAL';

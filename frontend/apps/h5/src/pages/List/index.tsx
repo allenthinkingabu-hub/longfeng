@@ -63,6 +63,8 @@ export const ListPage: React.FC = () => {
   );
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>('all');
   const [semanticMode, setSemanticMode] = useState(false);
+  // SC-10 · 归档视图开关 · 默认 active 视图
+  const [showArchived, setShowArchived] = useState(false);
 
   // AC-WB-LIST-009 · highlight from P04 save
   const highlightQid = searchParams.get('highlight');
@@ -90,10 +92,14 @@ export const ListPage: React.FC = () => {
   const allItems = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
 
   // client-side mastery filter (spec §6 FILTERED state)
+  // SC-10 · showArchived ? 仅 status=archived : 排除 archived
   const filteredItems = useMemo(() => {
-    if (masteryFilter === 'all') return allItems;
-    return allItems.filter((it) => masteryBucket(it.mastery) === masteryFilter);
-  }, [allItems, masteryFilter]);
+    const base = showArchived
+      ? allItems.filter((it) => it.status === 'archived')
+      : allItems.filter((it) => it.status !== 'archived');
+    if (masteryFilter === 'all') return base;
+    return base.filter((it) => masteryBucket(it.mastery) === masteryFilter);
+  }, [allItems, masteryFilter, showArchived]);
 
   const counts = useMemo(() => {
     let lo = 0, mi = 0, hi = 0;
@@ -211,6 +217,17 @@ export const ListPage: React.FC = () => {
               <span className={s.scCt}>{o.count}</span>
             </button>
           ))}
+          {/* SC-10 · 归档 tab · 切到 status='archived' 视图 */}
+          <button
+            type="button"
+            className={`${s.sc} ${showArchived ? s.scOn : ''}`}
+            onClick={() => setShowArchived((v) => !v)}
+            data-testid={TEST_IDS.wrongbookList['archive-tab']}
+            aria-pressed={showArchived}
+            aria-label="切到归档视图"
+          >
+            归档
+          </button>
         </div>
       </header>
 

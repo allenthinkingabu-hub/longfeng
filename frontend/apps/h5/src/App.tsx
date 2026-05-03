@@ -49,7 +49,65 @@ const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
 );
 
 // 各占位（FE-07 已替换 AuthPage / HomePage / NotificationsPage / MePage）
-const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 (P1)" />;
+/**
+ * P-WELCOMEBACK · 设备指纹回流唤起 (P1 minimal skeleton for SC-14 e2e)
+ * - 指纹存在 (lf_device_fp / __lf_device_fp__) → 显示"欢迎回来"
+ * - 指纹缺失 → 自动跳 /auth (降级到 P00)
+ */
+const WelcomeBackPage: React.FC = () => {
+  const [hasFp, setHasFp] = React.useState<boolean | null>(null);
+  React.useEffect(() => {
+    let fp: string | null = null;
+    try {
+      fp =
+        localStorage.getItem('__lf_device_fp__') ||
+        sessionStorage.getItem('__lf_device_fp__') ||
+        localStorage.getItem('lf_device_fp');
+    } catch { /* private mode */ }
+    if (!fp) {
+      window.location.replace('/auth');
+      return;
+    }
+    setHasFp(true);
+  }, []);
+  if (hasFp !== true) {
+    return (
+      <main
+        data-testid="p-welcomeback-root"
+        data-mood="A"
+        style={{ padding: 32, color: '#8E8E93' }}
+        role="status"
+        aria-label="正在识别设备"
+      >
+        正在识别设备...
+      </main>
+    );
+  }
+  return (
+    <main
+      data-testid="p-welcomeback-root"
+      data-mood="A"
+      role="main"
+      aria-label="欢迎回来"
+      style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}
+    >
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+        欢迎回来
+      </h1>
+      <p style={{ color: '#636366', fontSize: 14 }}>
+        继续上次的复习吧，记忆曲线还在等你。
+      </p>
+      <button
+        type="button"
+        data-testid="p-welcomeback-continue-btn"
+        onClick={() => { window.location.href = '/'; }}
+        style={{ marginTop: 24, padding: '10px 18px', borderRadius: 10, border: 'none', background: '#007AFF', color: '#fff', fontSize: 15, fontWeight: 600 }}
+      >
+        继续学习
+      </button>
+    </main>
+  );
+};
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
 // P00 AuthPage · P-HOME · P07/P08/P09 · P10/P11 · P12/P13 全部 import 真实页 (FE-04/05/07)
 // 仅余 P-WELCOMEBACK (P1) + P-OBSERVER (P1) placeholder · 见上
@@ -88,6 +146,8 @@ export const App: React.FC = () => (
       <Route path="/guest/capture" element={<GuestCapturePage />} />
       <Route path="/s/:shareToken" element={<SharedPage />} />
       <Route path="/welcome-back" element={<WelcomeBackPage />} />
+      {/* SC-14 异常 spec 用 /welcomeback (无横线) · alias 兼容 */}
+      <Route path="/welcomeback" element={<WelcomeBackPage />} />
     </Route>
 
     {/* ── 观察者 Shell（Mood E · scope=READ · C4 红线）── */}
@@ -111,10 +171,14 @@ export const App: React.FC = () => (
       <Route path="/capture" element={<CapturePage />} />
       <Route path="/analyzing/:taskId" element={<AnalyzingPage />} />
       <Route path="/question/:qid/result" element={<ResultPage />} />
+      {/* SC-07 spec 用 /result/:qid alias 兼容 */}
+      <Route path="/result/:qid" element={<ResultPage />} />
 
       {/* Tab 4: P07 复习 + 二级 P08 / P09 */}
       <Route path="/review" element={<ReviewTodayPage />} />
       <Route path="/review/exec/:nodeId" element={<ReviewExecPage />} />
+      {/* SC-02 / SC-04 spec 用 /review/:nodeId/exec 形态 · alias 兼容 */}
+      <Route path="/review/:nodeId/exec" element={<ReviewExecPage />} />
       <Route path="/review/done" element={<ReviewDonePage />} />
 
       {/* 二级：P10 / P11 / P12（从 P-HOME / P12 / 深链进入）*/}

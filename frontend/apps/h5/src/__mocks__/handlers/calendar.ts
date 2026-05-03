@@ -120,6 +120,33 @@ export const calendarHandlers = [
 
   // SC-05: P11 EventDetail 实际 fetch /api/calendar/events/:eventId (EventDetailResp shape)
   http.get('/api/calendar/events/:eventId', ({ params }) => {
+    const eid = String(params.eventId);
+
+    // SC-06: 通用事件 fixture id（family / exam · 不带 study/memory-curve）
+    if (eid.startsWith('test-event-general')) {
+      const isExam = eid.includes('exam');
+      if (isExam) {
+        return HttpResponse.json({
+          eventId: eid,
+          relationType: 'EXAM',
+          title: '期中物理 · 第二场',
+          startAt: '2026-05-15T09:00:00+08:00',
+          source: 'PARENT',
+          fromUser: { name: '妈妈', role: 'PARENT' },
+          exam: { subject: 'physics', location: '一中考场 B 栋 207', countdownDays: 13 },
+        });
+      }
+      return HttpResponse.json({
+        eventId: eid,
+        relationType: 'FAMILY',
+        title: '家长会 · 高三',
+        startAt: '2026-05-08T19:00:00+08:00',
+        source: 'PARENT',
+        fromUser: { name: '妈妈', role: 'PARENT' },
+        family: { participants: ['妈妈', '老师'], note: '请提前 10 分钟到达 · 带身份证' },
+      });
+    }
+
     const ev = MOCK_EVENTS.find((e) => e.id === params.eventId);
     if (!ev) return new HttpResponse(null, { status: 404 });
     const subjectStr = ('subject' in ev ? (ev as { subject?: string }).subject : 'math') ?? 'math';
