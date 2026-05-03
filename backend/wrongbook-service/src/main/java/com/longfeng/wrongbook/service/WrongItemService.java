@@ -10,7 +10,6 @@ import com.longfeng.wrongbook.dto.SetDifficultyReq;
 import com.longfeng.wrongbook.dto.UpdateWrongItemReq;
 import com.longfeng.wrongbook.dto.WrongItemImageVO;
 import com.longfeng.wrongbook.dto.WrongItemPageVO;
-import com.longfeng.wrongbook.dto.WrongItemTagVO;
 import com.longfeng.wrongbook.dto.WrongItemVO;
 import com.longfeng.wrongbook.entity.AuditLog;
 import com.longfeng.wrongbook.entity.TagTaxonomy;
@@ -117,10 +116,11 @@ public class WrongItemService {
     int capped = Math.min(Math.max(size, 1), 100);
     List<Short> statuses = resolveStatusGroup(statusGroup);
     List<WrongItem> rows = itemRepo.findPage(subject, statuses, tagCode, studentId, cursor, capped + 1);
-    boolean more = rows.size() > capped;
-    List<WrongItem> page = more ? rows.subList(0, capped) : rows;
-    String nextCursor = more ? String.valueOf(page.get(page.size() - 1).getId()) : null;
-    return new WrongItemPageVO(page.stream().map(this::toVo).toList(), nextCursor);
+    boolean hasMore = rows.size() > capped;
+    List<WrongItem> page = hasMore ? rows.subList(0, capped) : rows;
+    // Issue 5: 游标分页实现 — nextCursor 取最后一条记录 id（desc 排序 → 最小 id 作为下一页游标）
+    String nextCursor = hasMore ? String.valueOf(page.get(page.size() - 1).getId()) : null;
+    return new WrongItemPageVO(page.stream().map(this::toVo).toList(), nextCursor, hasMore);
   }
 
   @Transactional
@@ -286,9 +286,10 @@ public class WrongItemService {
   }
 
   private WrongItemVO toVo(WrongItem e) {
-    List<WrongItemTagVO> tags =
+    // Issue 4: tags simplified to string[] (tagCode only, weight dropped from VO)
+    List<String> tags =
         tagRepo.findByWrongItemIdOrderByIdAsc(e.getId()).stream()
-            .map(t -> new WrongItemTagVO(t.getTagCode(), t.getWeight()))
+            .map(WrongItemTag::getTagCode)
             .toList();
     List<WrongItemImageVO> images =
         imageRepo.findByWrongItemIdOrderByIdAsc(e.getId()).stream()
@@ -307,18 +308,33 @@ public class WrongItemService {
         e.getSubject(),
         e.getGradeCode(),
         e.getSourceType(),
+        // Issue 3: origin_image_key → image_url
         e.getOriginImageKey(),
         e.getProcessedImageKey(),
         e.getOcrText(),
         e.getStemText(),
         mapStatus(e.getStatus()),
-        e.getMastery(),
+        // Issue 2: mastery 量纲映射 0→0, 1→50, 2→100
+        mapMastery(e.getMastery()),
         e.getDifficulty(),
         e.getVersion(),
         e.getCreatedAt(),
         e.getUpdatedAt(),
         tags,
         images);
+  }
+
+  /**
+   * Maps internal mastery SMALLINT (0-2) to frontend 0-100 scale.
+   * 0 (unknown) → 0, 1 (learning) → 50, 2 (mastered) → 100.
+   */
+  static int mapMastery(Short mastery) {
+    if (mastery == null) return 0;
+    return switch (mastery) {
+      case 1 -> 50;
+      case 2 -> 100;
+      default -> 0;
+    };
   }
 
   /** G-03: maps internal SMALLINT status to frontend string. */

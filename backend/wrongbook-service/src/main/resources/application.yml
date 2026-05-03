@@ -33,6 +33,14 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       timeout: 200ms
+  # S4 · @Async executor for EmbeddingAsyncWorker
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 500
+      thread-name-prefix: embedding-
 
 rocketmq:
   name-server: ${ROCKETMQ_NAMESRV:localhost:9876}
@@ -43,6 +51,14 @@ rocketmq:
 
 snowflake:
   worker-id: ${SNOWFLAKE_WORKER_ID:1}
+
+# S4 · OpenFeign · ai-analysis-service embedding stub
+feign:
+  client:
+    ai-analysis:
+      url: ${AI_ANALYSIS_URL:http://localhost:8083}
+  circuitbreaker:
+    enabled: true
 
 springdoc:
   api-docs:

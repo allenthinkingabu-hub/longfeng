@@ -102,6 +102,12 @@
       <version>${rocketmq-client.version}</version>
     </dependency>
 
+    <!-- S4 · OpenFeign · ai-analysis-service stub · C10 跨服务调用 -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-openfeign</artifactId>
+    </dependency>
+
     <!-- S3 · pgvector JDBC adapter · wraps float[] ↔ vector · §4.2 -->
     <dependency>
       <groupId>com.pgvector</groupId>

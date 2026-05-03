@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * WrongItem aggregate root — maps wrong_item (V1.0.010) + version (V1.0.020) + difficulty
  * (V1.0.021). Soft delete via deleted_at TIMESTAMPTZ (S1 A5 / D4 drift). Status semantics see
  * {@link com.longfeng.wrongbook.domain.WrongItemStatus}. Embedding column is NOT mapped here —
- * S4 writes it natively after consuming wrongbook.item.changed.
+ * S4 writes it natively after consuming wrongbook_item_changed.
  */
 @Entity
 @Table(name = "wrong_item")
