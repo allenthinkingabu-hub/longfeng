@@ -159,6 +159,58 @@ export const TEST_IDS = {
     'bottom-actions-review-btn': 'p06-bottom-actions-review-btn',
   },
 
+  // P10 CalendarMonth · Mood B · AC-P10-001 ~ AC-P10-009
+  p10: {
+    root:             'p10-root',
+    monthNav:         'p10-month-nav',
+    monthNavTitle:    'p10-month-nav-title',
+    monthNavPrev:     'p10-month-nav-prev',
+    monthNavNext:     'p10-month-nav-next',
+    monthNavToday:    'p10-month-nav-today',
+    weekHeader:       'p10-week-header',
+    monthGrid:        'p10-month-grid',
+    // Per-cell: p10-month-grid-cell-{1..42}   (dynamic, use template literal)
+    // Per-dot:  p10-month-grid-cell-{n}-dot-{1..3} (dynamic)
+    // Overflow: p10-month-grid-cell-{n}-overflow (dynamic)
+    // Today marker: p10-month-grid-cell-{n}-today-marker (dynamic)
+    skeletonRoot:     'p10-month-grid-skeleton',
+    legendBar:        'p10-legend-bar',
+    legendMath:       'p10-legend-bar-item-math',
+    legendPhysics:    'p10-legend-bar-item-physics',
+    legendChemistry:  'p10-legend-bar-item-chemistry',
+    legendEnglish:    'p10-legend-bar-item-english',
+    legendExam:       'p10-legend-bar-item-exam',
+    legendFamily:     'p10-legend-bar-item-family',
+    readonlyBanner:   'p10-readonly-banner',
+    filterStudy:      'p10-filter-study',
+  },
+
+  // P11 EventDetail · Mood B · AC-P11-001 ~ AC-P11-010
+  p11: {
+    root:               'p11-root',
+    topBar:             'p11-top-bar',
+    topBarBack:         'p11-top-bar-back',
+    morphRibbon:        'p11-morph-ribbon',
+    eventHeroCard:      'p11-event-hero-card',
+    heroCardBadge:      'p11-event-hero-card-badge',
+    relatedStudy:       'p11-related-study',
+    relatedStudyQuestion: 'p11-related-study-question',
+    relatedStudyCurve:  'p11-related-study-memory-curve',
+    relatedStudyCancelled: 'p11-related-study-cancelled',
+    relatedFamily:      'p11-related-family',
+    relatedExam:        'p11-related-exam',
+    examSubjectChip:    'p11-related-exam-subject-chip',
+    examLocation:       'p11-related-exam-location',
+    examCountdown:      'p11-related-exam-countdown',
+    examFrom:           'p11-related-exam-from',
+    metaRow:            'p11-meta-row',
+    bottomCta:          'p11-bottom-cta',
+    ctaReviewNow:       'p11-bottom-cta-review-now',
+    ctaEdit:            'p11-bottom-cta-edit',
+    ctaAddCalendar:     'p11-bottom-cta-add-calendar',
+    // Per memory curve node: p11-memory-curve-node-{T0..T6} (dynamic)
+  },
+
   // 通用
   common: {
     back: 'common.back.btn',
