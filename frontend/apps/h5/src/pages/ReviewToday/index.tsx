@@ -160,7 +160,7 @@ export const ReviewTodayPage: React.FC = () => {
   // ── LOADING ─────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className={s.root} data-mood="B">
+      <div className={s.root} data-mood="B" data-testid={TEST_IDS.p07.root}>
         <StatusBar dark />
         <div className={s.skeleton} aria-busy="true" aria-label="加载中">
           <div className={s.skeletonHero} />
@@ -175,7 +175,7 @@ export const ReviewTodayPage: React.FC = () => {
   // ── ERROR ────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className={s.root} data-mood="B">
+      <div className={s.root} data-mood="B" data-testid={TEST_IDS.p07.root}>
         <StatusBar dark />
         <div className={s.errorBanner} role="alert">
           <span>加载失败，请重试</span>
@@ -193,7 +193,7 @@ export const ReviewTodayPage: React.FC = () => {
   const isEmpty = totalCount === 0;
 
   return (
-    <div className={s.root} data-mood="B">
+    <div className={s.root} data-mood="B" data-testid={TEST_IDS.p07.root}>
       <StatusBar dark />
 
       {/* NavBar */}

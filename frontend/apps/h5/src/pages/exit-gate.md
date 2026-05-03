@@ -1,3 +1,63 @@
+# fe-repair-B · SC-02 + SC-05 testid 修复 · Exit Gate Report
+
+> Date: 2026-05-02
+> Agent: fe-repair-B Sub-agent
+> Branch: agent/fe-repair-B
+
+---
+
+## 修复内容摘要 (SC-02 + SC-05 B 轨 smoke)
+
+### 改了哪些 testid
+
+| 页面 | 文件 | 修复内容 |
+|---|---|---|
+| P08 ReviewExec | `ReviewExec/index.tsx` | 加 `data-testid={TEST_IDS.p08.root}` 到 loading + main 根元素 |
+| P08 ReviewExec | `ReviewExec/index.tsx` | 三个 grade button 各加 `data-iron-rule-1-exception="self-grading"` |
+| P08 ReviewExec | `ReviewExec/index.tsx` | 三个 grade button 加 `aria-disabled={!revealed \|\| grading ? 'true' : 'false'}` |
+| P09 ReviewDone | `ReviewDone/index.tsx` | 加 `data-testid={TEST_IDS.p09.root}` 到 loading + main 根元素 |
+| P07 ReviewToday | `ReviewToday/index.tsx` | 加 `data-testid={TEST_IDS.p07.root}` 到 loading + error + main 根元素 |
+| P10 CalendarMonth | `CalendarMonth/index.tsx` | 加 `data-testid="p10-root"` 到主根元素 |
+| P11 EventDetail | `EventDetail/index.tsx` | 加 `data-testid="p11-root"` 到 loading + error + main 根元素 |
+
+### 注册表变更
+
+无需修改 `testids/src/index.ts` — 所有 testid 值已存在于注册表中：
+- `TEST_IDS.p07.root = 'p07-root'` ✓
+- `TEST_IDS.p08.root = 'p08-root'` ✓
+- `TEST_IDS.p09.root = 'p09-root'` ✓
+- `TEST_IDS.p10.root = 'p10-root'` ✓ (used via literal string in page)
+- `TEST_IDS.p11.root = 'p11-root'` ✓ (used via literal string in page)
+
+### SC-02 gap 分析
+
+| POM 方法 | 期望 testid | 修复前状态 | 修复后 |
+|---|---|---|---|
+| `exec.goto()` | `p08-root` (rootTestId) | 缺失 | ✅ 已加 |
+| `exec.assertGradeButtonsHaveException()` | 每个 grade btn 有 `data-iron-rule-1-exception="self-grading"` | 只在 footer 级 | ✅ 已下移到每个 button |
+| SC-02 异常测试 `aria-disabled` | `p08-grade-buttons-mastered` `aria-disabled="true"` | 未 reveal 时无 aria-disabled | ✅ 已加 `!revealed` guard |
+
+### SC-05 gap 分析
+
+| POM 方法 | 期望 testid | 修复前状态 | 修复后 |
+|---|---|---|---|
+| `cal.open()` | `p10-root` (rootTestId) | 缺失 | ✅ 已加 |
+| `home.assertWeeklySparklineVisible()` | `p-home-weekly-sparkline` | 已有 | ✓ 无需改 |
+| `cal.assertLegendBarVisible()` | 6× `p10-legend-bar-item-*` | 已有 | ✓ 无需改 |
+| `cal.openCell(15)` | `p10-month-grid-cell-15` | 已有(动态) | ✓ 无需改 |
+| `ev.assertStudyForm()` | `p11-related-study` + `p11-related-study-memory-curve` | 已有 | ✓ 无需改 |
+| `ev.clickReviewNow()` | `p11-bottom-cta-review-now` | 已有 | ✓ 无需改 |
+
+### Caveat / 真实 bug
+
+1. **P10 `cal.openCell(15)` MSW 依赖**: `openCell(15)` 会 click `p10-month-grid-cell-15`，该 cell 是否有事件取决于 MSW mock 返回数据。若 mock 的第 15 个 cell 的 events 为空，`handleCellTap` 只会 `setSelectedCellIndex` 而不 navigate，SC-05 将在 `ev.assertStudyForm()` 处失败。B 轨 MSW handler 需确保 cell[14] 有至少一个 STUDY 事件。
+
+2. **P08 grade button 行为变更**: 加了 `!revealed` guard 在 onClick 上。revealed=false 时点击不触发 handleGrade，仅靠 aria-disabled 语义阻止。这符合 SC-02 异常测试的期望行为（aria-disabled=true）。
+
+3. **P11 root testid**: SC-05 中 EventDetailPage 没有调用 `open()` 方法，只检查 URL，所以 `p11-root` 对当前 SC-05 pass 无影响。但为完整性已补充。
+
+---
+
 # FE-07 · Misc Pages · Exit Gate Report
 
 > Date: 2026-05-02

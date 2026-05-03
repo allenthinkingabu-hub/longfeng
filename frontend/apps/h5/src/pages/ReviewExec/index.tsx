@@ -168,7 +168,7 @@ export const ReviewExecPage: React.FC = () => {
   // ── LOADING ─────────────────────────────────────────────────
   if (loading || !data) {
     return (
-      <div className={s.root} data-mood="B">
+      <div className={s.root} data-mood="B" data-testid={TEST_IDS.p08.root}>
         <div className={s.skeleton} aria-busy="true" aria-label="加载中">
           <div className={s.skeletonNav} />
           <div className={s.skeletonCard} />
@@ -182,7 +182,7 @@ export const ReviewExecPage: React.FC = () => {
   const progressPct = Math.round(((cursor - 1) / total) * 100);
 
   return (
-    <div className={s.root} data-mood="B">
+    <div className={s.root} data-mood="B" data-testid={TEST_IDS.p08.root}>
       {/* Status bar */}
       <div className={s.status} aria-hidden="true">
         <span className={s.statusTime}>9:41</span>
@@ -396,9 +396,11 @@ export const ReviewExecPage: React.FC = () => {
           {/* Forgot */}
           <button
             className={`${s.gradeBtn} ${s.gradeBtnForgot}`}
-            onClick={() => handleGrade('FORGOT')}
+            onClick={() => !revealed ? undefined : handleGrade('FORGOT')}
             disabled={grading}
+            aria-disabled={!revealed || grading ? 'true' : 'false'}
             data-testid={TEST_IDS.p08.gradeBtnForgot}
+            data-iron-rule-1-exception="self-grading"
             aria-label="未掌握，回到 T0"
           >
             <div className={s.gradeIcon}>✗</div>
@@ -408,21 +410,25 @@ export const ReviewExecPage: React.FC = () => {
           {/* Partial */}
           <button
             className={`${s.gradeBtn} ${s.gradeBtnPartial}`}
-            onClick={() => handleGrade('PARTIAL')}
+            onClick={() => !revealed ? undefined : handleGrade('PARTIAL')}
             disabled={grading}
+            aria-disabled={!revealed || grading ? 'true' : 'false'}
             data-testid={TEST_IDS.p08.gradeBtnPartial}
+            data-iron-rule-1-exception="self-grading"
             aria-label="部分掌握，原计划不变"
           >
             <div className={s.gradeIcon}>◐</div>
             <div className={s.gradeLabel}>部分</div>
             <div className={s.gradeSub}>原计划不变</div>
           </button>
-          {/* Mastered — AC-P08-008: disabled if already revealed+wasShown (per spec) */}
+          {/* Mastered — AC-P08-008: disabled until revealed */}
           <button
             className={`${s.gradeBtn} ${s.gradeBtnMastered}`}
-            onClick={() => handleGrade('MASTERED')}
+            onClick={() => !revealed ? undefined : handleGrade('MASTERED')}
             disabled={grading}
+            aria-disabled={!revealed || grading ? 'true' : 'false'}
             data-testid={TEST_IDS.p08.gradeBtnMastered}
+            data-iron-rule-1-exception="self-grading"
             aria-label="已掌握，推进到下一节点"
           >
             <div className={s.gradeIcon}>✓</div>
