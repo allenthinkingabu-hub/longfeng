@@ -10,6 +10,9 @@ export const captureHandlers = [
     });
   }),
 
+  // Mock OSS direct-upload · SC-01 directUpload step
+  http.put('https://mock-oss.example.com/upload', () => new HttpResponse(null, { status: 200 })),
+
   http.post(`/api/v1/files/complete/${FAKE_FILE_KEY}`, () => {
     return HttpResponse.json({ file_key: FAKE_FILE_KEY, status: 'READY' });
   }),

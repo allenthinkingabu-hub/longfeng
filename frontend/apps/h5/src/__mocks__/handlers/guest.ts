@@ -6,6 +6,18 @@ import { http, HttpResponse } from 'msw';
 const QUOTA_PER_DAY = 1;
 
 export const guestHandlers = [
+  // Guest presign (file upload · SC-12 processCapture step 1)
+  http.post('/api/file/presign', () => HttpResponse.json({
+    url: 'https://mock-oss.example.com/upload-guest',
+    image_url: 'https://mock-oss.example.com/guest-image.jpg',
+  })),
+
+  // Mock OSS upload (catch-all PUT to mock-oss · SC-12 step 2)
+  http.put('https://mock-oss.example.com/upload-guest', () => new HttpResponse(null, { status: 200 })),
+
+  // Analytics events (fire-and-forget · must not 404)
+  http.post('/api/analytics/event', () => new HttpResponse(null, { status: 204 })),
+
   // P-LANDING samples（30/min IP 限流由 BE-05 IT 兜 · 这里只 mock happy path）
   http.get('/api/landing/samples', () => HttpResponse.json({
     bucket: 'default',
