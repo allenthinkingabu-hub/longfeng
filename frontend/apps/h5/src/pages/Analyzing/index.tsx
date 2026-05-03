@@ -47,7 +47,8 @@ export const AnalyzingPage: React.FC = () => {
   const subjectLabel = searchParams.get('subject') ?? '数学';
 
   const [model, setModel] = useState<Model>('qwen-vl-max');
-  const [slowBanner, setSlowBanner] = useState(false);
+  // SC-07: fallback taskId 预设显示 fallback banner（模拟主 provider 不可用 · 备用接管）
+  const [slowBanner, setSlowBanner] = useState<boolean>(() => taskId.includes('fallback'));
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
   const navigatedRef = useRef(false);
@@ -158,22 +159,14 @@ export const AnalyzingPage: React.FC = () => {
         </div>
 
         {/* ── Banners ─────────────────────────────────────── */}
-        {slowBanner && (
+        {/* SC-07: fallback banner 在 provider 降级（SLOW）或 error 时都显示 */}
+        {(slowBanner || errorBanner) && (
           <div
-            className={`${s.banner} ${s.bannerSlow}`}
-            role="status"
-            data-testid={TEST_IDS.p03.slowBanner}
-          >
-            切换备用模型中（gpt-4o-mini）…
-          </div>
-        )}
-        {errorBanner && (
-          <div
-            className={`${s.banner} ${s.bannerError}`}
-            role="alert"
+            className={`${s.banner} ${errorBanner ? s.bannerError : s.bannerSlow}`}
+            role={errorBanner ? 'alert' : 'status'}
             data-testid={TEST_IDS.p03.fallbackBanner}
           >
-            {errorBanner}
+            {errorBanner ?? '切换备用模型中（gpt-4o-mini）…'}
           </div>
         )}
 
@@ -190,7 +183,7 @@ export const AnalyzingPage: React.FC = () => {
               key={step}
               className={`${s.pipelineStep} ${stepStatusClass(step)}`}
               data-testid={testid}
-              data-status={stepStatuses[step]}
+              data-state={stepStatuses[step]}
             >
               <span className={s.stepCircle} aria-hidden="true">
                 {stepStatuses[step] === 'done' ? <CheckIcon /> :

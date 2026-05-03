@@ -9,6 +9,19 @@ import { http, HttpResponse } from 'msw';
 const MOCK_TASK_ID = 'mock-task-id';
 const MOCK_QID = 'mock-qid-001';
 
+/** SC-07: fallback task → 主 provider 已降级（前端预设 banner）· 备用继续完成全部 4 步 */
+const FALLBACK_SSE_EVENTS = [
+  { type: 'STEP_START', step: 1 },
+  { type: 'STEP_DONE',  step: 1, durationMs: 240 },
+  { type: 'STEP_START', step: 2 },
+  { type: 'STEP_DONE',  step: 2, durationMs: 1100 },
+  { type: 'STEP_START', step: 3 },
+  { type: 'STEP_DONE',  step: 3, durationMs: 950 },
+  { type: 'STEP_START', step: 4 },
+  { type: 'STEP_DONE',  step: 4, durationMs: 1200 },
+  { type: 'DONE' },
+];
+
 // SSE stream helper
 function makeSseResponse(events: object[]): ReadableStream {
   const encoder = new TextEncoder();
@@ -47,7 +60,9 @@ const SSE_EVENTS = [
 export const analyzingHandlers = [
   // SSE stream
   http.get('/api/ai/stream/:taskId', ({ params }) => {
-    const stream = makeSseResponse(SSE_EVENTS);
+    // SC-07: mock-task-id-fallback → 模拟主 provider 不可用 · 触发 fallback banner
+    const isFallback = params.taskId === 'mock-task-id-fallback';
+    const stream = makeSseResponse(isFallback ? FALLBACK_SSE_EVENTS : SSE_EVENTS);
     return new HttpResponse(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -64,6 +79,8 @@ export const analyzingHandlers = [
 
   // P04: GET question detail
   http.get('/api/wb/questions/:qid', ({ params }) => {
+    // SC-07: mock-low-conf-qid → confidence < 0.6 → 触发 P04 LOW_CONF state + low-conf banner
+    const isLowConf = params.qid === 'mock-low-conf-qid';
     return HttpResponse.json({
       question: {
         id: params.qid ?? MOCK_QID,
@@ -84,7 +101,7 @@ export const analyzingHandlers = [
           { id: 'kp-3', name: '对称轴', weight: 0.4 },
         ],
         difficulty: 3,
-        confidence: 0.87,
+        confidence: isLowConf ? 0.35 : 0.87,
         modelInfo: { name: 'qwen-vl-max', version: '2.0' },
         thumbnailUrl: null,
       },

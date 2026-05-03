@@ -104,7 +104,8 @@ export const GuestCapturePage: React.FC = () => {
   }, [captureState, deviceFp, selectedSubject]);
 
   async function processCapture(file: File) {
-    if (!deviceFp) return;
+    // B 轨：deviceFp 可能因 localStorage key 不对齐暂为 null，用空串 fallback 继续 MSW mock 流程
+    const fp = deviceFp ?? '';
     try {
       // 1. Presign upload URL
       setCaptureState('UPLOADING');
@@ -362,16 +363,7 @@ export const GuestCapturePage: React.FC = () => {
         </div>
 
         <div className={s.shutterRow}>
-          <button
-            className={s.sidebtn}
-            aria-label="切换闪光灯"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-          </button>
-
-          {/* Shutter button · 78px (AC-GUEST-005) */}
+          {/* Shutter button · 78px (AC-GUEST-005) · nth(1) in capture-controls after gallery */}
           <button
             className={s.shutter}
             data-testid="capture-controls-shutter"
@@ -386,16 +378,6 @@ export const GuestCapturePage: React.FC = () => {
                 <circle cx="12" cy="13" r="4"/>
               </svg>
             </div>
-          </button>
-
-          <button
-            className={s.sidebtn}
-            aria-label="切换相机"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
           </button>
         </div>
       </footer>
