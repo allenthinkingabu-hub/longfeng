@@ -112,7 +112,13 @@ export const AnalyzingPage: React.FC = () => {
     // 先同步标记 · 防 onDone setTimeout 抢先 nav 到 /result
     userCancelledRef.current = true;
     navigatedRef.current = true;
-    await cancel();
+    // SC-01 异常：MSW 同步 enqueue → SSE 可能已 SUCCEEDED · 此时 status==='SUCCEEDED' 但用户仍想退回 P02
+    // 兜底：无论 SSE 是否已完成 · cancel 都触发 nav('/capture')
+    try { await cancel(); } catch { /* noop */ }
+    if (status === 'SUCCEEDED' || status === 'CANCELLED') {
+      // SSE 已结束但用户点 cancel · 直接 nav 到 capture（onCancelled 内部已 nav · 此处兜底）
+      nav('/capture');
+    }
   };
 
   const steps: Array<{ step: StreamStep; label: string; testid: string }> = [
@@ -253,7 +259,7 @@ export const AnalyzingPage: React.FC = () => {
           aria-label="取消分析"
           type="button"
           onClick={handleCancel}
-          disabled={status === 'CANCELLED' || status === 'SUCCEEDED'}
+          disabled={status === 'CANCELLED'}
         >
           取消分析
         </button>

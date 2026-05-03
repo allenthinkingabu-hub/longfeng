@@ -19,7 +19,11 @@ export class GuestCapturePage extends BasePage {
   }
 
   async getQuotaText(): Promise<string> {
-    return await this.byTestId('guest-quota-banner').innerText();
+    // SC-12 异常：quota fetch 异步完成后 banner 文案才更新 · 等"额度|耗尽|明天|次"任一出现
+    const banner = this.byTestId('guest-quota-banner');
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText(/额度|耗尽|明天|次/, { timeout: 5_000 });
+    return await banner.innerText();
   }
 
   async triggerShutter(filePath: string) {

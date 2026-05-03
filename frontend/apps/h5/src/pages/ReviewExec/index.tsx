@@ -216,8 +216,9 @@ export const ReviewExecPage: React.FC = () => {
           >
             复习执行 · 第 {cursor} 题
           </div>
-          <div className={s.navSub} data-testid={TEST_IDS.p08.topbarCursor}>
-            {cursor} / {total} · 剩余 {total - cursor} 题
+          <div className={s.navSub}>
+            <span data-testid={TEST_IDS.p08.topbarCursor}>{cursor} / {total}</span>
+            <span> · 剩余 {total - cursor} 题</span>
           </div>
         </div>
         {/* AC-P08-009 · Exit × with confirm if not graded */}

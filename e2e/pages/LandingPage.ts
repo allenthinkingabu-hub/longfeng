@@ -39,12 +39,10 @@ export class LandingPage extends BasePage {
     await expect(this.byTestId('landing-kpi')).toBeVisible();
   }
 
-  /** SC-11 降级 · samples 500 → KPI banner 可见但 samples block 应空态 */
+  /** SC-11 降级 · samples 500 → KPI banner 可见但 samples block 应空态（5s 内出降级文案） */
   async assertSamplesDegraded() {
     await expect(this.byTestId('landing-samples')).toBeVisible();
-    // 降级时显示 fallback / empty (spec §9 异常路径)
-    const samples = this.byTestId('landing-samples');
-    const text = await samples.innerText();
-    expect(text).toMatch(/暂无|稍后|示例/);
+    // 降级时显示 fallback / empty (spec §9 异常路径) · useEffect 异步 setState 后才出现 → 用 toContainText auto-wait
+    await expect(this.byTestId('landing-samples')).toContainText(/暂无|稍后|示例/, { timeout: 5_000 });
   }
 }

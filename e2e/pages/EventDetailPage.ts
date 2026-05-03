@@ -20,10 +20,14 @@ export class EventDetailPage extends BasePage {
     await expect(this.byTestId('p11-related-study-memory-curve')).toBeVisible();
   }
 
-  /** 通用版必含：related-family or related-exam */
+  /** 通用版必含：related-family or related-exam（先等数据 load） */
   async assertGeneralForm() {
-    const hasFamily = await this.byTestId('p11-related-family').count();
-    const hasExam   = await this.byTestId('p11-related-exam').count();
+    // 等任一 general 块出现（query 完成后才渲染） · 5s 内必出
+    const family = this.byTestId('p11-related-family');
+    const exam   = this.byTestId('p11-related-exam');
+    await expect(family.or(exam).first()).toBeVisible({ timeout: 5_000 });
+    const hasFamily = await family.count();
+    const hasExam   = await exam.count();
     expect(hasFamily + hasExam).toBeGreaterThan(0);
   }
 

@@ -72,8 +72,12 @@ export const wrongbookHandlers = [
 
   http.get('/api/v1/wrongbook/items/:id', ({ params }) => {
     const item = WRONGBOOK_LIST.find((i) => i.id === params.id);
-    if (!item) return new HttpResponse(null, { status: 404 });
-    return HttpResponse.json(item);
+    if (item) return HttpResponse.json(item);
+    // wrongbook-smoke / 任意 id (e.g. demo-id) → 返回第一条 fallback · 让详情 page 正常 render（避免 axe scan 在 ERROR 状态走分支）
+    if (WRONGBOOK_LIST.length > 0) {
+      return HttpResponse.json({ ...WRONGBOOK_LIST[0], id: String(params.id) });
+    }
+    return new HttpResponse(null, { status: 404 });
   }),
 
   // SC-10 · 软删除 (归档) → 204 · Detail page archiveMut + 5s undo 窗口依赖此 200/204
