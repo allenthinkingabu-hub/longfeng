@@ -218,6 +218,91 @@ export const TEST_IDS = {
     'confirm-modal': 'common.confirm.modal',
   },
 
+  // ── S8 FE-07 · Misc Pages ────────────────────────────────────────────────────
+
+  // P00 · 登录 · AuthPage
+  p00: {
+    root:              'p00-root',
+    statusbar:         'p00-statusbar',
+    logoZone:          'p00-logo-zone',
+    logoZoneLogo:      'p00-logo-zone-logo',
+    wechatCtaBtn:      'p00-wechat-cta-btn',       // data-iron-rule-1-exception="wechat-brand"
+    otherMethodsLink:  'p00-other-methods-link',
+    consentBar:        'p00-consent-bar',
+    consentCheckbox:   'p00-consent-bar-checkbox',
+    consentLinkTos:    'p00-consent-bar-link-tos',
+    consentLinkPrivacy:'p00-consent-bar-link-privacy',
+  },
+
+  // P-HOME · 今日聚合首页
+  pHome: {
+    root:              'p-home-root',
+    greetingHero:      'greeting-hero',
+    streakFireIcon:    'streak-bar-fire-icon',
+    streakDaysNumber:  'streak-bar-days-number',
+    todayReviewCard:   'today-review-card',
+    circleProgress:    'today-review-card-circle-progress',
+    totalLabel:        'today-review-card-total',
+    estMin:            'today-review-card-est-min',
+    startAllBtn:       'today-review-card-start-all-btn',
+    weeklySparkline:   'p-home-weekly-sparkline',
+    weekStrip:         'week-strip',
+    // week-strip-day-{1..7}  data-today="true|false"
+    // week-strip-day-{n}-tlevel-{T}
+    messages:          'p-home-messages',
+    messagesMoreLink:  'p-home-messages-more-link',
+    // p-home-messages-item-{1..3}
+    weakKp:            'p-home-weak-kp',
+    quickEntries:      'p-home-quick-entries',
+    // p-home-quick-entries-item-{1..4}
+  },
+
+  // P12 · 通知中心
+  p12: {
+    root:              'p12-root',
+    headerTitle:       'p12-header-title',
+    markAllRead:       'p12-header-mark-all-read',
+    groupToday:        'p12-group-today',
+    groupYesterday:    'p12-group-yesterday',
+    groupThisweek:     'p12-group-thisweek',
+    groupEarlier:      'p12-group-earlier',
+    emptyState:        'p12-empty-state',
+    // p12-notif-card-{n}  data-kind=  data-read=
+    // p12-notif-card-{n}-icon
+    // p12-notif-card-{n}-title
+    // p12-notif-card-{n}-subtitle
+    // p12-notif-card-{n}-time
+    // p12-notif-card-{n}-unread-dot
+    // p12-notif-card-{n}-archive-btn
+  },
+
+  // P13 · 设置/我的 (含 SC-16 VIP AI 模型子区)
+  p13: {
+    root:                   'p13-root',
+    avatarBlock:            'p13-avatar-block',
+    avatarBlockName:        'p13-avatar-block-name',
+    settingsAccount:        'p13-settings-account',
+    settingsAccountLogout:  'p13-settings-account-logout-row',
+    settingsReview:         'p13-settings-review',
+    settingsReviewQuietHours: 'p13-settings-review-quiet-hours-row',
+    settingsPush:           'p13-settings-push',
+    settingsPushReviewSwitch: 'p13-settings-push-review-reminder-switch',
+    settingsPushFreqPreview: 'p13-settings-push-frequency-preview',
+    settingsPrivacy:        'p13-settings-privacy',
+    settingsAbout:          'p13-settings-about',
+    settingsAboutVersion:   'p13-settings-about-version',
+    dangerZone:             'p13-danger-zone',
+    dangerAccountDeletion:  'p13-danger-zone-account-deletion-btn',
+    dangerConfirm:          'p13-danger-confirm',
+    // SC-16 AI 模型子区
+    sc16AiSection:          'p13-sc16-ai-section',        // data-sc16-tier=NORMAL|VIP|VIP_PLUS
+    sc16UpgradeHint:        'p13-sc16-upgrade-hint',      // NORMAL only
+    sc16ModelSelector:      'p13-sc16-model-selector',    // VIP / VIP_PLUS
+    // p13-sc16-model-item-{model-id}  role=radio aria-checked
+    // p13-sc16-model-{id}-cost  (VIP_PLUS only)
+    // p13-sc16-model-{id}-latency (VIP_PLUS only)
+  },
+
   // ── S7 FE-01 · Shells & Bootstrap ──────────────────────────────────────────
 
   // AnonymousShell · 匿名 Shell

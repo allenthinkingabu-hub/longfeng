@@ -1,0 +1,365 @@
+/**
+ * P12 · 通知中心 · Notifications.module.css
+ * Mood B (pure-warm) · 米白底 + 白卡 + iOS nav
+ * archive ref: _archive/12_notifications.html
+ * spec: design/system/pages/P12-notifications.spec.md
+ */
+
+/* ── 页面 ── */
+.page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #F2F2F7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: #1C1C1E;
+}
+
+/* ── StatusBar (Mood B: 黑色字) ── */
+.statusbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  z-index: 30;
+  background: rgba(242, 242, 247, 0.78);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+}
+
+.statusRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Nav large title ── */
+.nav {
+  position: sticky;
+  top: 54px;
+  left: 0;
+  right: 0;
+  padding: 6px 20px 10px;
+  background: rgba(242, 242, 247, 0.78);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.14);
+  z-index: 20;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+}
+
+.navBack {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #007AFF;
+  font-size: 17px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.navMarkAllRead {
+  font-size: 17px;
+  font-weight: 600;
+  color: #007AFF;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navMarkAllRead:disabled {
+  opacity: 0.4;
+}
+
+.navTitle {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.36px;
+  margin-top: 2px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.navTitleCount {
+  font-size: 15px;
+  font-weight: 500;
+  color: #8E8E93;
+}
+
+/* ── Scrollable content ── */
+.content {
+  padding: 10px 16px 100px;
+}
+
+/* ── Group title ── */
+.groupTitle {
+  font-size: 13px;
+  color: #8E8E93;
+  letter-spacing: 0.2px;
+  padding: 10px 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.groupTitleDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #FF3B30;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+
+/* ── Notification Card ── */
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03), 0 8px 24px rgba(40, 50, 90, 0.04);
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+
+.card:active { opacity: 0.88; }
+
+/* Unread left bar */
+.cardUnread::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #007AFF;
+  border-radius: 3px 0 0 3px;
+}
+
+.cardRow1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Badge icon */
+.badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.badgeBlue   { background: linear-gradient(180deg, #58A6FF, #007AFF); }
+.badgeRed    { background: linear-gradient(180deg, #FF6F68, #FF3B30); }
+.badgeOrange { background: linear-gradient(180deg, #FFB357, #FF9500); }
+.badgeGreen  { background: linear-gradient(180deg, #6AE08E, #34C759); }
+.badgeIndigo { background: linear-gradient(180deg, #8582EA, #5856D6); }
+
+.cardSource {
+  flex: 1;
+  font-size: 13px;
+  color: #8E8E93;
+  letter-spacing: 0.1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardSourceStrong {
+  color: #3C3C43;
+  font-weight: 600;
+}
+
+.cardTime {
+  font-size: 12px;
+  color: #8E8E93;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+  letter-spacing: 0.1px;
+  color: #1C1C1E;
+}
+
+.cardBody {
+  font-size: 14px;
+  color: #3C3C43;
+  margin-top: 3px;
+  line-height: 1.45;
+}
+
+.cardBodyKw    { color: #007AFF; font-weight: 600; }
+.cardBodyTimeKw{ color: #FF9500; font-weight: 600; }
+
+/* Unread dot (top-right) */
+.unreadDot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF3B30;
+}
+
+/* ── Meta chips ── */
+.meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #F2F2F7;
+  color: #3C3C43;
+  font-size: 12px;
+  border: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.chipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ── Action buttons ── */
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.btnBase {
+  flex: 1;
+  height: 32px;
+  border-radius: 9px;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(118, 118, 128, 0.12);
+  color: #1C1C1E;
+}
+
+.btnPrimary {
+  background: #007AFF;
+  color: #fff;
+}
+
+/* ── Empty state ── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(118, 118, 128, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.emptyTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1C1C1E;
+  margin-bottom: 6px;
+}
+
+.emptyBody {
+  font-size: 14px;
+  color: #8E8E93;
+  line-height: 1.5;
+}
+
+/* ── Skeleton ── */
+.skeletonCard {
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(120, 120, 128, 0.12);
+  margin-bottom: 8px;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonLine:last-child { margin-bottom: 0; width: 60%; }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+/* ── Home indicator ── */
+.homebar {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: #000;
+  opacity: 0.85;
+  z-index: 30;
+}
+
+/* ── A11y ── */
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .skeletonLine { animation: none; }
+}

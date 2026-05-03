@@ -34,6 +34,12 @@ import { ReviewTodayPage } from './pages/ReviewToday';
 import { ReviewExecPage } from './pages/ReviewExec';
 import { ReviewDonePage } from './pages/ReviewDone';
 
+// ── S8 FE-07 · 新实现页面 (P00/P-HOME/P12/P13) ──────────────────────────────
+import { AuthPage } from './pages/Auth';
+import { HomePage } from './pages/Home';
+import { NotificationsPage } from './pages/Notifications';
+import { MePage } from './pages/Settings';
+
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
 const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
@@ -42,16 +48,11 @@ const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
   </div>
 );
 
-// 各占位（FE-02/03/06 已写真实页 import 在上 · 此处仅余未实现）
+// 各占位（FE-07 已替换 AuthPage / HomePage / NotificationsPage / MePage）
 const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 (P1)" />;
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
-const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;
-const AuthPage = () => <PlaceholderPage name="P00 登录" />;
-// P07/P08/P09 ReviewToday/Exec/Done · FE-04 实现 · import 在上
-// P10 CalendarMonthPage · FE-05 实现 · import 在上
-// P11 EventDetailPage   · FE-05 实现 · import 在上
-const NotificationsPage = () => <PlaceholderPage name="P12 通知中心" />;
-const MePage = () => <PlaceholderPage name="P13 设置/我的" />;
+// P00 AuthPage · P-HOME · P07/P08/P09 · P10/P11 · P12/P13 全部 import 真实页 (FE-04/05/07)
+// 仅余 P-WELCOMEBACK (P1) + P-OBSERVER (P1) placeholder · 见上
 
 // ── App 路由 ─────────────────────────────────────────────────────────────────
 
