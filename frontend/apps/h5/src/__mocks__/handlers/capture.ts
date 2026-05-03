@@ -2,8 +2,29 @@ import { http, HttpResponse } from 'msw';
 
 const FAKE_FILE_KEY = 'mock-file-key-001';
 
+// SC-01 异常 · 测试通过 localStorage flag 让 presign 返回 500 · MSW handler 在 service worker 内
+// 跑，能读取 self.localStorage（注：SW 不能直接读 main thread localStorage · 必须通过 client message
+// 注入；这里改为读取 cookie · 但 SW 也不能写 cookie · 最终采用 query param marker · 也不行）
+// → 真实可行：MSW handler 通过 fetch back 到 main thread 的 /__lf_e2e_flag 路径取状态 · 重 IO
+// → 折中：让 main thread 把 flag 写到 cookie (document.cookie) · SW 内 self.cookies 不可读
+// → 最终方案：spec 直接改用 worker.use() runtime override，handler 这里只判 cookie/header 兜底
+function shouldFailPresign(request: Request): boolean {
+  // 1) header 标记（spec.evaluate 里 fetch 注入 · page.setExtraHTTPHeaders 也可）
+  if (request.headers.get('x-e2e-fail-presign') === '1') return true;
+  // 2) cookie 标记（document.cookie 写入后 fetch 自动带）
+  const cookie = request.headers.get('cookie') ?? '';
+  if (/(?:^|;\s*)lf_e2e_presign_fail=1/.test(cookie)) return true;
+  return false;
+}
+
 export const captureHandlers = [
-  http.post('/api/v1/files/presign', () => {
+  http.post('/api/v1/files/presign', ({ request }) => {
+    if (shouldFailPresign(request)) {
+      return new HttpResponse(JSON.stringify({ error: 'presign_failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     return HttpResponse.json({
       file_key: FAKE_FILE_KEY,
       upload_url: 'https://mock-oss.example.com/upload',

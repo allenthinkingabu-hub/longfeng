@@ -269,13 +269,14 @@ export const CapturePage: React.FC = () => {
       </div>
 
       {/* ── Error banner ─────────────────────────────────────── */}
-      {errorMsg && (
+      {/* SC-01 异常 · ERROR state OR errorMsg 任一 truthy 时渲染 · 防 catch 内 setState 竞态丢字段 */}
+      {(state === 'ERROR' || errorMsg) && (
         <div className={s.errorBanner} role="alert" data-testid={TEST_IDS.p02.errorBanner}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 4L21.5 20H2.5L12 4Z" stroke="#FF3B30" strokeWidth="1.8" strokeLinejoin="round"/>
             <path d="M12 10v4M12 17v.1" stroke="#FF3B30" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
-          {errorMsg}
+          {errorMsg ?? '上传失败，请重试'}
         </div>
       )}
 

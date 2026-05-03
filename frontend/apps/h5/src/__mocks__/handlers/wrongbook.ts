@@ -86,8 +86,22 @@ export const wrongbookHandlers = [
     if (idx >= 0) {
       // soft delete · 标记 status='archived' · 不真删（保支持 undo）
       WRONGBOOK_LIST[idx] = { ...WRONGBOOK_LIST[idx], status: 'archived' };
+      // SC-10: 持久化到 sessionStorage · 让 list page reload (page.goto) 后 GET 看得到
+      saveWrongbookList(WRONGBOOK_LIST);
     }
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // SC-10: 兼容 PATCH/POST archive 端点 · 部分客户端走 status patch
+  http.patch('/api/v1/wrongbook/items/:id', async ({ params, request }) => {
+    const body = await request.json().catch(() => ({})) as Partial<WBItem>;
+    const idx = WRONGBOOK_LIST.findIndex((i) => i.id === params.id);
+    if (idx >= 0) {
+      WRONGBOOK_LIST[idx] = { ...WRONGBOOK_LIST[idx], ...body };
+      saveWrongbookList(WRONGBOOK_LIST);
+      return HttpResponse.json(WRONGBOOK_LIST[idx]);
+    }
+    return new HttpResponse(null, { status: 404 });
   }),
 
   // SC-01: POST /api/v1/wrongbook/items → push 一个 item · 立即可见 in GET list

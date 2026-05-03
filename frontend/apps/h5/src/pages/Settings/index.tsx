@@ -172,6 +172,15 @@ const AiModelSection: React.FC<{
   selectedModel: string | null | undefined;
   onSelect: (modelId: string) => void;
 }> = ({ tier, selectedModel, onSelect }) => {
+  // SC-16 round 20 · 本地兜底：click 后立即写本地 state · 防 prefs 异步更新滞后
+  // 当 prop 改变时同步更新本地 state（保 prop 优先）
+  const [localSelected, setLocalSelected] = React.useState<string | null | undefined>(selectedModel);
+  React.useEffect(() => { setLocalSelected(selectedModel); }, [selectedModel]);
+  const effectiveSelected = localSelected ?? selectedModel;
+  const handleItemClick = (modelId: string) => {
+    setLocalSelected(modelId);
+    onSelect(modelId);
+  };
   // NORMAL 用户: 不暴露选择器 UI (防 tier 信号泄露 · TDD §16.8)
   if (tier === 'NORMAL') {
     return (
@@ -231,12 +240,12 @@ const AiModelSection: React.FC<{
           </div>
           <div className={s.aiSelectorTitle}>首选模型</div>
           <div className={s.aiSelectorCurrent}>
-            {catalog.find((m) => m.id === selectedModel)?.displayName ?? '系统默认'}
+            {catalog.find((m) => m.id === effectiveSelected)?.displayName ?? '系统默认'}
           </div>
         </div>
 
         {catalog.map((model) => {
-          const isSelected = selectedModel === model.id;
+          const isSelected = effectiveSelected === model.id;
           return (
             <div
               key={model.id}
@@ -245,8 +254,8 @@ const AiModelSection: React.FC<{
               role="radio"
               aria-checked={isSelected}
               tabIndex={0}
-              onClick={() => onSelect(model.id)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(model.id); }}
+              onClick={() => handleItemClick(model.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(model.id); }}
             >
               <div className={`${s.aiModelDot} ${isSelected ? s.aiModelDotSelected : ''}`} />
               <div className={s.aiModelContent}>

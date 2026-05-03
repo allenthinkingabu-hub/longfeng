@@ -19,14 +19,24 @@ export const guestHandlers = [
   http.post('/api/analytics/event', () => new HttpResponse(null, { status: 204 })),
 
   // P-LANDING samples（30/min IP 限流由 BE-05 IT 兜 · 这里只 mock happy path）
-  http.get('/api/landing/samples', () => HttpResponse.json({
-    bucket: 'default',
-    samples: [
-      { id: 'sample-1', subject: 'math',    stemPreview: '已知函数 f(x)=x²-4x+3，求顶点坐标。', thumbnailUrl: '/mock/math.png' },
-      { id: 'sample-2', subject: 'physics', stemPreview: '一物体做匀速直线运动，加速度为零…',     thumbnailUrl: '/mock/physics.png' },
-      { id: 'sample-3', subject: 'english', stemPreview: 'Choose the best word: She ___ to school every day.', thumbnailUrl: '/mock/english.png' },
-    ],
-  })),
+  // SC-11 异常 · cookie lf_e2e_samples_fail=1 → 返 500 · 触发 DEGRADED 文案
+  http.get('/api/landing/samples', ({ request }) => {
+    const cookie = request.headers.get('cookie') ?? '';
+    if (/(?:^|;\s*)lf_e2e_samples_fail=1/.test(cookie)) {
+      return new HttpResponse(JSON.stringify({ error: 'samples_failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return HttpResponse.json({
+      bucket: 'default',
+      samples: [
+        { id: 'sample-1', subject: 'math',    stemPreview: '已知函数 f(x)=x²-4x+3，求顶点坐标。', thumbnailUrl: '/mock/math.png' },
+        { id: 'sample-2', subject: 'physics', stemPreview: '一物体做匀速直线运动，加速度为零…',     thumbnailUrl: '/mock/physics.png' },
+        { id: 'sample-3', subject: 'english', stemPreview: 'Choose the best word: She ___ to school every day.', thumbnailUrl: '/mock/english.png' },
+      ],
+    });
+  }),
 
   http.get('/api/landing/kpi', () => HttpResponse.json({
     totalQuestionsAnalyzed: 1_204_312,
@@ -41,10 +51,15 @@ export const guestHandlers = [
     quotaResetAt: new Date(Date.now() + 86_400_000).toISOString(),
   })),
 
-  http.get('/api/guest/quota', () => HttpResponse.json({
-    quotaRemaining: QUOTA_PER_DAY,
-    quotaResetAt: new Date(Date.now() + 86_400_000).toISOString(),
-  })),
+  // SC-12 异常 · cookie lf_e2e_quota_out=1 → quotaRemaining=0 触发"额度耗尽"文案
+  http.get('/api/guest/quota', ({ request }) => {
+    const cookie = request.headers.get('cookie') ?? '';
+    const quotaOut = /(?:^|;\s*)lf_e2e_quota_out=1/.test(cookie);
+    return HttpResponse.json({
+      quotaRemaining: quotaOut ? 0 : QUOTA_PER_DAY,
+      quotaResetAt: new Date(Date.now() + 86_400_000).toISOString(),
+    });
+  }),
 
   // Guest analyze (simplified · returns task id)
   http.post('/api/guest/analyze', () => HttpResponse.json({

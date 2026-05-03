@@ -40,15 +40,20 @@ test.describe('SC-12 · 游客 + Claim @sc-12', () => {
     const device = newDeviceFingerprint('sc-12-quota-out');
     await injectDeviceFingerprint(context, device);
 
-    // mock-b: quota = 0
-    await page.route('**/api/guest/quota**', (r) => r.fulfill({
-      status: 200,
-      body: JSON.stringify({ quotaRemaining: 0, quotaResetAt: '2026-05-03T00:00:00+08:00' }),
-    }));
+    // MSW 是 SW · page.route 不能拦 · 用 cookie 让 MSW handler 返 quotaRemaining=0
+    // 见 frontend/apps/h5/src/__mocks__/handlers/guest.ts
+    const baseUrl = process.env.BASE_URL ?? 'http://localhost:5173';
+    await context.addCookies([{
+      name: 'lf_e2e_quota_out',
+      value: '1',
+      url: baseUrl,
+    }]);
 
     const guest = new GuestCapturePage(page);
     await guest.open();
     const txt = await guest.getQuotaText();
     expect(txt).toMatch(/0|额度|耗尽|明天/);
+
+    await context.clearCookies();
   });
 });
