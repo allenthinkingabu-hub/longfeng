@@ -465,7 +465,7 @@ export const SharedPage: React.FC = () => {
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>
-            <div className={s.maskedOverlayTitle}>加入错题本查看完整 AI 分析</div>
+            <div className={s.maskedOverlayTitle}>注册查看 · 完整 AI 分析</div>
             <div className={s.maskedOverlayDesc}>含错因 / 正解 / 变式 / 知识点网络 · 自动排 T0–T6 节点</div>
           </div>
         </article>
@@ -536,7 +536,7 @@ export const SharedPage: React.FC = () => {
       <footer className={s.ctaDock} role="contentinfo" aria-label="注册升级">
         <button
           className={s.ctaJoin}
-          data-testid="upgrade-cta-fixed-btn"
+          data-testid="upgrade-cta-fixed"
           onClick={handleUpgradeCta}
           aria-label={data.upgrade_cta.text ?? '注册查看 + 拥有自己的错题本'}
         >

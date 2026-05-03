@@ -14,7 +14,9 @@ export class SharedPage extends BasePage {
   constructor(page: Page) { super(page); }
 
   async openWithToken(token: string) {
-    await this.goto(SharedPage.routeOf(token));
+    // 不用 this.goto() 因为错误 token 不会渲染 rootTestId='masked-question'
+    await this.page.goto(SharedPage.routeOf(token));
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 });
   }
 
   async assertSharerBanner() {
