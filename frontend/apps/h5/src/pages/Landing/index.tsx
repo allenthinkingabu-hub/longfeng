@@ -294,7 +294,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <div
                 className={s.samples}
-                role="region"
+                role="list"
                 tabIndex={0}
                 aria-label="样例卡 · 可横向滚动"
               >

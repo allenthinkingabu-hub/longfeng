@@ -92,10 +92,11 @@ export const AnalyzingPage: React.FC = () => {
   });
 
   // Update slow banner when status becomes SLOW
+  // SC-07: fallback task 的 banner 在 SUCCEEDED 后**不清** · 因 fallback 状态横贯整个分析过程
   useEffect(() => {
     if (status === 'SLOW') setSlowBanner(true);
-    if (status === 'SUCCEEDED') setSlowBanner(false);
-  }, [status]);
+    if (status === 'SUCCEEDED' && !isFallbackTask) setSlowBanner(false);
+  }, [status, isFallbackTask]);
 
   const handleCancel = async () => {
     await cancel();

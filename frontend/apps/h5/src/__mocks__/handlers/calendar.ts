@@ -13,6 +13,8 @@ const MOCK_EVENTS = [
   { id: 'ev-2',  date: '2026-05-03', kind: 'STUDY',  subject: 'physics', qid: 'qid-2' },
   { id: 'ev-3',  date: '2026-05-15', kind: 'EXAM',   subject: 'math',    location: '一中考场', countdownDays: 13 },
   { id: 'ev-4',  date: '2026-05-08', kind: 'FAMILY', title: '家长会' },
+  // SC-05: cell-15 (Mon-first 6 周布局 · 5/1 Fri 在 idx=4 → cell-15 = 5/11) 必须有 event 才能 nav
+  { id: 'ev-5',  date: '2026-05-11', kind: 'STUDY',  subject: 'math',    qid: 'qid-5' },
 ];
 
 /**
