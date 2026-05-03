@@ -1,72 +1,261 @@
-/* S7 · CapturePage · design tokens aligned · pre-flight decisions applied
+/**
+ * P02 Capture · Mood C dark-camera
+ * STYLE-TRUTH §3 Mood C: 全屏 #0B0F1A + 黄色检测元素 + viewfinder 模拟纸面
  *
- * Camera-specific exceptions (approved in CapturePage-token-mapping-review.md):
- *   --cam-bg, --cam-bg-grad : #0B0F1A dark camera background
- *   --cam-yellow            : #FFCC00 scan/bracket/mode indicator
- *   --grad-start            : #5FA8FF shutter gradient start (no token)
- *   All rgba(255,255,255,X) and rgba(0,0,0,X) values: permitted (camera translucency)
+ * Token 对应：
+ *   --cam-bg         → --camera-screen  (#0B0F1A)
+ *   --cam-bg-grad    → --camera-vf-from (#1d2433)
+ *   --cam-yellow     → --yellow         (#FFCC00)
+ *   --grad-shutter   → --grad-icon-blue-deep (linear-gradient(180deg,#5FA8FF,#007AFF))
+ *   --blue           → #007AFF
+ *
+ * Archive 1:1 参考: design/mockups/wrongbook/_archive/02_capture.html
  */
+
+/* ─── Root ──────────────────────────────────────────────────────── */
 .root {
+  /* local tokens */
   --cam-bg: #0B0F1A;
   --cam-bg-grad: #1d2433;
   --cam-yellow: #FFCC00;
-  --grad-start: #5FA8FF;
-  --primary-rgb: 0, 113, 227;
-  --danger-rgb: 192, 57, 43;
-  --preview-start: #fbf8f0;
-  --preview-end: #f1ece0;
+  --blue: #007AFF;
+  --grad-shutter-start: #5FA8FF;
+  --paper-from: #fbf8f0;
+  --paper-to: #f1ece0;
 
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  min-height: 100svh;
   background: var(--cam-bg);
-  color: var(--tkn-color-white);
-  font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 顶部透明 nav */
+/* ─── Status bar (white-on-dark) ─────────────────────────────── */
+.statusbar {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  flex: 0 0 auto;
+  z-index: 30;
+}
+.statusIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Nav bar (transparent over camera) ──────────────────────── */
 .nav {
-  position: sticky;
-  top: 0;
+  flex: 0 0 auto;
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 18px;
   z-index: 25;
-  background: rgba(11, 15, 26, 0.4);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 .iconBtn {
   width: 36px;
   height: 36px;
-  border-radius: var(--tkn-radius-circle);
+  border-radius: 50%;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--tkn-color-white);
+  color: #fff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.title {
+.iconBtn svg {
+  width: 18px;
+  height: 18px;
+}
+.navTitle {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.2px;
+  color: #fff;
 }
 
-/* 中心 viewfinder area */
+/* ─── Auto-detect badge ──────────────────────────────────────── */
+.detect {
+  position: absolute;
+  top: 122px; /* matches archive: top:122px */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #fff;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 24;
+  white-space: nowrap;
+}
+.detectPulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cam-yellow);
+  box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.18);
+  animation: pulse 1.6s ease-in-out infinite;
+  flex: 0 0 7px;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .detectPulse { animation: none; }
+}
+
+/* ─── Tip card ───────────────────────────────────────────────── */
+.tip {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 165px; /* archive: top:170px roughly */
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  letter-spacing: 0.1px;
+  z-index: 24;
+}
+.tip svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: var(--cam-yellow);
+}
+
+/* ─── Viewfinder ─────────────────────────────────────────────── */
 .view {
-  position: relative;
-  height: 360px;
+  position: absolute;
+  top: 104px;
+  left: 0;
+  right: 0;
+  bottom: 240px;
   background: radial-gradient(800px 400px at 50% 30%, var(--cam-bg-grad) 0%, var(--cam-bg) 65%);
   overflow: hidden;
-  border-radius: 0;
 }
+
+/* Faux textbook paper in viewfinder */
+.paper {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  width: 255px;
+  height: 330px;
+  background: linear-gradient(180deg, var(--paper-from), var(--paper-to));
+  border-radius: 6px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 22px 20px;
+  color: #1a1a1a;
+  font-family: Georgia, serif;
+  overflow: hidden;
+}
+.paperLbl {
+  font-size: 9px;
+  color: #a78a3c;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-family: -apple-system, sans-serif;
+  font-weight: 700;
+}
+.paperQno {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a3b3b;
+  background: #fde9e9;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: -apple-system, sans-serif;
+}
+.paperHeading {
+  font-size: 13px;
+  line-height: 1.55;
+  margin-top: 8px;
+  font-weight: 600;
+  color: #222;
+}
+.paperFormula {
+  margin-top: 10px;
+  text-align: center;
+  font-style: italic;
+  font-size: 14px;
+  color: #222;
+}
+.paperFormula em {
+  color: #a02828;
+  font-style: italic;
+  font-weight: 700;
+}
+.paperOpts {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  font-size: 11px;
+  color: #333;
+  font-family: -apple-system, sans-serif;
+  list-style: none;
+  padding: 0;
+}
+.paperAns {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #666;
+  font-family: -apple-system, sans-serif;
+}
+.paperStrike {
+  position: absolute;
+  top: 172px;
+  left: 24px;
+  width: 184px;
+  height: 18px;
+  background: rgba(255, 80, 80, 0.55);
+  transform: rotate(-2deg);
+  border-radius: 3px;
+}
+.paperPen {
+  position: absolute;
+  top: 198px;
+  left: 36px;
+  font-family: 'Caveat', 'Comic Sans MS', cursive;
+  font-size: 18px;
+  color: #c9302c;
+  transform: rotate(-3deg);
+}
+
+/* ─── Corner brackets (yellow · auto-detect) ─────────────────── */
 .bracket {
   position: absolute;
   width: 46px;
@@ -74,11 +263,12 @@
   border: 3px solid var(--cam-yellow);
   box-shadow: 0 0 18px rgba(255, 204, 0, 0.45);
 }
-.bracketTL { top: 14%; left: 14%; border-right: 0; border-bottom: 0; border-top-left-radius: var(--tkn-radius-md); }
-.bracketTR { top: 14%; right: 14%; border-left: 0; border-bottom: 0; border-top-right-radius: var(--tkn-radius-md); }
-.bracketBL { bottom: 14%; left: 14%; border-right: 0; border-top: 0; border-bottom-left-radius: var(--tkn-radius-md); }
-.bracketBR { bottom: 14%; right: 14%; border-left: 0; border-top: 0; border-bottom-right-radius: var(--tkn-radius-md); }
+.bracketTL { top: 14%; left: 14%; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.bracketTR { top: 14%; right: 14%; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+.bracketBL { bottom: 14%; left: 14%; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+.bracketBR { bottom: 14%; right: 14%; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
 
+/* Scan line */
 .scan {
   position: absolute;
   left: 14%;
@@ -87,120 +277,67 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.95), transparent);
   box-shadow: 0 0 18px rgba(255, 204, 0, 0.7);
+  animation: scanMove 2.4s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0%, 100% { top: 30%; }
+  50% { top: 65%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan { animation: none; top: 48%; }
 }
 
-.detect {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(18px);
-  color: var(--tkn-color-white);
-  font-size: 12px;
-  padding: 7px var(--tkn-spacing-6);
-  border-radius: var(--tkn-radius-pill);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  z-index: 24;
-}
-.detectPulse {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--tkn-radius-circle);
-  background: var(--cam-yellow);
-  box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.18);
-  animation: pulse 1.6s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.tip {
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  top: 50px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--tkn-radius-lg);
-  padding: 11px var(--tkn-spacing-7);
-  display: flex;
-  align-items: center;
-  gap: var(--tkn-spacing-5);
-  color: var(--tkn-color-white);
-  font-size: 13px;
-  letter-spacing: 0.1px;
-  z-index: 24;
-}
-.tip svg {
-  flex: 0 0 18px;
-  color: var(--cam-yellow);
-}
-
-/* 文件预览 · 上传时显示 */
-.preview {
-  position: absolute;
-  inset: 24px;
-  border-radius: var(--tkn-radius-lg);
-  background: linear-gradient(180deg, var(--preview-start), var(--preview-end));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tkn-color-text-primary);
-  font-size: 14px;
-}
-
-/* 下方控制区 */
-.dock {
-  padding: var(--tkn-spacing-8) 18px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--tkn-spacing-8);
-}
-
-/* subject chips — 等分横排 */
+/* ─── Subject chips (glass · on = white/blue) ────────────────── */
 .subjects {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 228px;
+  padding: 0 18px;
   display: flex;
-  gap: var(--tkn-spacing-4);
-  overflow-x: auto;
-  padding-bottom: var(--tkn-spacing-2);
+  gap: 8px;
+  overflow: hidden;
+  z-index: 24;
 }
-.subjects::-webkit-scrollbar { display: none; }
 .subj {
-  flex: 0 0 auto;
+  flex: 1;
   height: 36px;
-  min-width: 56px;
-  padding: 0 var(--tkn-spacing-7);
-  border-radius: var(--tkn-radius-md);
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border: 0.5px solid rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
-  color: var(--tkn-color-white);
+  color: #fff;
+  letter-spacing: 0.2px;
   cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease;
 }
 .subjOn {
   background: rgba(255, 255, 255, 0.95);
-  color: var(--tkn-color-primary-default);
+  color: var(--blue);
   border-color: transparent;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
 
-/* mode tabs */
+/* ─── Mode tabs ──────────────────────────────────────────────── */
 .modes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 112px;
   display: flex;
   justify-content: center;
   gap: 22px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.55);
+  z-index: 24;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -212,8 +349,12 @@
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
-  padding: var(--tkn-spacing-3) 0;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  font-weight: inherit;
+  padding: 4px 0;
   position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 .modeOn {
   color: var(--cam-yellow);
@@ -228,18 +369,33 @@
   margin: 4px auto 0;
 }
 
-/* controls · gallery + shutter + file */
+/* ─── Dock (fade gradient behind controls) ───────────────────── */
+.dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  height: 144px;
+  background: linear-gradient(180deg, rgba(11, 15, 26, 0) 0%, rgba(11, 15, 26, 0.85) 35%, #0B0F1A 100%);
+  z-index: 23;
+}
+
+/* ─── Controls (gallery + shutter + file) ───────────────────── */
 .controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 116px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: var(--tkn-spacing-4) 0 var(--tkn-spacing-8);
+  z-index: 24;
 }
 .controlBtn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--tkn-spacing-2);
+  gap: 4px;
   color: rgba(255, 255, 255, 0.85);
   font-size: 11px;
   letter-spacing: 0.2px;
@@ -248,26 +404,32 @@
   cursor: pointer;
   font-family: inherit;
   min-width: 60px;
-  min-height: 60px;
+  -webkit-tap-highlight-color: transparent;
 }
 .controlIc {
   width: 48px;
   height: 48px;
-  border-radius: var(--tkn-radius-lg);
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.10);
   border: 0.5px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--tkn-color-white);
+  color: #fff;
+}
+.controlIc svg {
+  width: 22px;
+  height: 22px;
 }
 
+/* Shutter: 78px white ring + 60px blue gradient core */
 .shutter {
   width: 78px;
   height: 78px;
-  border-radius: var(--tkn-radius-circle);
-  background: var(--tkn-color-white);
+  border-radius: 50%;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,107 +440,146 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 .shutterCore {
   width: 60px;
   height: 60px;
-  border-radius: var(--tkn-radius-circle);
-  background: linear-gradient(180deg, var(--grad-start), var(--tkn-color-primary-default));
-  border: 3px solid var(--tkn-color-white);
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--grad-shutter-start), var(--blue));
+  border: 3px solid #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--tkn-color-white);
+  color: #fff;
+}
+.shutterCore svg {
+  width: 24px;
+  height: 24px;
 }
 
-/* 手动表单 */
-.manualForm {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(18px);
-  border: 0.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--tkn-radius-lg);
-  padding: var(--tkn-spacing-8);
+/* ─── Upload progress ring overlay ──────────────────────────── */
+.uploadOverlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--tkn-spacing-6);
-}
-.fieldLabel {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: var(--tkn-spacing-2);
-  letter-spacing: 0.3px;
-}
-.fieldInput, .fieldTextarea {
-  width: 100%;
-  padding: var(--tkn-spacing-5) var(--tkn-spacing-6);
-  background: rgba(0, 0, 0, 0.25);
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--tkn-radius-md);
-  color: var(--tkn-color-white);
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(11, 15, 26, 0.75);
+  z-index: 30;
+  color: #fff;
   font-size: 14px;
-  font-family: inherit;
-  resize: vertical;
 }
-.fieldTextarea { min-height: 80px; }
-.fieldInput::placeholder, .fieldTextarea::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+.uploadRing {
+  width: 72px;
+  height: 72px;
 }
-.submitBtn {
-  width: 100%;
-  min-height: 50px;
-  border-radius: var(--tkn-radius-lg);
-  background: linear-gradient(180deg, var(--grad-start), var(--tkn-color-primary-default));
-  border: none;
-  color: var(--tkn-color-white);
-  font-size: 16px;
-  font-weight: 600;
+
+/* ─── Tab bar (dark glass) ───────────────────────────────────── */
+.tabbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 84px;
+  padding: 8px 0 24px;
+  background: rgba(11, 15, 26, 0.78);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  z-index: 25;
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  background: transparent;
+  border: none;
   font-family: inherit;
-  box-shadow: 0 8px 18px rgba(var(--primary-rgb), 0.30);
 }
-.submitBtn:disabled {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.4);
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.banner {
-  margin: var(--tkn-spacing-6) 18px;
-  padding: var(--tkn-spacing-5) var(--tkn-spacing-7);
-  border-radius: var(--tkn-radius-md);
-  background: rgba(255, 204, 0, 0.15);
-  border: 0.5px solid rgba(255, 204, 0, 0.4);
+.tabActive {
   color: var(--cam-yellow);
+}
+.tab svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ─── Error / banner ─────────────────────────────────────────── */
+.errorBanner {
+  position: absolute;
+  top: 110px;
+  left: 16px;
+  right: 16px;
+  z-index: 35;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 59, 48, 0.18);
+  border: 0.5px solid rgba(255, 59, 48, 0.55);
+  color: #fff;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.uploadProgress {
-  margin: var(--tkn-spacing-6) 18px;
-  padding: var(--tkn-spacing-4) var(--tkn-spacing-7);
-  border-radius: var(--tkn-radius-md);
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.fileOk {
-  margin: var(--tkn-spacing-4) 18px;
-  font-size: 12px;
-  color: var(--tkn-color-success-default);
-}
-
-.draftHint {
+/* ─── Permission denied state ────────────────────────────────── */
+.permDenied {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
   text-align: center;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-  margin-top: var(--tkn-spacing-4);
+  z-index: 30;
+}
+.permDeniedTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+.permDeniedSub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+}
+.permDeniedBtn {
+  height: 46px;
+  padding: 0 28px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #5FA8FF, #007AFF);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.28);
 }
 
+/* ─── File input (hidden) ────────────────────────────────────── */
+.hiddenInput {
+  display: none;
+}
+
+/* ─── Desktop clamp ──────────────────────────────────────────── */
 @media (min-width: 768px) {
   .root {
     max-width: 414px;
     margin: 0 auto;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    min-height: 100vh;
   }
 }
