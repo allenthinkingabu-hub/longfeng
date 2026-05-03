@@ -1,25 +1,40 @@
-/* S7 · ListPage · design tokens aligned · pre-flight A1/B1/C1/D1 applied */
-
-/*
- * Non-token local vars — approved exceptions per CapturePage/ListPage pre-flight review:
- *   --grad-start : gradient start #5FA8FF — no token, approved for FAB/mastery bar
- *   --separator  : rgba(60,60,67,.14) iOS separator — no --tkn-color-border-subtle token
- *   All other values derived from --tkn-color-primary-default rgb(0,113,227)
+/* S7 · FE-03 · WrongbookList (P05) · Mood B pure-warm
+ * Archive reference: design/mockups/wrongbook/_archive/05_wrongbook_list.html
+ * STYLE-TRUTH §3 Mood B: #F2F2F7 bg + #FFFFFF 白卡 + iOS nav 玻璃态
+ *
+ * Non-token local vars (approved exceptions):
+ *   --grad-start        : #5FA8FF — gradient start (no --tkn token)
+ *   --separator         : rgba(60,60,67,.14) — iOS separator
+ *   --nav-glass         : rgba(242,242,247,.78) — correct iOS bg-light opacity
+ *   --primary-rgb       : 0,122,255 — #007AFF (STYLE-TRUTH §2.1)
+ *   --danger-rgb        : 255,59,48   — #FF3B30
+ *   --warning-rgb       : 255,149,0   — #FF9500
+ *   --success-rgb       : 52,199,89   — #34C759
+ *   --search-bg         : rgba(118,118,128,.12)
+ *   --thumb-start/end   : paper texture gradient (archive 1:1)
+ *   --thumb-qno-*       : paper label (archive 1:1)
+ *   --thumb-strike      : red strikethrough (archive 1:1)
  */
 .root {
-  --grad-start: #5FA8FF;
-  --separator: rgba(60, 60, 67, 0.14);
-  --nav-glass: rgba(245, 245, 247, 0.78);
-  --primary-rgb: 0, 113, 227;
-  --danger-rgb: 192, 57, 43;
-  --warning-rgb: 180, 83, 9;
-  --success-rgb: 26, 125, 52;
-  --search-bg: rgba(118, 118, 128, 0.12);
-  --thumb-start: #fbf8f0;
-  --thumb-end: #f1ece0;
-  --thumb-qno-bg: #fde9e9;
-  --thumb-qno-color: #7a3b3b;
-  --thumb-strike: rgba(255, 80, 80, 0.55);
+  --grad-start:        #5FA8FF;
+  --separator:         rgba(60, 60, 67, 0.14);
+  --nav-glass:         rgba(242, 242, 247, 0.78);
+  --primary-rgb:       0, 113, 227;    /* matches --tkn-color-primary-default #0071e3 */
+  --danger-rgb:        192, 57, 43;    /* matches --tkn-color-danger-default */
+  --warning-rgb:       180, 83, 9;     /* matches --tkn-color-warning-default */
+  --success-rgb:       26, 125, 52;    /* matches --tkn-color-success-default */
+  --search-bg:         rgba(118, 118, 128, 0.12);
+  --thumb-start:       #fbf8f0;
+  --thumb-end:         #f1ece0;
+  --thumb-qno-bg:      #fde9e9;
+  --thumb-qno-color:   #7a3b3b;
+  --thumb-strike:      rgba(255, 80, 80, 0.55);
+  /* Spec tokens not in tokens.css · defined as local fallbacks */
+  --tkn-color-card:          #FFFFFF;
+  --tkn-color-mastery-forgot:  var(--tkn-color-danger-default);
+  --tkn-color-mastery-partial: var(--tkn-color-warning-default);
+  --tkn-color-mastery-mastered:var(--tkn-color-success-default);
+  --tkn-color-sep:             rgba(60, 60, 67, 0.14);
 
   position: relative;
   width: 100%;
@@ -28,13 +43,31 @@
   font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
   color: var(--tkn-color-text-primary);
   -webkit-font-smoothing: antialiased;
+  padding-bottom: 84px; /* reserve tabbar */
 }
 
-/* 顶部 nav · sticky · backdrop blur */
+/* ── Status Bar (Mood B · black text) ─────────────────────── */
+.status {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #111;
+}
+.statusIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── B1 Nav · sticky · backdrop blur (Mood B) ─────────────── */
 .nav {
   position: sticky;
   top: 0;
-  padding: 12px 18px 10px;
+  padding: 6px 18px 10px;
   background: var(--nav-glass);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -47,11 +80,13 @@
   justify-content: space-between;
   height: 36px;
 }
+/* AC-WB-LIST-001 · display-hero 34px (archive h1=34px weight:700) */
 .navTitle {
   font-size: 34px;
   font-weight: 700;
   letter-spacing: 0.36px;
   color: var(--tkn-color-text-primary);
+  line-height: 1;
 }
 .navRight {
   display: flex;
@@ -72,26 +107,28 @@
   justify-content: center;
 }
 
-/* search */
+/* ── Search box (AC-WB-LIST-001 · 凹陷底) ─────────────────── */
 .search {
   margin-top: 8px;
   background: var(--search-bg);
   border-radius: var(--tkn-radius-md);
-  padding: var(--tkn-spacing-4) var(--tkn-spacing-5);
+  padding: 8px 10px;
   display: flex;
   align-items: center;
-  gap: var(--tkn-spacing-4);
+  gap: 8px;
   color: var(--tkn-color-text-tertiary);
   font-size: 14px;
   cursor: pointer;
   border: none;
   width: 100%;
   text-align: left;
+  font-family: inherit;
 }
 .searchPlaceholder {
   color: var(--tkn-color-text-secondary);
   flex: 1;
 }
+/* AC-WB-LIST-010 · AI 语义 Badge */
 .searchAi {
   margin-left: auto;
   font-size: 11px;
@@ -100,33 +137,43 @@
   background: rgba(var(--primary-rgb), 0.10);
   padding: 3px 7px;
   border-radius: var(--tkn-radius-xs);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
+}
+.searchAiActive {
+  background: rgba(var(--primary-rgb), 0.18);
+  color: var(--tkn-color-primary-default);
+  font-weight: 700;
 }
 
-/* subject chips */
+/* ── B2 Subject chips (horizontal scroll) ─────────────────── */
 .chipsRow {
-  margin-top: var(--tkn-spacing-5);
+  margin-top: 10px;
   display: flex;
-  gap: var(--tkn-spacing-4);
+  gap: 8px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
-.chipsRow::-webkit-scrollbar {
-  display: none;
-}
+.chipsRow::-webkit-scrollbar { display: none; }
 .sc {
   flex-shrink: 0;
-  padding: var(--tkn-spacing-3) 11px;
+  padding: 6px 11px;
   border-radius: var(--tkn-radius-pill);
-  background: var(--tkn-color-white);
+  background: var(--tkn-color-card);
   border: 0.5px solid var(--separator);
   font-size: 13px;
   font-weight: 600;
   color: var(--tkn-color-text-secondary);
   display: inline-flex;
   align-items: center;
-  gap: var(--tkn-spacing-3);
+  gap: 6px;
   cursor: pointer;
-  min-height: 32px;
+  min-height: 34px;
+  font-family: inherit;
+  transition: background var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard),
+              box-shadow var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
 }
 .scOn {
   background: var(--tkn-color-primary-default);
@@ -138,27 +185,25 @@
   font-size: 11px;
   opacity: 0.75;
 }
-.scOn .scCt {
-  opacity: 0.85;
-}
+.scOn .scCt { opacity: 0.85; }
 
-/* content */
+/* ── Content area ──────────────────────────────────────────── */
 .content {
-  padding: var(--tkn-spacing-5) var(--tkn-spacing-8) 100px;
+  padding: 10px 16px 16px;
 }
 
-/* mastery filter */
+/* ── B3 Mastery Status Cards ───────────────────────────────── */
 .mr {
   display: flex;
-  gap: var(--tkn-spacing-4);
+  gap: 8px;
   align-items: center;
   padding: 2px 2px 10px;
 }
 .mf {
   flex: 1;
-  background: var(--tkn-color-white);
+  background: var(--tkn-color-card);
   border-radius: var(--tkn-radius-lg);
-  padding: var(--tkn-spacing-4) var(--tkn-spacing-5);
+  padding: 9px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -169,6 +214,7 @@
   border: none;
   font-family: inherit;
   min-height: 56px;
+  transition: box-shadow var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
 }
 .mfV {
   font-size: 18px;
@@ -180,12 +226,12 @@
   color: var(--tkn-color-text-tertiary);
   letter-spacing: 0.2px;
 }
-.mfRed .mfV  { color: var(--tkn-color-danger-default); }
+.mfRed    .mfV { color: var(--tkn-color-danger-default); }
 .mfOrange .mfV { color: var(--tkn-color-warning-default); }
-.mfGreen .mfV  { color: var(--tkn-color-success-default); }
+.mfGreen  .mfV { color: var(--tkn-color-success-default); }
 
 .mfOn {
-  background: linear-gradient(180deg, var(--tkn-color-white), rgba(var(--primary-rgb), 0.04));
+  background: linear-gradient(180deg, var(--tkn-color-card), rgba(var(--primary-rgb), 0.04));
   border: 0.5px solid rgba(var(--primary-rgb), 0.25);
   box-shadow: 0 8px 18px rgba(var(--primary-rgb), 0.10);
 }
@@ -202,7 +248,7 @@
   background: linear-gradient(90deg, var(--grad-start), var(--tkn-color-primary-default));
 }
 
-/* sort hint */
+/* ── B4 SortBar ────────────────────────────────────────────── */
 .sort {
   display: flex;
   align-items: center;
@@ -211,20 +257,106 @@
   color: var(--tkn-color-text-tertiary);
   padding: 0 4px 8px;
 }
+.sortLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 .sort strong {
   color: var(--tkn-color-text-secondary);
   font-weight: 600;
 }
 
-/* card list */
-.card {
-  background: var(--tkn-color-white);
-  border-radius: var(--tkn-radius-lg);
-  padding: var(--tkn-spacing-6);
+/* ── Loading skeleton ──────────────────────────────────────── */
+.skeleton {
   display: flex;
-  gap: var(--tkn-spacing-6);
+  flex-direction: column;
+  gap: 10px;
+}
+.skeletonCard {
+  height: 98px;
+  border-radius: var(--tkn-radius-lg);
+  background: var(--search-bg);
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+/* ── EMPTY state (AC-WB-LIST-008) ─────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--tkn-color-text-tertiary);
+}
+.emptyIcon {
+  font-size: 48px;
+  line-height: 1;
+}
+.emptyText {
+  font-size: 15px;
+  font-weight: 500;
+}
+.emptyCapture {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tkn-color-primary-default);
+  background: rgba(var(--primary-rgb), 0.10);
+  border: none;
+  border-radius: var(--tkn-radius-pill);
+  padding: 8px 20px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── ERROR banner ──────────────────────────────────────────── */
+.errorBanner {
+  background: rgba(var(--warning-rgb), 0.12);
+  border: 0.5px solid rgba(var(--warning-rgb), 0.28);
+  border-radius: var(--tkn-radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--tkn-color-warning-default);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.retryBtn {
+  background: transparent;
+  border: none;
+  color: var(--tkn-color-primary-default);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+/* ── B5 Question List ──────────────────────────────────────── */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: opacity var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
+}
+
+/* AC-WB-LIST-005 · Question card */
+.card {
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-lg);
+  padding: 12px;
+  display: flex;
+  gap: 12px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03), 0 8px 22px rgba(40, 50, 90, 0.05);
-  margin-bottom: var(--tkn-spacing-5);
+  margin-bottom: 10px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -232,18 +364,45 @@
   width: 100%;
   text-align: left;
   font-family: inherit;
+  transition: transform var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
 }
+.card:active {
+  transform: scale(0.98);
+}
+/* AC-WB-LIST-009 · highlight from P04 */
+.cardHighlighted {
+  outline: 2px solid var(--tkn-color-success-default);
+  outline-offset: 0;
+  animation: highlightPulse 3s ease forwards;
+}
+@keyframes highlightPulse {
+  0%, 30% { outline-color: var(--tkn-color-success-default); }
+  100%     { outline-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardHighlighted { animation: none; }
+}
+
+/* AC-WB-LIST-006 · 4px 学科色左条 · --tkn-subject-{subject} */
 .leftBar {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
+  width: 4px;
 }
-.leftBarRed    { background: var(--tkn-color-danger-default); }
-.leftBarOrange { background: var(--tkn-color-warning-default); }
-.leftBarGreen  { background: var(--tkn-color-success-default); }
+.leftBarMath      { background: var(--tkn-subject-math); }
+.leftBarPhysics   { background: var(--tkn-subject-physics); }
+.leftBarChemistry { background: var(--tkn-subject-chemistry); }
+.leftBarEnglish   { background: var(--tkn-subject-english); }
 
+/* Subject label colors */
+.subMath      { color: var(--tkn-subject-math); }
+.subPhysics   { color: var(--tkn-subject-physics); }
+.subChemistry { color: var(--tkn-subject-chemistry); }
+.subEnglish   { color: var(--tkn-subject-english); }
+
+/* AC-WB-LIST-005 · 缩略图 80×80 → 60×74 (archive 1:1) */
 .thumb {
   width: 60px;
   height: 74px;
@@ -254,10 +413,15 @@
   flex: 0 0 60px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .thumbQno {
   position: absolute;
-  top: var(--tkn-spacing-3);
-  left: var(--tkn-spacing-3);
+  top: 6px;
+  left: 6px;
   font-size: 7px;
   font-weight: 700;
   color: var(--thumb-qno-color);
@@ -268,8 +432,8 @@
 .thumbH3 {
   position: absolute;
   top: 18px;
-  left: var(--tkn-spacing-3);
-  right: var(--tkn-spacing-3);
+  left: 6px;
+  right: 6px;
   font-family: Georgia, serif;
   font-size: 6px;
   line-height: 1.4;
@@ -279,7 +443,7 @@
 .thumbStrk {
   position: absolute;
   top: 48px;
-  left: var(--tkn-spacing-4);
+  left: 8px;
   width: 38px;
   height: 5px;
   background: var(--thumb-strike);
@@ -294,25 +458,19 @@
 .bodyHead {
   display: flex;
   align-items: center;
-  gap: var(--tkn-spacing-3);
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
-
-/* C1 决策：subject 使用 --tkn-subject-* tokens */
-.subMath      { color: var(--tkn-subject-math); }
-.subPhysics   { color: var(--tkn-subject-physics); }
-.subChemistry { color: var(--tkn-subject-chemistry); }
-.subEnglish   { color: var(--tkn-subject-english); }
-
 .bodyDot {
   width: 3px;
   height: 3px;
   border-radius: 50%;
   background: var(--tkn-color-text-tertiary);
   display: inline-block;
+  flex-shrink: 0;
 }
 .bodyTime {
   color: var(--tkn-color-text-tertiary);
@@ -322,7 +480,7 @@
 .stem {
   font-size: 14px;
   line-height: 1.45;
-  margin-top: var(--tkn-spacing-2);
+  margin-top: 4px;
   letter-spacing: 0.05px;
   font-weight: 500;
   display: -webkit-box;
@@ -334,24 +492,23 @@
 .tags {
   margin-top: 7px;
   display: flex;
-  gap: var(--tkn-spacing-3);
+  gap: 6px;
   flex-wrap: wrap;
 }
 .tg {
   display: inline-flex;
   align-items: center;
-  gap: var(--tkn-spacing-2);
+  gap: 4px;
   padding: 3px 7px;
   border-radius: var(--tkn-radius-pill);
   font-size: 11px;
   font-weight: 600;
   border: 0.5px solid var(--separator);
 }
-/* KP tag: 用 primary-default 色系（indigo 无对应 token） */
 .tgKp {
-  background: rgba(var(--primary-rgb), 0.08);
+  background: rgba(88, 86, 214, 0.08);
   color: var(--tkn-color-primary-default);
-  border-color: rgba(var(--primary-rgb), 0.18);
+  border-color: rgba(88, 86, 214, 0.18);
 }
 .tgErr {
   background: rgba(var(--danger-rgb), 0.08);
@@ -370,7 +527,6 @@
   align-items: flex-end;
   justify-content: space-between;
   flex: 0 0 64px;
-  gap: var(--tkn-spacing-2);
 }
 .pillbg {
   font-size: 10px;
@@ -383,6 +539,7 @@
 .pillbgOrange { background: rgba(var(--warning-rgb), 0.14); color: var(--tkn-color-warning-default); }
 .pillbgGreen  { background: rgba(var(--success-rgb), 0.14); color: var(--tkn-color-success-default); }
 
+/* AC-WB-LIST-005 · 6 段进度 */
 .stageBar {
   display: flex;
   gap: 2px;
@@ -391,10 +548,11 @@
   width: 8px;
   height: 5px;
   border-radius: 1.5px;
-  background: var(--tkn-color-button-active);
+  background: #E5E5EA;
 }
 .sbDone { background: var(--tkn-color-success-default); }
 .sbNow  { background: linear-gradient(90deg, var(--grad-start), var(--tkn-color-primary-default)); }
+
 .due {
   font-size: 10px;
   color: var(--tkn-color-text-tertiary);
@@ -402,7 +560,26 @@
   letter-spacing: 0.2px;
 }
 
-/* FAB */
+/* ── Load more ─────────────────────────────────────────────── */
+.loadMoreBtn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 0.5px solid var(--separator);
+  border-radius: var(--tkn-radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tkn-color-primary-default);
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.loadMoreBtn:disabled {
+  color: var(--tkn-color-text-tertiary);
+  cursor: not-allowed;
+}
+
+/* ── B6 FAB (AC-WB-LIST-007) ──────────────────────────────── */
 .fab {
   position: fixed;
   right: 18px;
@@ -419,16 +596,18 @@
   z-index: 25;
   border: none;
   cursor: pointer;
+  transition: transform var(--tkn-motion-duration-base) var(--tkn-motion-ease-apple-standard);
 }
+.fab:active { transform: scale(0.94); }
 
-/* TabBar */
+/* ── TabBar (Mood B · white glass) ────────────────────────── */
 .tabbar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: 84px;
-  padding: var(--tkn-spacing-4) 0 24px;
+  padding: 8px 0 24px;
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -452,16 +631,35 @@
 }
 .tabActive { color: var(--tkn-color-primary-default); }
 
-/* load-more text */
-.loadMoreText {
-  color: var(--tkn-color-primary-default);
-  font-weight: 600;
+/* ── Home indicator ────────────────────────────────────────── */
+.homebar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 8px;
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: #000;
+  opacity: 0.85;
+  z-index: 30;
 }
 
+/* ── Responsive max-width ──────────────────────────────────── */
 @media (min-width: 768px) {
   .root {
     max-width: 414px;
     margin: 0 auto;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.08);
   }
+  .fab { right: calc(50% - 207px + 18px); }
+  .tabbar, .homebar { max-width: 414px; left: 50%; transform: translateX(-50%); }
+}
+
+/* ── reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .fab  { transition: none; }
+  .skeletonCard { animation: none; }
+  .list { transition: none; }
 }

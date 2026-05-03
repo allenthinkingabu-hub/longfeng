@@ -94,7 +94,8 @@ export const TEST_IDS = {
     'ocr-fallback': 'capture.ocr-fallback.banner',
     'upload-progress': 'capture.upload-progress',
   },
-  // P06 List · SC-08
+
+  // P05 WrongbookList · SC-08 · AC-WB-LIST-001 ~ 010
   wrongbookList: {
     root: 'wrongbook.list.root',
     'filter-bar': 'wrongbook.list.filter-bar',
@@ -108,8 +109,20 @@ export const TEST_IDS = {
     empty: 'wrongbook.list.empty',
     skeleton: 'wrongbook.list.skeleton',
     'tabbar-wrongbook': 'wrongbook.list.tabbar-wrongbook',
+    // P05 spec §8 testids
+    'page-header': 'p05-page-header',
+    'page-header-title': 'p05-page-header-title',
+    'page-header-search': 'p05-page-header-search',
+    'page-header-semantic-badge': 'p05-page-header-semantic-badge',
+    'subject-chips': 'p05-subject-chips',
+    'mastery-status': 'p05-mastery-status',
+    'sort-bar': 'p05-sort-bar',
+    'fab-capture': 'p05-fab-capture',
+    'empty-state': 'p05-empty-state',
+    'empty-capture-btn': 'p05-empty-capture-btn',
   },
-  // P07 Detail · SC-02 + SC-03 + SC-04
+
+  // P06 WrongbookDetail · SC-02 + SC-03 + SC-04 · AC-WB-DETAIL-001 ~ 010
   wrongbookDetail: {
     root: 'wrongbook.detail.root',
     'stem-text': 'wrongbook.detail.stem-text',
@@ -127,7 +140,25 @@ export const TEST_IDS = {
       confirm: 'wrongbook.detail.delete.confirm',
       cancel: 'wrongbook.detail.delete.cancel',
     },
+    // P06 spec §8 testids
+    'origin-image': 'p06-origin-image',
+    'origin-image-zoom': 'p06-origin-image-zoom',
+    'segment-tab': 'p06-segment-tab',
+    'segment-tab-analysis': 'p06-segment-tab-analysis',
+    'segment-tab-records': 'p06-segment-tab-records',
+    'segment-tab-variants': 'p06-segment-tab-variants',
+    'ai-brief': 'p06-ai-brief',
+    'ai-brief-reason-bar': 'p06-ai-brief-reason-bar',
+    'ai-brief-difficulty': 'p06-ai-brief-difficulty',
+    'memory-curve': 'memory-curve',
+    'records-timeline': 'p06-records-timeline',
+    'variants-empty': 'p06-variants-empty',
+    'radar-chart': 'p06-radar-chart',
+    'bottom-actions': 'p06-bottom-actions',
+    'bottom-actions-archive-btn': 'p06-bottom-actions-archive-btn',
+    'bottom-actions-review-btn': 'p06-bottom-actions-review-btn',
   },
+
   // 通用
   common: {
     back: 'common.back.btn',
