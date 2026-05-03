@@ -117,4 +117,47 @@ export const calendarHandlers = [
       } : undefined,
     });
   }),
+
+  // SC-05: P11 EventDetail 实际 fetch /api/calendar/events/:eventId (EventDetailResp shape)
+  http.get('/api/calendar/events/:eventId', ({ params }) => {
+    const ev = MOCK_EVENTS.find((e) => e.id === params.eventId);
+    if (!ev) return new HttpResponse(null, { status: 404 });
+    const subjectStr = ('subject' in ev ? (ev as { subject?: string }).subject : 'math') ?? 'math';
+    const titleStr = ('title' in ev ? (ev as { title?: string }).title : '') ?? `${subjectStr} 复习`;
+    const baseResp = {
+      eventId: ev.id,
+      relationType: ev.kind as 'STUDY' | 'EXAM' | 'FAMILY',
+      title: titleStr,
+      startAt: `${ev.date}T09:00:00+08:00`,
+      source: 'AI' as const,
+    };
+    if (ev.kind === 'STUDY') {
+      return HttpResponse.json({
+        ...baseResp,
+        study: {
+          subject: subjectStr,
+          questionId: ('qid' in ev ? (ev as { qid?: string }).qid : 'q-default') ?? 'q-default',
+          questionStem: '已知函数 f(x)=x²-4x+3，求其顶点坐标与对称轴方程。',
+          thumbnailUrl: '',
+          nodeId: `node-${ev.id}`,
+          tLevel: 'T1',
+          nodes: ['T0', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6'].map((t, i) => ({
+            tLevel: t,
+            status: i < 1 ? 'done' : i === 1 ? 'now' : 'future',
+          })),
+        },
+      });
+    }
+    if (ev.kind === 'EXAM') {
+      const exam = ev as { location?: string; countdownDays?: number };
+      return HttpResponse.json({
+        ...baseResp,
+        exam: { subject: subjectStr, location: exam.location ?? '一中考场', countdownDays: exam.countdownDays ?? 13 },
+      });
+    }
+    return HttpResponse.json({
+      ...baseResp,
+      family: { participants: ['妈妈', '老师'], note: titleStr },
+    });
+  }),
 ];

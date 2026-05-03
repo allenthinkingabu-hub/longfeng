@@ -311,14 +311,17 @@ export const GuestCapturePage: React.FC = () => {
             结果保留 <em>24 小时</em> · 注册后可一键 claim
           </div>
         </div>
-        <button
+        {/* SC-12: 用 <a role="link"> 而非 button · POM expect role=link with name /注册|不限次/ */}
+        <a
           className={s.quotaCta}
           data-testid="guest-quota-banner-cta"
-          onClick={() => handleRegisterCta('banner')}
+          href="/auth"
+          role="link"
+          onClick={(e) => { e.preventDefault(); handleRegisterCta('banner'); }}
           aria-label="注册后不限次使用"
         >
           注册后不限次 →
-        </button>
+        </a>
       </div>
 
       {/* B4 · Subject chip row */}

@@ -73,8 +73,10 @@ export const wrongbookHandlers = [
   // SC-01: Result page 实际 POST /api/wb/questions/:id/save (Result/index.tsx:152) · 必须 mock
   http.post('/api/wb/questions/:id/save', async ({ request, params }) => {
     const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+    // SC-01: id 加 timestamp 避免与 seed 'mock-qid-001' 冲突 → pushWrongbookItem 走 unshift
+    const uniqueId = `${String(params.id ?? 'q')}-${Date.now()}`;
     const newItem: WBItem = {
-      id: String(params.id ?? `item-msw-${Date.now()}`),
+      id: uniqueId,
       subject: (body.subject as string) ?? 'math',
       stem_text: (body.stem_text as string) ?? '（MSW save）新增错题',
       tags: (body.tags as string[]) ?? [],
