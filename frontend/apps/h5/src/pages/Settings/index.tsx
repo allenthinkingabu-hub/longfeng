@@ -10,7 +10,7 @@
  *   VIP      → 显示模型选择器 (catalog 白名单)
  *   VIP_PLUS → 显示实验池 + cost/latency 元信息
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import s from './Settings.module.css';
 
@@ -57,7 +57,7 @@ const MOCK_USER: UserProfile = {
   grade: '高三',
   phoneBound: true,
   streakDays: 12,
-  tier: 'VIP',          // Switch this to test SC-16 branches
+  tier: 'NORMAL',        // Default NORMAL; overridden by /api/v1/me/tier at runtime
   email: 'allenthinking.abu@gmail.com',
 };
 
@@ -83,12 +83,12 @@ const VIP_MODEL_CATALOG: AiModelCatalog[] = [
     notes: '中文学科准确率更高 · VIP',
   },
   {
-    id: 'gpt-4o-mini',
+    id: 'openai-gpt-4o',
     provider: 'OpenAI',
-    displayName: 'GPT-4o mini',
+    displayName: 'OpenAI GPT-4o',
     vipOnly: false,
     supportedSubjects: ['english', 'math'],
-    cost_tier: 'L',
+    cost_tier: 'M',
     avg_latency_ms: 2100,
     notes: '英语/海外学生首选 · VIP',
   },
@@ -106,14 +106,14 @@ const VIP_MODEL_CATALOG: AiModelCatalog[] = [
 
 const VIP_PLUS_EXTRA_CATALOG: AiModelCatalog[] = [
   {
-    id: 'claude-3-5-sonnet',
+    id: 'claude-3-7-sonnet-experimental',
     provider: 'Anthropic',
-    displayName: 'Claude 3.5 Sonnet',
+    displayName: 'Claude 3.7 Sonnet（实验池）',
     vipOnly: true,
     supportedSubjects: ['math', 'physics', 'english'],
     cost_tier: 'H',
     avg_latency_ms: 5200,
-    notes: '复杂推理 · VIP_PLUS 专属',
+    notes: '复杂推理实验版 · VIP_PLUS 专属',
   },
   {
     id: 'private-model',
@@ -295,8 +295,30 @@ const AiModelSection: React.FC<{
 export const SettingsPage: React.FC = () => {
   const nav = useNavigate();
 
-  const [user] = useState<UserProfile>(MOCK_USER);
+  const [user, setUser] = useState<UserProfile>(MOCK_USER);
   const [prefs, setPrefs] = useState<Preferences>(MOCK_PREFS);
+
+  /* SC-16 · 从 /api/v1/me/tier + /api/v1/ai-models 读 tier 和当前选中模型（B 轨 MSW 拦截）*/
+  useEffect(() => {
+    void fetch('/api/v1/me/tier', { headers: { 'Cache-Control': 'no-store' } })
+      .then((res) => (res.ok ? (res.json() as Promise<{ tier: UserTier }>) : null))
+      .then((data) => {
+        if (data?.tier) {
+          setUser((prev) => ({ ...prev, tier: data.tier }));
+        }
+      })
+      .catch(() => { /* silently fallback to NORMAL */ });
+
+    void fetch('/api/v1/ai-models', { headers: { 'Cache-Control': 'no-store' } })
+      .then((res) => (res.ok ? (res.json() as Promise<{ currentModel?: string }>) : null))
+      .then((data) => {
+        if (data?.currentModel) {
+          setPrefs((prev) => ({ ...prev, preferredAiModel: data.currentModel ?? null }));
+        }
+      })
+      .catch(() => { /* silently keep MOCK_PREFS.preferredAiModel */ });
+  }, []);
+
   const [dangerConfirmOpen, setDangerConfirmOpen] = useState(false);
   const [dangerAction, setDangerAction] = useState<'account-deletion' | 'clear-data' | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
@@ -311,8 +333,12 @@ export const SettingsPage: React.FC = () => {
 
   const handleSelectAiModel = useCallback((modelId: string) => {
     setPrefs((prev) => ({ ...prev, preferredAiModel: modelId }));
-    // PATCH /api/me/ai-preference · VIP 专属端点
-    // NORMAL 用户走不到这里 (UI 层隔离)
+    // SC-16 · POST /api/v1/me/ai-model 持久化（VIP/VIP_PLUS 专属 · NORMAL 静默忽略）
+    void fetch('/api/v1/me/ai-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ modelId }),
+    }).catch(() => { /* ignore network error */ });
   }, []);
 
   const openDanger = (action: 'account-deletion' | 'clear-data') => {

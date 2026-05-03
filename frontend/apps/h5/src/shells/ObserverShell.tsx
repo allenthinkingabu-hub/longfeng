@@ -201,6 +201,17 @@ export const ObserverShell: React.FC<ObserverShellProps> = ({
         </button>
       </nav>
 
+      {/* Observer ReadOnly Banner（SC-15 · assertReadOnlyBannerVisible）*/}
+      <div
+        className={s.readonlyBanner}
+        data-testid="observer-banner"
+        role="region"
+        aria-label="仅可读 · 观察者模式"
+      >
+        <span aria-hidden="true">👁</span>
+        <span>观察者模式 · 仅可读</span>
+      </div>
+
       {/* Observer Identity Card（archive §identity）*/}
       <div
         className={s.identityCard}
@@ -218,7 +229,11 @@ export const ObserverShell: React.FC<ObserverShellProps> = ({
             </div>
             <div className={s.idTx}>
               <span className={s.idKey}>Observer · 观察者</span>
-              <span className={s.idValue}>
+              <span
+                className={s.idValue}
+                data-testid="observer-student-summary"
+                aria-label={`您是 ${studentName} 的${roleText}`}
+              >
                 您是 {studentName} 的
                 <em className={s.idValueEm}>{roleText}</em>
               </span>

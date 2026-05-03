@@ -206,7 +206,6 @@ export const LandingPage: React.FC = () => {
       className={s.phone}
       data-testid="landing-page"
       data-mood="A"
-      aria-label="访客落地 · AI 帮你拍下错题"
     >
       {/* B1 StatusBar */}
       <div className={s.statusbar} data-testid="p-landing-statusbar" aria-hidden="true">
@@ -215,15 +214,15 @@ export const LandingPage: React.FC = () => {
       </div>
 
       {/* Hero (Mood A · 380px) */}
-      <header
+      <div
         className={s.hero}
         data-testid="landing-hero"
         data-mood="A"
-        role="banner"
+        role="img"
         aria-label="AI 错题本访客落地页"
       >
         <span className={s.blob} aria-hidden="true" />
-      </header>
+      </div>
 
       {/* Anon Nav: Logo + Login */}
       <nav className={s.anonNav} aria-label="顶部导航">
@@ -242,7 +241,7 @@ export const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero copy */}
-      <div className={s.heroCopy} aria-hidden="false">
+      <div className={s.heroCopy}>
         <div className={s.eyebrow} role="note">
           <span className={s.eyebrowDot} aria-hidden="true" />
           0 注册成本 · 先看看值不值
@@ -275,37 +274,43 @@ export const LandingPage: React.FC = () => {
       <main className={s.scroll} role="main" id="landing-main">
 
         {/* B4 · Sample cards */}
-        {pageState !== 'DEGRADED' && (
-          <section data-testid="landing-samples" aria-label="真实样例">
+        <section data-testid="landing-samples" aria-label="真实样例">
+          {pageState === 'DEGRADED' ? (
             <div className={s.secRow}>
-              <span className={s.secTitle}>真实样例 · 匿名脱敏</span>
-              <span className={s.secMore}>滑动查看 →</span>
+              <span className={s.secTitle}>暂无样例 · 稍后再试</span>
             </div>
-            <div className={s.samples} role="list">
-              {displaySamples.map((card, idx) => (
-                <article
-                  key={card.id}
-                  className={s.sampleCard}
-                  data-testid={`landing-samples-card-${idx + 1}`}
-                  role="listitem"
-                  aria-label={`样例卡 ${idx + 1}: ${card.kpLabel}`}
-                >
-                  <div className={`${s.sampleThumb} ${s[card.subject]}`}>
-                    <span className={s.sampleChip}>
-                      {card.subject === 'math' ? '数学 · 高一' : card.subject === 'physics' ? '物理 · 高二' : '英语 · 初三'}
-                    </span>
-                    <div className={s.sampleFormula} aria-label="公式预览">{card.formula}</div>
-                  </div>
-                  <div className={s.sampleBody}>
-                    <div className={s.sampleErr}>{card.errorReason}</div>
-                    <div className={s.sampleKp}>{card.kpLabel}</div>
-                    <span className={s.sampleTag}>{card.tagLabel}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
+          ) : (
+            <>
+              <div className={s.secRow}>
+                <span className={s.secTitle}>真实样例 · 匿名脱敏</span>
+                <span className={s.secMore}>滑动查看 →</span>
+              </div>
+              <div className={s.samples} role="list">
+                {displaySamples.map((card, idx) => (
+                  <article
+                    key={card.id}
+                    className={s.sampleCard}
+                    data-testid={`landing-samples-card-${idx + 1}`}
+                    role="listitem"
+                    aria-label={`样例卡 ${idx + 1}: ${card.kpLabel}`}
+                  >
+                    <div className={`${s.sampleThumb} ${s[card.subject]}`}>
+                      <span className={s.sampleChip}>
+                        {card.subject === 'math' ? '数学 · 高一' : card.subject === 'physics' ? '物理 · 高二' : '英语 · 初三'}
+                      </span>
+                      <div className={s.sampleFormula} aria-label="公式预览">{card.formula}</div>
+                    </div>
+                    <div className={s.sampleBody}>
+                      <div className={s.sampleErr}>{card.errorReason}</div>
+                      <div className={s.sampleKp}>{card.kpLabel}</div>
+                      <span className={s.sampleTag}>{card.tagLabel}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
 
         {/* B3 · Feature rows */}
         <section aria-label="功能特色" data-testid="landing-three-step">
@@ -344,30 +349,28 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* B5 · KPI banner */}
-        {kpi && (
-          <section data-testid="landing-kpi" aria-label="平台数据">
-            <div className={s.kpiBanner} role="region" aria-label="平台关键数据">
-              <div className={s.kpiStat}>
-                <div className={s.kpiN} data-testid="landing-kpi-total" aria-label={`已分析 ${Math.floor(kpi.totalQuestionsAnalyzed / 10000)}w+ 错题`}>
-                  {Math.floor(kpi.totalQuestionsAnalyzed / 10000)}w+
-                </div>
-                <div className={s.kpiL}>已分析错题</div>
+        <section data-testid="landing-kpi" aria-label="平台数据">
+          <div className={s.kpiBanner} role="region" aria-label="平台关键数据">
+            <div className={s.kpiStat}>
+              <div className={s.kpiN} data-testid="landing-kpi-total" aria-label={`已分析 ${kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : DEFAULT_KPI.totalQuestionsAnalyzed / 10000}w+ 错题`}>
+                {kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : Math.floor(DEFAULT_KPI.totalQuestionsAnalyzed / 10000)}w+
               </div>
-              <div className={s.kpiSep} aria-hidden="true" />
-              <div className={s.kpiStat}>
-                <div className={s.kpiN} data-testid="landing-kpi-retention" aria-label={`7日留存率 ${Math.round(kpi.retention7d * 100)}%`}>
-                  {Math.round(kpi.retention7d * 100)}%
-                </div>
-                <div className={s.kpiL}>7 日留存</div>
-              </div>
-              <div className={s.kpiSep} aria-hidden="true" />
-              <div className={s.kpiStat}>
-                <div className={s.kpiN} aria-label="AI 分析准确率 98%">98%</div>
-                <div className={s.kpiL}>AI 准确率</div>
-              </div>
+              <div className={s.kpiL}>已分析错题</div>
             </div>
-          </section>
-        )}
+            <div className={s.kpiSep} aria-hidden="true" />
+            <div className={s.kpiStat}>
+              <div className={s.kpiN} data-testid="landing-kpi-retention" aria-label={`7日留存率 ${kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%`}>
+                {kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%
+              </div>
+              <div className={s.kpiL}>7 日留存</div>
+            </div>
+            <div className={s.kpiSep} aria-hidden="true" />
+            <div className={s.kpiStat}>
+              <div className={s.kpiN} aria-label="AI 分析准确率 98%">98%</div>
+              <div className={s.kpiL}>AI 准确率</div>
+            </div>
+          </div>
+        </section>
 
         {/* Social proof */}
         <div className={s.social} aria-label="社区用户数量">
@@ -404,10 +407,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* B6 · Bottom CTA */}
-        <footer
+        {/* B6 · Bottom CTA sentinel */}
+        <div
           data-testid="landing-cta-bottom"
-          role="contentinfo"
           style={{ height: '1px' }}
           aria-hidden="true"
         />

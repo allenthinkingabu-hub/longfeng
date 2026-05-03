@@ -333,14 +333,16 @@ export const TEST_IDS = {
 
   // ObserverShell · 观察者 Shell（scope=READ · C4 红线）
   observerShell: {
-    root:          'observer-shell',
-    watermark:     'observer-watermark',
-    nav:           'observer-shell-nav',
-    backBtn:       'observer-back-btn',
-    exitBtn:       'observer-exit-btn',
-    identityCard:  'observer-identity-card',
-    scopeBadge:    'observer-scope-badge',
-    outlet:        'observer-shell-outlet',
+    root:             'observer-shell',
+    watermark:        'observer-watermark',
+    banner:           'observer-banner',           // SC-15 · assertReadOnlyBannerVisible
+    studentSummary:   'observer-student-summary',  // SC-15 · assertStudentSummary
+    nav:              'observer-shell-nav',
+    backBtn:          'observer-back-btn',
+    exitBtn:          'observer-exit-btn',
+    identityCard:     'observer-identity-card',
+    scopeBadge:       'observer-scope-badge',
+    outlet:           'observer-shell-outlet',
     ghostTabs: {
       home:      'observer-ghost-tab-home',
       wrongbook: 'observer-ghost-tab-wrongbook',
@@ -348,6 +350,43 @@ export const TEST_IDS = {
       review:    'observer-ghost-tab-review',
       me:        'observer-ghost-tab-me',
     },
+  },
+
+  // P-LANDING · 访客落地页（SC-11）
+  pLanding: {
+    root:          'landing-page',
+    hero:          'landing-hero',
+    heroCataLogin: 'landing-hero-cta-login',
+    heroCataTry:   'landing-hero-cta-try',
+    heroLogo:      'landing-hero-logo',
+    heroHeadline:  'landing-hero-headline',
+    samples:       'landing-samples',
+    threeStep:     'landing-three-step',
+    kpi:           'landing-kpi',
+    kpiTotal:      'landing-kpi-total',
+    kpiRetention:  'landing-kpi-retention',
+    ctaBottom:     'landing-cta-bottom',
+    ctaBottomBtn:  'landing-cta-bottom-btn',
+  },
+
+  // P-SHARED · 分享只读预览（SC-13）
+  pShared: {
+    root:                 'p-shared',
+    statusbar:            'p-shared-statusbar',
+    sharerBanner:         'sharer-banner',
+    sharerBannerAvatar:   'sharer-banner-avatar',
+    sharerBannerText:     'sharer-banner-text',
+    maskedQuestion:       'masked-question',
+    maskedStemClear:      'masked-question-stem-clear',
+    maskedStemBlurred:    'masked-question-stem-blurred',
+    maskedOverlay:        'masked-question-overlay',
+    memoryCurvePreview:   'memory-curve-preview',
+    memoryCurvePreviewSvg:'memory-curve-preview-svg',
+    shareMeta:            'share-meta',
+    upgradeCta:           'upgrade-cta-fixed',       // SC-13 · POM.clickUpgradeCta
+    tokenExpiredScreen:   'token-expired-screen',
+    tokenInvalidScreen:   'token-invalid-screen',
+    tokenRevokedScreen:   'token-revoked-screen',
   },
 
   // ── S8 FE-04 · Review Pages (P07/P08/P09) ──────────────────────────────

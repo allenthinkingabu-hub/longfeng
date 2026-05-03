@@ -29,8 +29,9 @@ export const guestHandlers = [
   })),
 
   http.get('/api/landing/kpi', () => HttpResponse.json({
-    analyzedTotal: 1_204_312,
+    totalQuestionsAnalyzed: 1_204_312,
     retention7d: 0.47,
+    headline: '已分析 120w+ 错题',
   })),
 
   // Guest session
