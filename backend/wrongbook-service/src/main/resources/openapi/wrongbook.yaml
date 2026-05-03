@@ -6,6 +6,25 @@ servers:
 - url: http://localhost:8081
   description: Generated server url
 paths:
+  /wrongbook/questions/search:
+    post:
+      tags:
+      - wrongbook-search
+      summary: Hybrid search (pgvector + pg_trgm, RRF fusion)
+      operationId: search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchReq'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiResultListWrongItemVO'
   /wrongbook/items:
     get:
       tags:
@@ -400,6 +419,7 @@ components:
           format: int64
     WrongItemTagVO:
       type: object
+      description: "Deprecated - kept for backward compat; new responses use tags: string[]"
       properties:
         tagCode:
           type: string
@@ -407,50 +427,55 @@ components:
           type: number
     WrongItemVO:
       type: object
+      description: "S7 fixes: image_url (was origin_image_key), tags: string[], mastery 0-100"
       properties:
         id:
-          type: integer
-          format: int64
-        studentId:
+          type: string
+          description: "Snowflake id serialized as string"
+        student_id:
           type: integer
           format: int64
         subject:
           type: string
-        gradeCode:
+        grade_code:
           type: string
-        sourceType:
+        source_type:
           type: integer
           format: int32
-        originImageKey:
+        image_url:
           type: string
-        processedImageKey:
+          description: "S7 Issue 3: was origin_image_key"
+        processed_image_key:
           type: string
-        ocrText:
+        ocr_text:
           type: string
-        stemText:
+        stem_text:
           type: string
         status:
-          type: integer
-          format: int32
+          type: string
         mastery:
           type: integer
           format: int32
+          minimum: 0
+          maximum: 100
+          description: "S7 Issue 2: 0-100 scale (was 0-2 enum)"
         difficulty:
           type: integer
           format: int32
         version:
           type: integer
           format: int64
-        createdAt:
+        created_at:
           type: string
           format: date-time
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
         tags:
           type: array
+          description: "S7 Issue 4: simplified to string[] (tagCode only)"
           items:
-            $ref: '#/components/schemas/WrongItemTagVO'
+            type: string
         images:
           type: array
           items:
@@ -622,13 +647,20 @@ components:
           type: string
     WrongItemPageVO:
       type: object
+      description: "S7 fixes: list→items, nextCursor→next_cursor, added has_more"
       properties:
-        list:
+        items:
           type: array
+          description: "S7 Issue 1: was 'list'"
           items:
             $ref: '#/components/schemas/WrongItemVO'
-        nextCursor:
+        next_cursor:
           type: string
+          nullable: true
+          description: "S7 Issue 2: was 'nextCursor'"
+        has_more:
+          type: boolean
+          description: "S7 Issue 2: new field, true if more pages exist"
     ApiResultListWrongAttemptVO:
       type: object
       properties:
@@ -653,5 +685,41 @@ components:
           type: string
         data:
           type: string
+        traceId:
+          type: string
+    SearchReq:
+      type: object
+      description: "Request body for POST /wrongbook/questions/search (hybrid search)"
+      properties:
+        query:
+          type: string
+          description: "Free-text query for pg_trgm trigram search"
+        query_vector:
+          type: array
+          description: "Optional pre-computed embedding vector for pgvector semantic search"
+          items:
+            type: number
+            format: float
+        student_id:
+          type: integer
+          format: int64
+        subject:
+          type: string
+        top_n:
+          type: integer
+          format: int32
+          default: 20
+    ApiResultListWrongItemVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WrongItemVO'
         traceId:
           type: string

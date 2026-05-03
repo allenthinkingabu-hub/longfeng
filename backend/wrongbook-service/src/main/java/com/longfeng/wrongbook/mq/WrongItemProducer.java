@@ -13,8 +13,11 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 /**
- * Emits WrongItemChangedEvent to topic {@code wrongbook.item.changed}. Primary path: RocketMQ
+ * Emits WrongItemChangedEvent to topic {@code wrongbook_item_changed}. Primary path: RocketMQ
  * syncSend. Fallback (ADR 0002): insert into wrong_item_outbox; scheduler (S10) republishes.
+ *
+ * <p>S7 Issue 6: topic was renamed from {@code wrongbook.item.changed} (dots are not allowed in
+ * RocketMQ topic names per rule {@code ^[%|a-zA-Z0-9_-]+$}).
  */
 @Component
 public class WrongItemProducer {

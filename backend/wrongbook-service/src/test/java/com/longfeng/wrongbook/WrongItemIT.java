@@ -189,7 +189,8 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
     createItem("rid-page-2", "p2");
     mvc.perform(get("/wrongbook/items").param("subject", "math").param("size", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.list.length()").value(org.hamcrest.Matchers.greaterThan(0)));
+        // S7 Issue 1: field renamed list → items
+        .andExpect(jsonPath("$.data.items.length()").value(org.hamcrest.Matchers.greaterThan(0)));
   }
 
   @Test
