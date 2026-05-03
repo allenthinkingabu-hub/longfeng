@@ -10,7 +10,7 @@ import { BasePage } from './_base';
 export class WelcomeBackPage extends BasePage {
   readonly rootTestId = 'p-welcomeback-root';
 
-  static route = '/welcomeback';
+  static route = '/welcome-back';
 
   constructor(page: Page) { super(page); }
 

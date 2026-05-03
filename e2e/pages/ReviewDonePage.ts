@@ -8,7 +8,7 @@ import { BasePage } from './_base';
 export class ReviewDonePage extends BasePage {
   readonly rootTestId = 'p09-root';
 
-  static routePattern = /\/review\/[^/]+\/done/;
+  static routePattern = /\/review\/done/;
 
   constructor(page: Page) { super(page); }
 

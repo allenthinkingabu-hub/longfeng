@@ -8,7 +8,7 @@ import { BasePage } from './_base';
 export class ResultPage extends BasePage {
   readonly rootTestId = 'p04-root';
 
-  static routePattern = /\/result\/[^/]+/;
+  static routePattern = /\/question\/[^/]+\/result/;
 
   constructor(page: Page) { super(page); }
 

@@ -8,7 +8,7 @@ import { BasePage } from './_base';
 export class CalendarMonthPage extends BasePage {
   readonly rootTestId = 'p10-root';
 
-  static route = '/calendar';
+  static route = '/calendar/month';
 
   constructor(page: Page) { super(page); }
 

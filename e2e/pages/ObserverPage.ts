@@ -8,7 +8,7 @@ import { BasePage } from './_base';
 export class ObserverPage extends BasePage {
   readonly rootTestId = 'observer-shell';
 
-  static route = '/observer';
+  static route = '/observer/test123';
 
   constructor(page: Page) { super(page); }
 

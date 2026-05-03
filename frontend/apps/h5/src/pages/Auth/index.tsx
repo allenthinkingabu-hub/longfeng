@@ -212,9 +212,17 @@ export const AuthPage: React.FC = () => {
                 type="button"
                 data-testid="auth-form-submit"
                 onClick={async () => {
-                  // dev login: 模拟 wechat callback · 设 token + navigate
                   const tier = devAccount.includes('vipplus') ? 'VIP_PLUS' : devAccount.includes('vip') ? 'VIP' : 'NORMAL';
-                  document.cookie = `longfeng_token=dev-${tier}-token; path=/`;
+                  const b64u = (s: string) => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                  const header = b64u('{"alg":"HS256","typ":"JWT"}');
+                  const payload = b64u(JSON.stringify({
+                    sub: `qa-${tier.toLowerCase()}`,
+                    scope: 'USER',
+                    tier,
+                    exp: Math.floor(Date.now() / 1000) + 24 * 3600,
+                  }));
+                  const jwt = `${header}.${payload}.devsig`;
+                  localStorage.setItem('lf:token', jwt);
                   localStorage.setItem('lf_user_tier', tier);
                   window.location.href = '/';
                 }}

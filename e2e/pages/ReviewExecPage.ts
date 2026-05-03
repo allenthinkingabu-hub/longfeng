@@ -10,7 +10,7 @@ export type Grade = 'forgot' | 'partial' | 'mastered';
 export class ReviewExecPage extends BasePage {
   readonly rootTestId = 'p08-root';
 
-  static routePattern = /\/review\/[^/]+\/exec/;
+  static routePattern = /\/review\/exec\/[^/]+/;
 
   constructor(page: Page) { super(page); }
 

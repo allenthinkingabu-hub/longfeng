@@ -9,7 +9,7 @@ import type { UserTier } from '../fixtures/student';
 export class SettingsPage extends BasePage {
   readonly rootTestId = 'p13-root';
 
-  static route = '/me/settings';
+  static route = '/me';
 
   constructor(page: Page) { super(page); }
 

@@ -7,7 +7,7 @@ import { BasePage } from './_base';
 export class HomePage extends BasePage {
   readonly rootTestId = 'p-home-root';
 
-  static route = '/home';
+  static route = '/';
 
   constructor(page: Page) { super(page); }
 
