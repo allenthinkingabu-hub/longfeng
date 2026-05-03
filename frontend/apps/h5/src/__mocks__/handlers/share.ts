@@ -1,5 +1,9 @@
 /**
  * MSW · anonymous-service share mock（B 轨 · 给 SC-09/SC-13 用）
+ *
+ * 重要：本 handler 运行在浏览器（MSW Service Worker），不能用 Node Buffer。
+ *  - issueShareToken 用 base64url（URL-safe，无填充）
+ *  - 浏览器侧用 atob + URL-safe → standard base64 转换 + TextDecoder('utf-8')
  */
 import { http, HttpResponse } from 'msw';
 
@@ -12,10 +16,27 @@ interface SharePayloadDecoded {
   sharerNickMasked: string;
 }
 
+/** base64url → utf-8 字符串（浏览器安全 · 不依赖 Node Buffer / 不依赖 escape） */
+function base64UrlDecode(input: string): string {
+  // 1) URL-safe → 标准 base64
+  let b64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  // 2) 补齐填充
+  const pad = b64.length % 4;
+  if (pad === 2) b64 += '==';
+  else if (pad === 3) b64 += '=';
+  else if (pad === 1) throw new Error('invalid base64url length');
+  // 3) atob 得到 latin1 二进制字符串 → 转 Uint8Array → TextDecoder 解 utf-8
+  const binStr = atob(b64);
+  const bytes = new Uint8Array(binStr.length);
+  for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 function decodeShareToken(token: string): SharePayloadDecoded | null {
   try {
     const [, p] = token.split('.');
-    const json = Buffer.from(p, 'base64').toString('utf-8');
+    if (!p) return null;
+    const json = base64UrlDecode(p);
     return JSON.parse(json);
   } catch {
     return null;
@@ -28,7 +49,7 @@ function verifyShareTokenIntegrity(token: string): boolean {
     const parts = token.split('.');
     if (parts.length !== 3) return false;
     const [, payloadB64] = parts;
-    const payloadStr = Buffer.from(payloadB64, 'base64').toString('utf-8');
+    const payloadStr = base64UrlDecode(payloadB64);
     const payload = JSON.parse(payloadStr);
     // 篡改 token 特征：tamperShareToken 把 sub 改成 'tampered-sub-id'
     if (payload.sub === 'tampered-sub-id') return false;

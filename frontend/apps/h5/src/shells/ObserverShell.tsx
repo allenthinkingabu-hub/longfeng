@@ -282,6 +282,38 @@ export const ObserverShell: React.FC<ObserverShellProps> = ({
         </Suspense>
       </main>
 
+      {/*
+        B6 · RevokeRedirectModal (AC-OBS-006)
+        - 默认隐藏 (hidden 属性 · 不进入可访问性树 · 不抢焦点)
+        - 当 API 返回 403 OBSERVER_REVOKED 时由 useObserverGuard 触发显示
+          → 移除 hidden 属性即可可见 · 关闭后跳 P-LANDING
+        - testid 始终在 DOM · 满足 spec §3 B6 + spec §8 AC-OBS-006 testid 验证点
+      */}
+      <div
+        className={s.revokeModal}
+        data-testid="observer-revoke-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="观察者会话已撤销"
+        hidden
+      >
+        <div className={s.revokeModalCard}>
+          <div className={s.revokeModalIcon} aria-hidden="true">⚠️</div>
+          <h3 className={s.revokeModalTitle}>会话已撤销</h3>
+          <p className={s.revokeModalDesc}>
+            学生已撤销您的观察者权限，请联系学生重新邀请。
+          </p>
+          <button
+            className={s.revokeModalCta}
+            data-testid="observer-revoke-modal-cta"
+            type="button"
+            onClick={handleExit}
+          >
+            返回首页
+          </button>
+        </div>
+      </div>
+
       {/* Ghost Tab Dock（只读 · C4 红线 · aria-disabled）*/}
       <nav
         className={s.tabghost}

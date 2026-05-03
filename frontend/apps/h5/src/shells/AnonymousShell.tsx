@@ -54,11 +54,10 @@ export const AnonymousShell: React.FC<AnonymousShellProps> = ({
       data-mood="A"
     >
       {/* Hero 深蓝渐变背景 (Mood A) */}
-      <div
-        className={s.hero}
-        aria-hidden="true"
-        role="presentation"
-      >
+      {/* 注：hero 容器不能整体 aria-hidden，因为内部 nav 包含 focusable
+          的登录按钮（axe rule: aria-hidden-focus serious）。仅装饰性子节点
+          单独标 aria-hidden。 */}
+      <div className={s.hero}>
         {/* Blob 3: 粉 · 中央偏左 */}
         <div className={s.heroBlobPink} aria-hidden="true" />
 
