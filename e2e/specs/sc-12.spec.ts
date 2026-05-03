@@ -40,20 +40,15 @@ test.describe('SC-12 · 游客 + Claim @sc-12', () => {
     const device = newDeviceFingerprint('sc-12-quota-out');
     await injectDeviceFingerprint(context, device);
 
-    // MSW 是 SW · page.route 不能拦 · 用 cookie 让 MSW handler 返 quotaRemaining=0
-    // 见 frontend/apps/h5/src/__mocks__/handlers/guest.ts
-    const baseUrl = process.env.BASE_URL ?? 'http://localhost:5173';
-    await context.addCookies([{
-      name: 'lf_e2e_quota_out',
-      value: '1',
-      url: baseUrl,
-    }]);
+    // MSW 是 SW · page.route 不能拦 · 用 header 让 MSW handler 返 quotaRemaining=0
+    // 见 frontend/apps/h5/src/__mocks__/handlers/guest.ts (header 比 cookie 更可靠)
+    await page.setExtraHTTPHeaders({ 'x-e2e-quota-out': '1' });
 
     const guest = new GuestCapturePage(page);
     await guest.open();
     const txt = await guest.getQuotaText();
     expect(txt).toMatch(/0|额度|耗尽|明天/);
 
-    await context.clearCookies();
+    await page.setExtraHTTPHeaders({});
   });
 });

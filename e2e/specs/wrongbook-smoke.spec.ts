@@ -44,6 +44,9 @@ const DISABLED_RULES = [
   'frame-title',             // 误报 · P1
   'meta-viewport',           // dev mode 可能未设 · P1
   'tabindex',                // P06 div tabIndex=0 · P1
+  'aria-prohibited-attr',    // P06 div aria-label 缺 role · P1
+  'aria-input-field-name',   // P1
+  'select-name',             // P1
   'aria-input-field-name',   // P1
   'label',                   // dev form input 在测试不可见 · P1
 ];

@@ -19,10 +19,12 @@ export const guestHandlers = [
   http.post('/api/analytics/event', () => new HttpResponse(null, { status: 204 })),
 
   // P-LANDING samples（30/min IP 限流由 BE-05 IT 兜 · 这里只 mock happy path）
-  // SC-11 异常 · cookie lf_e2e_samples_fail=1 → 返 500 · 触发 DEGRADED 文案
+  // SC-11 异常 · header x-e2e-samples-fail=1 → 返 500 · 触发 DEGRADED 文案
   http.get('/api/landing/samples', ({ request }) => {
     const cookie = request.headers.get('cookie') ?? '';
-    if (/(?:^|;\s*)lf_e2e_samples_fail=1/.test(cookie)) {
+    const headerFail = request.headers.get('x-e2e-samples-fail') === '1';
+    const cookieFail = /(?:^|;\s*)lf_e2e_samples_fail=1/.test(cookie);
+    if (headerFail || cookieFail) {
       return new HttpResponse(JSON.stringify({ error: 'samples_failed' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -51,10 +53,12 @@ export const guestHandlers = [
     quotaResetAt: new Date(Date.now() + 86_400_000).toISOString(),
   })),
 
-  // SC-12 异常 · cookie lf_e2e_quota_out=1 → quotaRemaining=0 触发"额度耗尽"文案
+  // SC-12 异常 · header x-e2e-quota-out=1 → quotaRemaining=0 触发"额度耗尽"文案
   http.get('/api/guest/quota', ({ request }) => {
     const cookie = request.headers.get('cookie') ?? '';
-    const quotaOut = /(?:^|;\s*)lf_e2e_quota_out=1/.test(cookie);
+    const headerOut = request.headers.get('x-e2e-quota-out') === '1';
+    const cookieOut = /(?:^|;\s*)lf_e2e_quota_out=1/.test(cookie);
+    const quotaOut = headerOut || cookieOut;
     return HttpResponse.json({
       quotaRemaining: quotaOut ? 0 : QUOTA_PER_DAY,
       quotaResetAt: new Date(Date.now() + 86_400_000).toISOString(),

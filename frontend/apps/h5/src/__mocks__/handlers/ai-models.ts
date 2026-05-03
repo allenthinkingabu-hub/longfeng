@@ -26,7 +26,19 @@ const POOL: Record<Tier, Array<{ id: string; name: string; costPerCall?: number;
   ],
 };
 
-let currentSelectedModel: string | null = null;
+// SC-16 持久化: 让 currentSelectedModel 跨 page.reload (full reload 重 init module) 保留
+const SELECTED_MODEL_KEY = 'msw:ai-models:selected';
+function loadSelectedModel(): string | null {
+  try { return typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(SELECTED_MODEL_KEY) : null; } catch { return null; }
+}
+function saveSelectedModel(id: string | null): void {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    if (id === null) sessionStorage.removeItem(SELECTED_MODEL_KEY);
+    else sessionStorage.setItem(SELECTED_MODEL_KEY, id);
+  } catch { /* ignore */ }
+}
+let currentSelectedModel: string | null = loadSelectedModel();
 
 /** base64url → utf-8 (browser-safe; no Node Buffer) */
 function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
@@ -86,6 +98,7 @@ export const aiModelsHandlers = [
       return new HttpResponse(JSON.stringify({ error: 'MODEL_NOT_ALLOWED_FOR_TIER' }), { status: 400 });
     }
     currentSelectedModel = body!.modelId!;
+    saveSelectedModel(currentSelectedModel);
     return HttpResponse.json({ ok: true, currentModel: currentSelectedModel });
   }),
 

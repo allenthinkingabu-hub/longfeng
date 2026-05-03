@@ -24,19 +24,13 @@ test.describe('SC-11 · 访客落地页 @sc-11', () => {
     await landing.assertAxeNoSerious();
   });
 
-  test('异常 · samples 500 → 降级显示', async ({ page, context }) => {
-    // MSW 是 SW · page.route 不能拦 · 用 cookie 让 MSW handler 走 500 分支
-    // 见 frontend/apps/h5/src/__mocks__/handlers/guest.ts
-    const baseUrl = process.env.BASE_URL ?? 'http://localhost:5173';
-    await context.addCookies([{
-      name: 'lf_e2e_samples_fail',
-      value: '1',
-      url: baseUrl,
-    }]);
+  test('异常 · samples 500 → 降级显示', async ({ page }) => {
+    // MSW 是 SW · 用 header 让 MSW handler 走 500 分支
+    await page.setExtraHTTPHeaders({ 'x-e2e-samples-fail': '1' });
     const landing = new LandingPage(page);
     await landing.open();
     await landing.assertSamplesDegraded();
-    await context.clearCookies();
+    await page.setExtraHTTPHeaders({});
   });
 
   test('异常 · 30/min IP 限流 → 429', async ({ page, context }) => {
