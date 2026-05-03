@@ -1,10 +1,11 @@
-# Phase S9 · QA E2E 多轨多 SC 对抗 · Acceptance Report (草稿 · 待第 5 轮 smoke 完成补)
+# Phase S9 · QA E2E 多轨多 SC 对抗 · Acceptance Report (FINAL · round 7 smoke)
 
 **Date**: 2026-05-03
 **Phase**: S9 (plan §5.S9 + §6) · 16 SC × 38 it · 真浏览器 (WebKit iPhone 15 Pro) · 多 AI Agent 对抗模式
 **Base**: `512640e` (S9 QA framework merge)
-**Final HEAD**: `82136c1` (待第 5 轮 smoke 后补 · 预计 90xxxxx)
-**实际耗时**: ~3.5h (含 4 轮 fe-repair sub-agent 对抗) · vs plan 1d=8h · 节省 ~56%
+**Final HEAD**: `e1b76f9` (round 7 完成)
+**实际耗时**: ~5h (含 5 轮 fe-repair sub-agent + 4 轮 Orchestrator 修对抗) · vs plan 1d=8h · 节省 ~38%
+**最终 smoke 结果**: **6 PASS / 3 fail (66.7%)** — SC-13/15/16/07/11/02 通过 · SC-01/05/12 留 caveat
 
 ## S9 框架交付 (QA Agent 单轮 · 已 merge 512640e)
 
@@ -28,15 +29,29 @@
 | r3 (fe-repair-A/B/C 并行) | 7 fail / 2 pass | SC-07 SC-15 | testid contract gap 第 1 轮 |
 | r3.5 (fe-repair-D 单 agent) | 5 fail / 4 pass | +SC-13 | MSW SSE EventSource→fetch · share base64UrlDecode · LandingPage aria-hidden · ObserverShell revoke modal |
 | r4 (Orchestrator + fe-repair-E) | 6 fail / 3 pass (-SC-07 退化) | SC-13 SC-15 SC-16 | MSW SSE 同步 enqueue · P04 cta z-index · review handler · calendar handler · LandingPage aria-prohibited-attr |
-| r5 (fe-repair-F 跑中 · 待第 5 轮 smoke) | TBD | TBD | SC-07 fallback banner mount-time · SC-01 wrongbook list +1 · SC-02 grade-buttons-forgot testid · SC-05 cell click nav · SC-11 scrollable-region-focusable |
+| r5 (fe-repair-F1 死) | — | — | F1 调研 30+ 文件没 Edit 就被 kill · 通知漏 · 重派 F2 |
+| r5.5 (fe-repair-F2 重派) | 6 fail / 3 pass | SC-13/15/16 | 5 page bug · 但 r5 smoke 仅 SC-02/SC-11 部分起作用 |
+| r6 (Orchestrator-r4) | 4 fail / 5 pass | +SC-07 +SC-11 | F2 fix 真根因补：SC-01 实际 endpoint /api/wb/questions/:id/save · SC-05 cell-15 加 ev-5 · SC-07 fallback banner !isFallbackTask 才清 · SC-11 role=region→role=list |
+| r7 (Orchestrator-r5 POM regex) | **3 fail / 6 pass** | +SC-02 | POM getItemCount 改 regex `/^question-list-card-\d+$/` · 之前找 wrongbook.list.item-card 完全不匹配 |
 
-## 通过 SC 详情 (r4 之前 ≥ 1 轮稳定)
+## 通过 SC 详情 · 最终 6/9 (r7 终态)
 
 | SC | 名称 | 通过轨道 | 备注 |
 |---|---|---|---|
-| SC-13 | 分享接收 (合法 token → 脱敏渲染) | B (mock) | r3 起稳定 |
+| SC-02 | 推送→执行 (P12→P08→自评 MASTERED→P09→列表 +1 mastery) | B (mock) | r7 起 (POM regex 修后 list count work) |
+| SC-07 | AI 降级 (主供应商挂 → fallback banner + 备用 provider 出结果) | B (mock) | r6 起稳定 (banner !isFallbackTask 才清) |
+| SC-11 | 访客落地页 (双 CTA + warm 区段 axe wcag2aa) | B (mock) | r6 起稳定 (role list 修 listitem 父级) |
+| SC-13 | 分享接收 (合法 token → 脱敏渲染) | B (mock) | r3 起稳定 (base64UrlDecode) |
 | SC-15 | Observer 三重防护 (READ scope · watermark · 脱敏) | B (mock) | r2 起稳定 · ObserverHomePage 仍 placeholder 但 happy path 不依赖 outlet |
 | SC-16 | NORMAL upgrade-hint (selector 不存在 · data-sc16-tier=NORMAL) | B (mock) | r2 起稳定 |
+
+## 未通过 SC · 留 caveat
+
+| SC | 名称 | 根因 | 严重度 | 修方向 |
+|---|---|---|---|---|
+| SC-01 | 拍题入库 (拍照→SSE→保存→列表 +1) | C-S9-A1 · P04 fetch question 链 bug · question 为 null 时 handleSave 早 return · save POST 不发 · WRONGBOOK_LIST 不 push | 中 (业务核心) | P04 mock fetch question 修正 · 让 question.id 总能 resolve |
+| SC-05 | 视图融合 (HOME→月历→事件→立即复习) | C-S9-A2 · cell click → P11 nav 通了 · 但 P11 (EventDetail) 缺 testid `p11-related-study` | 低 (testid 补) | EventDetail/index.tsx 加 related-study testid |
+| SC-12 | 游客 + Claim (游客拍→注册→claim) | C-S9-A3 · guest-quota-banner 缺 link role=link · POM 等 register CTA | 中 | GuestCapture/index.tsx 加 link element 含 "注册" 文字 |
 
 ## 关键 bug 修复列表 (累计 4 轮)
 
