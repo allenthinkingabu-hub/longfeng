@@ -21,6 +21,9 @@ import { AnalyzingPage } from './pages/Analyzing';
 import { ResultPage } from './pages/Result';
 import { ListPage } from './pages/List';
 import { DetailPage } from './pages/Detail';
+import { LandingPage } from './pages/Landing';
+import { GuestCapturePage } from './pages/GuestCapture';
+import { SharedPage } from './pages/Shared';
 
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
@@ -30,10 +33,7 @@ const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
   </div>
 );
 
-// 各占位（按 PRD §2A.3.1 页面列表 · FE-02/03/06 已写真实页 · 此处仅余未实现）
-const LandingPage = () => <PlaceholderPage name="P-LANDING 访客落地" />;
-const GuestCapturePage = () => <PlaceholderPage name="P-GUEST-CAPTURE 游客拍题" />;
-const SharedPage = () => <PlaceholderPage name="P-SHARED 分享预览" />;
+// 各占位（FE-02/03/06 已写真实页 import 在上 · 此处仅余未实现）
 const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 (P1)" />;
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
 const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;

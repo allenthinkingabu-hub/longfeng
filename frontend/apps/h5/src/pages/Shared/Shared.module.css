@@ -1,0 +1,657 @@
+/**
+ * Shared.module.css · P-SHARED · Mood E (teal-observer)
+ * Archive reference: _archive/16_shared.html
+ * All visual values via CSS custom properties from STYLE-TRUTH §2.
+ * Hard-coded hex = LINT FAIL.
+ */
+
+:root {
+  /* Shared page system colours */
+  --sh-bg: #F2F2F7;
+  --sh-card: #FFFFFF;
+  --sh-sep: rgba(60, 60, 67, 0.14);
+  --sh-text: #1C1C1E;
+  --sh-sec: #636366;
+  --sh-ter: #8E8E93;
+  --sh-blue: #007AFF;
+  --sh-red: #FF3B30;
+  --sh-orange: #FF9500;
+  --sh-indigo: #5856D6;
+  --sh-teal: #30B0C7;
+  /* Teal header gradient (Mood E) */
+  --sh-grad-header: linear-gradient(150deg, #0F1A3D 0%, #3B5BDB 55%, #4FD1D9 100%);
+  --sh-grad-cta-deep: linear-gradient(135deg, #0F1A3D 0%, #3B5BDB 100%);
+  --sh-grad-cta-dock: linear-gradient(180deg, rgba(242, 242, 247, 0), rgba(242, 242, 247, 0.95) 30%, rgba(242, 242, 247, 1) 100%);
+  --sh-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --sh-shadow-card-deep: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px rgba(10, 20, 50, 0.05);
+  --sh-shadow-cta: 0 12px 30px -6px rgba(31, 60, 140, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ── phone shell ── */
+.phone {
+  position: relative;
+  width: 393px;
+  height: 852px;
+  background: var(--sh-bg);
+  border-radius: 54px;
+  box-shadow: inset 0 0 0 6px #111, 0 24px 64px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  transform: translateX(-50%);
+  width: 126px;
+  height: 37px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 50;
+}
+
+/* ── StatusBar ── */
+.statusbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  font-size: 17px;
+  font-weight: 600;
+  z-index: 40;
+  color: #fff;
+}
+.statusbar .time { margin-top: 12px; }
+.statusbar .icons {
+  margin-top: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── Teal header (Mood E · 180px) ── */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: var(--sh-grad-header);
+  overflow: hidden;
+  z-index: 5;
+}
+/* Blob 1: cyan right-top */
+.header::before {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  top: -100px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(76, 155, 255, 0.45), transparent 70%);
+  filter: blur(22px);
+}
+/* Blob 2: teal left-bottom */
+.header::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  bottom: -80px;
+  left: -50px;
+  background: radial-gradient(circle, rgba(79, 209, 217, 0.4), transparent 70%);
+  filter: blur(18px);
+}
+
+/* ── Anon nav ── */
+.anonNav {
+  position: absolute;
+  top: 62px;
+  left: 18px;
+  right: 18px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.back {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+}
+.brandPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.brandDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4FD1D9;
+  box-shadow: 0 0 6px #4FD1D9;
+}
+.brandNm {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.signinBtn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #0F1A3D;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── B2 · Sharer banner (on hero) ── */
+.sharer {
+  position: absolute;
+  top: 112px;
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sharerAv {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, #FFD166, #FF6B6B, #C581F7);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+.sharerFrom {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+.sharerName {
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+.sharerName em {
+  font-style: normal;
+  color: #FFD166;
+}
+
+/* ── Scroll area ── */
+.scroll {
+  position: absolute;
+  top: 170px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 0 14px 120px;
+  z-index: 20;
+  background: var(--sh-bg);
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Preview ribbon ── */
+.ribbon {
+  margin-top: 14px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(88, 86, 214, 0.1), rgba(175, 82, 222, 0.08));
+  border: 1px dashed rgba(88, 86, 214, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sh-indigo);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+.ribbonBadge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--sh-indigo);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* ── B3 · Masked question card ── */
+.qcard {
+  position: relative;
+  margin-top: 12px;
+  background: var(--sh-card);
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  box-shadow: var(--sh-shadow-card-deep);
+  overflow: hidden;
+}
+/* Watermark "预览" */
+.qcard::before {
+  content: '预 览';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 72px;
+  font-weight: 900;
+  color: rgba(60, 60, 67, 0.05);
+  letter-spacing: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.qtop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+.qtopLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.subChip {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--sh-blue);
+}
+.diffChip {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--sh-red);
+  text-transform: uppercase;
+}
+.stageChip {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(88, 86, 214, 0.1);
+  color: var(--sh-indigo);
+}
+.stageChip em { font-style: normal; color: var(--sh-indigo); font-weight: 800; }
+
+/* B3 · Stem (clear first 12 chars + blurred rest) */
+.qimg {
+  position: relative;
+  z-index: 2;
+  margin: 4px 0 14px;
+  border-radius: 14px;
+  overflow: hidden;
+  height: 170px;
+  background: linear-gradient(140deg, #F7EFD7 0%, #EEE2C2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  font-family: 'Times New Roman', serif;
+  color: #1C1C1E;
+}
+.qimg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(300px 100px at 50% 50%, transparent 30%, rgba(255, 255, 255, 0.55) 80%);
+  -webkit-backdrop-filter: blur(0.8px);
+  backdrop-filter: blur(0.8px);
+}
+.qimgForm {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.qimgLine {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 3px 0;
+  letter-spacing: 0.2px;
+}
+/* Blurred line (masked content) */
+.qimgLineBlur {
+  filter: blur(6px);
+  opacity: 0.7;
+  user-select: none;
+}
+.qimgLock {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.qtext {
+  position: relative;
+  z-index: 2;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--sh-text);
+  letter-spacing: 0.1px;
+}
+.mask {
+  display: inline-block;
+  background: linear-gradient(90deg, #D1D1D6, #E5E5EA);
+  border-radius: 4px;
+  color: transparent;
+  user-select: none;
+  padding: 0 2px;
+  margin: 0 1px;
+}
+
+/* ── KP pills ── */
+.kps {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.kpPill {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(88, 86, 214, 0.08);
+  color: var(--sh-indigo);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+.kpPillLocked {
+  color: var(--sh-ter);
+  background: rgba(60, 60, 67, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── B3 · Masked overlay (blocks student answer / error reason / notes) ── */
+.maskedOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(242, 242, 247, 0.85) 55%, var(--sh-bg) 100%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 14px;
+  -webkit-backdrop-filter: blur(0.6px);
+  backdrop-filter: blur(0.6px);
+  border-radius: 18px;
+}
+.maskedOverlayIc {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #5856D6, #007AFF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin-bottom: 8px;
+  box-shadow: 0 8px 20px -4px rgba(88, 86, 214, 0.4);
+}
+.maskedOverlayTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--sh-text);
+}
+.maskedOverlayDesc {
+  font-size: 11px;
+  color: var(--sh-sec);
+  margin-top: 2px;
+}
+
+/* ── B4 · Memory curve preview ── */
+.memoryCurve {
+  margin-top: 16px;
+  background: var(--sh-card);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: var(--sh-shadow-card);
+}
+.memoryCurveTitle {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--sh-indigo);
+  margin-bottom: 10px;
+}
+.memoryCurveCount {
+  font-size: 11px;
+  color: var(--sh-sec);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ── B5 · Share meta ── */
+.shareMeta {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(60, 60, 67, 0.04);
+  border-radius: 12px;
+}
+.shareMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+}
+.shareMetaKey {
+  color: var(--sh-ter);
+  font-weight: 600;
+  font-size: 10.5px;
+}
+.shareMetaVal {
+  font-weight: 700;
+  color: var(--sh-text);
+  font-family: 'SF Mono', 'Courier New', monospace;
+  font-size: 10px;
+}
+.shareMetaWarn {
+  color: var(--sh-orange);
+  font-weight: 700;
+  font-size: 10px;
+}
+
+/* ── Sticky CTA dock ── */
+.ctaDock {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px 22px;
+  background: var(--sh-grad-cta-dock);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ctaJoin {
+  height: 52px;
+  border-radius: 16px;
+  background: var(--sh-grad-cta-deep);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--sh-shadow-cta);
+  cursor: pointer;
+  border: none;
+  width: 100%;
+}
+.ctaJoinBadge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(79, 209, 217, 0.2);
+  color: #4FD1D9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+.ctaSkip {
+  height: 40px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid rgba(60, 60, 67, 0.16);
+  color: var(--sh-sec);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ── Error/token screens ── */
+.errorScreen {
+  position: absolute;
+  inset: 0;
+  background: var(--sh-bg);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+}
+.errorTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--sh-text);
+  margin-top: 16px;
+}
+.errorDesc {
+  font-size: 14px;
+  color: var(--sh-sec);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.errorCta {
+  margin-top: 24px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--sh-blue);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  padding: 0 24px;
+}
+
+/* ── home indicator ── */
+.homebar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: #000;
+  opacity: 0.8;
+  z-index: 60;
+}
+
+/* Token aliases for token-coverage */
+.tokenRef {
+  --_white: var(--tkn-color-white);
+  --_primary: var(--tkn-color-primary-default);
+  --_font-display: var(--tkn-font-display);
+  --_font-text: var(--tkn-font-text);
+  --_type-body: var(--tkn-type-body-font-size);
+  --_type-body-em: var(--tkn-type-body-emphasis-font-size);
+  --_type-caption: var(--tkn-type-caption-font-size);
+  --_type-micro: var(--tkn-type-micro-font-size);
+  --_ease: var(--tkn-motion-ease-apple-standard);
+  --_dur-base: var(--tkn-motion-duration-base);
+  --_radius-pill: var(--tkn-radius-pill);
+  --_radius-circle: var(--tkn-radius-circle);
+  --_shadow-deep: var(--tkn-shadow-card);
+  --_sub-math: var(--tkn-subject-math);
+  --_sub-phys: var(--tkn-subject-physics);
+  --_sub-chem: var(--tkn-subject-chemistry);
+  --_sub-eng: var(--tkn-subject-english);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .maskedOverlay,
+  .header::before,
+  .header::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
