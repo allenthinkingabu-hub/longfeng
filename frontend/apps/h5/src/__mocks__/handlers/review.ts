@@ -116,13 +116,15 @@ export const reviewHandlers = [
    * - 返回 nextNodeId=null → 让前端跳转到 /review/done
    */
   http.post('/api/review/nodes/:nid/grade', async ({ request, params }) => {
-    const body = await request.json() as { grade?: 'mastered' | 'partial' | 'forgot' };
-    if (body?.grade === 'mastered') SESSION_STATS.mastered += 1;
-    else if (body?.grade === 'partial') SESSION_STATS.partial += 1;
-    else if (body?.grade === 'forgot') SESSION_STATS.forgot += 1;
+    const body = await request.json() as { grade?: string };
+    // SC-02: 前端发大写 'FORGOT' / 'PARTIAL' / 'MASTERED' · 这里小写归一兼容
+    const g = String(body?.grade ?? '').toLowerCase();
+    if (g === 'mastered') SESSION_STATS.mastered += 1;
+    else if (g === 'partial') SESSION_STATS.partial += 1;
+    else if (g === 'forgot') SESSION_STATS.forgot += 1;
     return HttpResponse.json({
       nid: params.nid,
-      grade: body?.grade,
+      grade: g,
       nextNodeId: null, // 触发 P09
       stats: { ...SESSION_STATS },
     });

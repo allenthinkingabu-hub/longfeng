@@ -146,15 +146,19 @@ export const CalendarMonthPage: React.FC = () => {
   }, []);
 
   // AC-P10-005 · Cell tap → P11
+  // SC-05: 优先 navigate · cell.events 有任意 event 即跳第一个 · 兼容 eventId / id 字段名
   const handleCellTap = useCallback(
     (cellIdx: number, cell: CalendarCell) => {
-      if (cell.events.length === 0) {
-        setSelectedCellIndex(cellIdx);
-        return;
+      if (cell.events && cell.events.length > 0) {
+        const firstEvent = cell.events[0] as CalendarCellEvent & { id?: string };
+        const evId = firstEvent.eventId || firstEvent.id;
+        if (evId) {
+          nav(`/event/${evId}?from=CAL`);
+          return;
+        }
       }
-      // Navigate to P11 with first event + from=CAL
-      const firstEvent = cell.events[0];
-      nav(`/event/${firstEvent.eventId}?from=CAL`);
+      // 空 cell → 显示底部 day list
+      setSelectedCellIndex(cellIdx);
     },
     [nav],
   );

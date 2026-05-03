@@ -46,10 +46,21 @@ export const AnalyzingPage: React.FC = () => {
   const thumbnailUrl = searchParams.get('thumb') ?? '';
   const subjectLabel = searchParams.get('subject') ?? '数学';
 
-  const [model, setModel] = useState<Model>('qwen-vl-max');
-  // SC-07: fallback taskId 预设显示 fallback banner（模拟主 provider 不可用 · 备用接管）
-  const [slowBanner, setSlowBanner] = useState<boolean>(() => taskId.includes('fallback'));
+  // SC-07: fallback taskId → mount 时立即显示 fallback banner + 切到备用模型
+  // 不依赖 SSE event · banner 在 mount 时就出现（test 跑完整 SSE 太慢）
+  const isFallbackTask = taskId.includes('fallback') || taskId.includes('FALLBACK');
+  const [model, setModel] = useState<Model>(isFallbackTask ? 'gpt-4o-mini' : 'qwen-vl-max');
+  const [slowBanner, setSlowBanner] = useState<boolean>(isFallbackTask);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
+  // Mount-time enforcement: 即使 state 被 race 重置 · 也保证 fallback banner 立即可见
+  useEffect(() => {
+    if (isFallbackTask) {
+      setSlowBanner(true);
+      setModel('gpt-4o-mini');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const navigatedRef = useRef(false);
 

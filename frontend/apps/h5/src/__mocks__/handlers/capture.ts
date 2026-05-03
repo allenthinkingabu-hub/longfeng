@@ -18,16 +18,22 @@ export const captureHandlers = [
   }),
 
   http.post('/api/v1/wrongbook/items', () => {
-    return HttpResponse.json({
-      id: 'mock-item-created-001',
+    // SC-01: 同时 push 到共享 WRONGBOOK_LIST · 让 GET /items list +1
+    const newItem = {
+      id: `mock-item-created-${Date.now()}`,
       subject: 'math',
       stem_text: '（MSW mock）已知函数 f(x) = x² + 2x，求 f(1) 的值。',
-      tags: [],
+      tags: [] as string[],
       status: 'analyzing',
       mastery: 0,
       image_url: null,
       created_at: new Date().toISOString(),
       version: 1,
-    }, { status: 201 });
+    };
+    // 动态 import 避免循环依赖
+    void import('./wrongbook').then(({ pushWrongbookItem }) => {
+      pushWrongbookItem(newItem);
+    });
+    return HttpResponse.json(newItem, { status: 201 });
   }),
 ];

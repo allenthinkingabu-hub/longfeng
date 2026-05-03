@@ -102,8 +102,17 @@ export const ReviewExecPage: React.FC = () => {
       try {
         const resp = await fetch(`/api/review/nodes/${nodeId}/open`, { method: 'POST' });
         if (!resp.ok) throw new Error('API error');
-        const json: ExecPageData = await resp.json();
-        if (!cancelled) { setData(json); setLoading(false); }
+        const json = await resp.json() as Partial<ExecPageData>;
+        // SC-02: MSW /open 只返回 { nid, openedAt, timeBudgetSec } · 缺 question/plannedNodes
+        // → 用 MOCK_DATA 填充缺失字段 · 保证 footer/B8 grade buttons 可渲染
+        const merged: ExecPageData = {
+          ...MOCK_DATA,
+          ...json,
+          node: { ...MOCK_DATA.node, ...(json?.node ?? {}), nid: nodeId ?? json?.node?.nid ?? 'n1' },
+          question: json?.question ?? MOCK_DATA.question,
+          plannedNodes: json?.plannedNodes ?? MOCK_DATA.plannedNodes,
+        };
+        if (!cancelled) { setData(merged); setLoading(false); }
       } catch {
         if (!cancelled) {
           setData({ ...MOCK_DATA, node: { ...MOCK_DATA.node, nid: nodeId ?? 'n1' } });

@@ -270,8 +270,15 @@ export const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Scroll area (Mood A overlap) */}
-      <main className={s.scroll} role="main" id="landing-main">
+      {/* Scroll area (Mood A overlap)
+          SC-11 axe: scrollable-region-focusable → tabIndex=0 让键盘可聚焦滚动 */}
+      <main
+        className={s.scroll}
+        role="main"
+        id="landing-main"
+        tabIndex={0}
+        aria-label="主要内容 · 可滚动区域"
+      >
 
         {/* B4 · Sample cards */}
         <section data-testid="landing-samples" aria-label="真实样例">
@@ -285,7 +292,12 @@ export const LandingPage: React.FC = () => {
                 <span className={s.secTitle}>真实样例 · 匿名脱敏</span>
                 <span className={s.secMore}>滑动查看 →</span>
               </div>
-              <div className={s.samples} role="list">
+              <div
+                className={s.samples}
+                role="region"
+                tabIndex={0}
+                aria-label="样例卡 · 可横向滚动"
+              >
                 {displaySamples.map((card, idx) => (
                   <article
                     key={card.id}
