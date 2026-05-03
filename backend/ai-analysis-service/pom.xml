@@ -75,6 +75,19 @@
       <version>${okhttp.version}</version>
     </dependency>
 
+    <!-- S3 (BE-07-ai) · Spring AI 1.0.0-M1 (BOM in parent) · D-AI 多供应商 + ChatClient 抽象。
+         注意：只引一档 client starter (openai) 作为 ChatClient 协议；其他三家走 protocol-only
+         配置 + Spring AI 通用 ChatClient API（参 plan §5.S3 ChatClientFactory）。 -->
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+    </dependency>
+    <!-- WebFlux for SSE Sinks.Many + WebSocket handler (D-SSE / D-WS · §8.3 §8.4) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
+
     <!-- S4 · Sentinel 熔断 + 限流 · §8.4 首选 -->
     <dependency>
       <groupId>com.alibaba.cloud</groupId>
