@@ -1,15 +1,13 @@
 package com.longfeng.reviewplan.job;
 
 import com.longfeng.reviewplan.entity.ReviewPlan;
-import com.longfeng.reviewplan.feign.NotificationFeignClient;
-import com.longfeng.reviewplan.feign.NotificationFeignClient.ReviewDueNotifyReq;
 import com.longfeng.reviewplan.repo.ReviewPlanRepository;
+import com.longfeng.reviewplan.service.PushTaskOrchestrator;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,20 +30,23 @@ public class ReviewDueJob {
   private static final int BATCH_SIZE = 500;
 
   private final ReviewPlanRepository planRepo;
-  private final Optional<NotificationFeignClient> notificationClient;
+  private final PushTaskOrchestrator pushTaskOrchestrator;
   private final TransactionTemplate txTemplate;
   private final Counter scanCounter;
   private final Counter dispatchedCounter;
   private final Counter casFailCounter;
 
+  /** 学生默认时区 · 实际从 user-service 获取；MVP 占位. */
+  private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
+
   @Autowired
   public ReviewDueJob(
       ReviewPlanRepository planRepo,
-      Optional<NotificationFeignClient> notificationClient,
+      PushTaskOrchestrator pushTaskOrchestrator,
       PlatformTransactionManager txManager,
       MeterRegistry meterRegistry) {
     this.planRepo = planRepo;
-    this.notificationClient = notificationClient;
+    this.pushTaskOrchestrator = pushTaskOrchestrator;
     this.txTemplate = new TransactionTemplate(txManager);
     this.scanCounter = Counter.builder("review_due_scan_count").register(meterRegistry);
     this.dispatchedCounter =
@@ -73,18 +74,13 @@ public class ReviewDueJob {
         LOG.debug("cas fail planId={} · skip (抢占 · 其他 executor 已派发)", p.getId());
         continue;
       }
-      notificationClient.ifPresent(
-          c -> {
-            try {
-              c.notifyReviewDue(
-                  new ReviewDueNotifyReq(
-                      p.getId(), p.getStudentId(), p.getWrongItemId(),
-                      p.getNodeIndex() == null ? 0 : p.getNodeIndex().intValue(),
-                      p.getNextDueAt()));
-            } catch (Exception e) {
-              LOG.warn("notification feign fail planId={} · event 留 outbox relay 兜底", p.getId(), e);
-            }
-          });
+      try {
+        // S6: 入队 push_task（幂等 · DND-aware）
+        Instant dueAt = p.getNextDueAt() != null ? p.getNextDueAt() : Instant.now();
+        pushTaskOrchestrator.enqueue(p.getId(), p.getStudentId(), dueAt, DEFAULT_TIMEZONE);
+      } catch (Exception e) {
+        LOG.warn("push_task enqueue fail planId={} · DND/idem 兜底", p.getId(), e);
+      }
       dispatched++;
       dispatchedCounter.increment();
     }

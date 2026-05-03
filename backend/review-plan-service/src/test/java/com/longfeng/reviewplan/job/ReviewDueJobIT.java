@@ -4,12 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.longfeng.common.test.CoversAC;
 import com.longfeng.reviewplan.IntegrationTestBase;
-import com.longfeng.reviewplan.entity.ReviewPlan;
-import com.longfeng.reviewplan.feign.NotificationFeignClient;
+import com.longfeng.reviewplan.repo.PushTaskRepository;
+import com.longfeng.reviewplan.service.DndService;
+import com.longfeng.reviewplan.service.PushTaskOrchestrator;
 import com.longfeng.reviewplan.service.ReviewPlanService;
+import com.longfeng.reviewplan.support.SnowflakeIdGenerator;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class ReviewDueJobIT extends IntegrationTestBase {
 
   @Autowired private DataSource dataSource;
   @Autowired private ReviewPlanService service;
+  @Autowired private PushTaskRepository pushTaskRepo;
+  @Autowired private DndService dndService;
+  @Autowired private SnowflakeIdGenerator idGenerator;
 
   private JdbcTemplate jdbc;
 
@@ -93,34 +97,48 @@ class ReviewDueJobIT extends IntegrationTestBase {
             WRONG_ITEM_END);
     assertThat(dueInOurRange).as("seeded due rows in DB").isEqualTo(5);
 
-    AtomicInteger calls = new AtomicInteger();
-    NotificationFeignClient counter = req -> calls.incrementAndGet();
+    AtomicInteger enqueueCount = new AtomicInteger();
+    // S6: 使用真实 PushTaskOrchestrator（注入 spy 计数）
+    PushTaskOrchestrator orchestrator =
+        new PushTaskOrchestrator(pushTaskRepo, dndService, idGenerator) {
+          @Override
+          public com.longfeng.reviewplan.entity.PushTask enqueue(
+              Long nodeId, Long studentId, Instant scheduledAt, String timezone) {
+            enqueueCount.incrementAndGet();
+            return super.enqueue(nodeId, studentId, scheduledAt, timezone);
+          }
+        };
 
     ReviewDueJob job =
-        new ReviewDueJob(
-            repo(), Optional.of(counter), txManager, new SimpleMeterRegistry());
+        new ReviewDueJob(repo(), orchestrator, txManager, new SimpleMeterRegistry());
     int dispatched = job.execute();
 
     // 可能 dispatched > 5（其他 IT 留 due）· 只断 ≥ 5
     assertThat(dispatched).as("dispatched count").isGreaterThanOrEqualTo(5);
-    assertThat(calls.get()).isGreaterThanOrEqualTo(5);
+    assertThat(enqueueCount.get()).isGreaterThanOrEqualTo(5);
   }
 
   @Test
-  @DisplayName("execute · 本 IT 范围无 due · 不增 Feign 调用")
+  @DisplayName("execute · 本 IT 范围无 due · 不增 enqueue 调用")
   void empty_due_noop() {
-    AtomicInteger calls = new AtomicInteger();
-    NotificationFeignClient counter = req -> calls.incrementAndGet();
+    AtomicInteger enqueueCount = new AtomicInteger();
+    PushTaskOrchestrator orchestrator =
+        new PushTaskOrchestrator(pushTaskRepo, dndService, idGenerator) {
+          @Override
+          public com.longfeng.reviewplan.entity.PushTask enqueue(
+              Long nodeId, Long studentId, Instant scheduledAt, String timezone) {
+            enqueueCount.incrementAndGet();
+            return super.enqueue(nodeId, studentId, scheduledAt, timezone);
+          }
+        };
 
     ReviewDueJob job =
-        new ReviewDueJob(
-            repo(), Optional.of(counter), txManager, new SimpleMeterRegistry());
-    // seeder 清了本 IT 的 wrong_item_id · 这些 item 下无 plan · 本 IT 不造 due · execute 不应派到本 IT
-    // 仓库内其他 IT 残留的 due 可能存在（不 scope 本 IT）· 只断"本 IT 没造 due 则 calls 不变"的弱条件
-    int before = calls.get();
-    job.execute(); // 结果可能 > 0（老残留）· 但不影响本 IT 断言
-    // 断言：本 IT 没 seed 任何 due · 本 IT 期望 Notification 至少没因本 seed 增加
-    assertThat(calls.get()).isGreaterThanOrEqualTo(before);
+        new ReviewDueJob(repo(), orchestrator, txManager, new SimpleMeterRegistry());
+    // seeder 清了本 IT 的 wrong_item_id · 这些 item 下无 plan · 本 IT 不造 due
+    int before = enqueueCount.get();
+    job.execute();
+    // 断言：本 IT 没 seed 任何 due · 本 IT 期望 enqueue 至少没因本 seed 增加
+    assertThat(enqueueCount.get()).isGreaterThanOrEqualTo(before);
   }
 
   /** 手工 construct repo · 避免 Spring @Autowired（我们直接 new ReviewDueJob）. */

@@ -45,6 +45,13 @@ calendar:
   core-service:
     url: ${CALENDAR_URL:http://localhost:18080}
 
+notification:
+  url: ${NOTIFICATION_URL:http://localhost:18090}
+
+review:
+  push:
+    relay-interval-ms: 30000   # PushTaskRelayJob @Scheduled 间隔 · §9 D-MultiPush
+
 # Springdoc OpenAPI
 springdoc:
   api-docs:

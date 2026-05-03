@@ -1,6 +1,7 @@
 package com.longfeng.reviewplan.config;
 
 import com.longfeng.reviewplan.feign.CalendarFeignClient;
+import com.longfeng.reviewplan.feign.NotificationFeignClient;
 import java.util.Collections;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -25,13 +26,37 @@ public class FeignAndJpaConfig {
       matchIfMissing = true)
   public static class FeignEnabled {}
 
-  /** IT stub · review.feign.enabled=false 时注入空实现，避免 controller 构造器 wiring 失败. */
+  /**
+   * IT stub · review.feign.enabled=false 时注入空实现，避免 controller 构造器 wiring 失败.
+   *
+   * <p>同时提供 NotificationFeignClient stub：4 channel 均返回 success=true（幂等空实现）。
+   */
   @Configuration
   @ConditionalOnProperty(value = "review.feign.enabled", havingValue = "false")
   public static class FeignDisabled {
+
     @Bean
     CalendarFeignClient calendarFeignClientStub() {
       return date -> Collections.emptyList();
+    }
+
+    @Bean
+    NotificationFeignClient notificationFeignClientStub() {
+      return new NotificationFeignClient() {
+        private final SendResp OK = new SendResp(true, "stub-req-id", null, null);
+
+        @Override
+        public SendResp sendWxMp(SendReq req) { return OK; }
+
+        @Override
+        public SendResp sendApp(SendReq req) { return OK; }
+
+        @Override
+        public SendResp sendEmail(SendReq req) { return OK; }
+
+        @Override
+        public SendResp sendSms(SendReq req) { return OK; }
+      };
     }
   }
 }

@@ -1,0 +1,193 @@
+{
+  "mappings": [
+    {
+      "_comment": "WX_MP 推送 · 正常送达 (200 success=true)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/wx-mp/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.msgkey" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": true,
+          "requestId": "wx-msgid-{{randomValue type='UUID'}}",
+          "errorCode": null,
+          "errorMsg": null
+        }
+      },
+      "priority": 5
+    },
+    {
+      "_comment": "WX_MP 推送 · 额度耗尽 (200 success=false QUOTA_EXHAUSTED)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/wx-mp/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.msgkey =~ /.*quota-test.*/)]" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": false,
+          "requestId": null,
+          "errorCode": "subscribe-msg-quota-exhausted",
+          "errorMsg": "用户订阅消息配额已耗尽"
+        }
+      },
+      "priority": 3
+    },
+    {
+      "_comment": "WX_MP 推送 · 服务限流 (429)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/wx-mp/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.msgkey =~ /.*rate-limit.*/)]" }
+        ]
+      },
+      "response": {
+        "status": 429,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": false,
+          "requestId": null,
+          "errorCode": "RATE_LIMITED",
+          "errorMsg": "Too Many Requests"
+        }
+      },
+      "priority": 3
+    },
+    {
+      "_comment": "APP 推送 · 正常送达 (200 success=true)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/app/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.msgkey" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": true,
+          "requestId": "app-push-{{randomValue type='UUID'}}",
+          "errorCode": null,
+          "errorMsg": null
+        }
+      },
+      "priority": 5
+    },
+    {
+      "_comment": "APP 推送 · DeviceToken 过期 (200 success=false)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/app/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.msgkey =~ /.*token-expired.*/)]" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": false,
+          "requestId": null,
+          "errorCode": "DEVICE_TOKEN_EXPIRED",
+          "errorMsg": "Device token has expired"
+        }
+      },
+      "priority": 3
+    },
+    {
+      "_comment": "EMAIL 推送 · 正常送达 (200 success=true)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/email/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.msgkey" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": true,
+          "requestId": "email-msgid-{{randomValue type='UUID'}}",
+          "errorCode": null,
+          "errorMsg": null
+        }
+      },
+      "priority": 5
+    },
+    {
+      "_comment": "EMAIL 推送 · 500 服务故障",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/email/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.msgkey =~ /.*email-fail.*/)]" }
+        ]
+      },
+      "response": {
+        "status": 500,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": false,
+          "requestId": null,
+          "errorCode": "INTERNAL_ERROR",
+          "errorMsg": "Email service unavailable"
+        }
+      },
+      "priority": 3
+    },
+    {
+      "_comment": "SMS 推送 · 正常送达 (200 success=true)",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/sms/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.msgkey" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": true,
+          "requestId": "sms-reqid-{{randomValue type='UUID'}}",
+          "errorCode": null,
+          "errorMsg": null
+        }
+      },
+      "priority": 5
+    },
+    {
+      "_comment": "SMS 推送 · 500 全部失败（测试 INAPP 红点兜底路径）",
+      "request": {
+        "method": "POST",
+        "urlPattern": "/notifications/sms/send",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$[?(@.msgkey =~ /.*all-fail.*/)]" }
+        ]
+      },
+      "response": {
+        "status": 500,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "success": false,
+          "requestId": null,
+          "errorCode": "SMS_PROVIDER_DOWN",
+          "errorMsg": "SMS provider unavailable"
+        }
+      },
+      "priority": 3
+    }
+  ]
+}

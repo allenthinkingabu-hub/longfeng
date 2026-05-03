@@ -25,6 +25,7 @@
     <awaitility.version>4.2.1</awaitility.version>
     <testcontainers.version>1.20.1</testcontainers.version>
     <flyway.version>10.15.0</flyway.version>
+    <wiremock.version>3.4.2</wiremock.version>
   </properties>
 
   <dependencies>
@@ -134,6 +135,13 @@
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
       <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- WireMock · 跨仓 notification-service stub · S6 BE-10 -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
