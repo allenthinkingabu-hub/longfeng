@@ -27,17 +27,12 @@ function makeSseResponse(events: object[]): ReadableStream {
   const encoder = new TextEncoder();
   return new ReadableStream({
     start(controller) {
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i >= events.length) {
-          clearInterval(interval);
-          controller.close();
-          return;
-        }
-        const line = `data: ${JSON.stringify(events[i])}\n\n`;
-        controller.enqueue(encoder.encode(line));
-        i++;
-      }, 600);
+      // MSW Service Worker 不支持真流式 (会 buffer 整 stream 直到 close)
+      // 改为同步全 enqueue · 行为对外仍是 SSE 帧分隔 · 客户端按 \n\n 解析
+      for (const e of events) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+      }
+      controller.close();
     },
   });
 }

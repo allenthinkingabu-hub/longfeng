@@ -298,7 +298,7 @@ export const LandingPage: React.FC = () => {
                       <span className={s.sampleChip}>
                         {card.subject === 'math' ? '数学 · 高一' : card.subject === 'physics' ? '物理 · 高二' : '英语 · 初三'}
                       </span>
-                      <div className={s.sampleFormula} aria-label="公式预览">{card.formula}</div>
+                      <div className={s.sampleFormula} role="img" aria-label={`公式预览：${card.formula}`}>{card.formula}</div>
                     </div>
                     <div className={s.sampleBody}>
                       <div className={s.sampleErr}>{card.errorReason}</div>
@@ -352,28 +352,28 @@ export const LandingPage: React.FC = () => {
         <section data-testid="landing-kpi" aria-label="平台数据">
           <div className={s.kpiBanner} role="region" aria-label="平台关键数据">
             <div className={s.kpiStat}>
-              <div className={s.kpiN} data-testid="landing-kpi-total" aria-label={`已分析 ${kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : DEFAULT_KPI.totalQuestionsAnalyzed / 10000}w+ 错题`}>
+              <div className={s.kpiN} data-testid="landing-kpi-total" role="img" aria-label={`已分析 ${kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : DEFAULT_KPI.totalQuestionsAnalyzed / 10000}w+ 错题`}>
                 {kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : Math.floor(DEFAULT_KPI.totalQuestionsAnalyzed / 10000)}w+
               </div>
               <div className={s.kpiL}>已分析错题</div>
             </div>
             <div className={s.kpiSep} aria-hidden="true" />
             <div className={s.kpiStat}>
-              <div className={s.kpiN} data-testid="landing-kpi-retention" aria-label={`7日留存率 ${kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%`}>
+              <div className={s.kpiN} data-testid="landing-kpi-retention" role="img" aria-label={`7日留存率 ${kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%`}>
                 {kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%
               </div>
               <div className={s.kpiL}>7 日留存</div>
             </div>
             <div className={s.kpiSep} aria-hidden="true" />
             <div className={s.kpiStat}>
-              <div className={s.kpiN} aria-label="AI 分析准确率 98%">98%</div>
+              <div className={s.kpiN} role="img" aria-label="AI 分析准确率 98%">98%</div>
               <div className={s.kpiL}>AI 准确率</div>
             </div>
           </div>
         </section>
 
         {/* Social proof */}
-        <div className={s.social} aria-label="社区用户数量">
+        <div className={s.social} role="region" aria-label="社区用户数量">
           <div className={s.avatarStack} aria-hidden="true">
             <div className={`${s.stackAv} ${s.a1}`} />
             <div className={`${s.stackAv} ${s.a2}`} />
@@ -386,7 +386,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* How it works */}
-        <div className={s.how} aria-label="使用步骤">
+        <div className={s.how} role="region" aria-label="使用步骤">
           <div className={s.howTitle}>三步 · 看清曲线</div>
           <div className={s.howRow} role="list">
             <div className={s.howStep} role="listitem">

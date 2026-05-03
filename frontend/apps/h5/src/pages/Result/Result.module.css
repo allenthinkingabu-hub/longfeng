@@ -129,7 +129,8 @@
 
 /* ─── Scrollable content area ────────────────────────────────── */
 .content {
-  padding: 12px 16px 140px; /* leave room for CTA */
+  /* CTA 现位于 tabbar (84px) 之上 → 内容底部需让出 CTA(110px) + tabbar(84px) */
+  padding: 12px 16px calc(200px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── B2 · Question hero card ────────────────────────────────── */
@@ -547,9 +548,12 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
-  padding: 14px 16px 34px; /* extra for home indicator */
+  /* 抬到 TabShell tabbar (84px + safe-area) 之上，防止 pointer 被拦截 */
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 16px 18px;
   background: linear-gradient(180deg, rgba(242, 242, 247, 0), rgba(242, 242, 247, 0.92) 30%, #F2F2F7 100%);
+  /* 必须高于 TabShell.tabbar 的 z-index: 40 */
+  z-index: 50;
 }
 .ctaRow {
   display: flex;
