@@ -58,6 +58,9 @@ export const AuthPage: React.FC = () => {
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [authState, setAuthState] = useState<AuthState>('IDLE');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showDevForm, setShowDevForm] = useState(false);
+  const [devAccount, setDevAccount] = useState('qa-normal@longfeng.test');
+  const [devPassword, setDevPassword] = useState('Qa!Normal2026');
 
   const handleWechatLogin = useCallback(async () => {
     if (!consentAccepted) {
@@ -180,14 +183,47 @@ export const AuthPage: React.FC = () => {
               data-testid="p00-other-methods-link"
               type="button"
               style={{ fontSize: 14, fontWeight: 600, color: '#007AFF' }}
-              onClick={() => {
-                /* P1: 手机号登录浮层 (placeholder) */
-                alert('手机号登录 · P1 功能待实现');
-              }}
+              onClick={() => setShowDevForm((v) => !v)}
             >
               其他登录方式
             </button>
           </div>
+
+          {/* dev-only 账密 form · 默认隐藏 · QA loginAs fixture 通过 click "其他登录方式" 展开 */}
+          {showDevForm && (
+            <div data-testid="auth-dev-form" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                type="text"
+                data-testid="auth-form-account"
+                placeholder="账号 (dev only)"
+                value={devAccount}
+                onChange={(e) => setDevAccount(e.target.value)}
+                style={{ padding: 12, borderRadius: 8, border: '1px solid #C7C7CC', fontSize: 14 }}
+              />
+              <input
+                type="password"
+                data-testid="auth-form-password"
+                placeholder="密码 (dev only)"
+                value={devPassword}
+                onChange={(e) => setDevPassword(e.target.value)}
+                style={{ padding: 12, borderRadius: 8, border: '1px solid #C7C7CC', fontSize: 14 }}
+              />
+              <button
+                type="button"
+                data-testid="auth-form-submit"
+                onClick={async () => {
+                  // dev login: 模拟 wechat callback · 设 token + navigate
+                  const tier = devAccount.includes('vipplus') ? 'VIP_PLUS' : devAccount.includes('vip') ? 'VIP' : 'NORMAL';
+                  document.cookie = `longfeng_token=dev-${tier}-token; path=/`;
+                  localStorage.setItem('lf_user_tier', tier);
+                  window.location.href = '/';
+                }}
+                style={{ padding: 12, borderRadius: 8, border: 'none', background: '#007AFF', color: '#fff', fontSize: 14, fontWeight: 600 }}
+              >
+                登录 (dev)
+              </button>
+            </div>
+          )}
 
           {/* ── 协议勾选 ── */}
           <footer role="contentinfo" className={s.consentBar} data-testid="p00-consent-bar">

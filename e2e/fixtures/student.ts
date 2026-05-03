@@ -49,8 +49,8 @@ export async function loginAs(page: Page, tier: UserTier): Promise<TestUser> {
   await page.getByTestId('auth-form-password').fill(user.password);
   await page.getByTestId('auth-form-submit').click();
 
-  // 等待跳转到 P-HOME（默认入口）
-  await page.waitForURL(/\/(home|wrongbook|review)/, { timeout: 15_000 });
+  // 等待跳转到登录态主页 (TabShell 任一 route · / 即 P-HOME)
+  await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 15_000 });
   await page.waitForLoadState('networkidle');
 
   return user;
