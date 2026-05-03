@@ -70,4 +70,35 @@ public interface ReviewPlanRepository extends JpaRepository<ReviewPlan, Long> {
       nativeQuery = true)
   int compareAndUpdateDispatch(
       @Param("id") Long id, @Param("expected") Long expectedVersion);
+
+  /**
+   * BE-13 · GET /review-plans/list cursor 翻页 · 按 created_at DESC + id DESC 排序 · cursor stable.
+   *
+   * <p>{@code statusOpt < 0} 表示不过滤 status. {@code cursorId = Long.MAX_VALUE} 等价首页.
+   */
+  @Query(
+      value =
+          "SELECT * FROM review_plan WHERE student_id = :studentId AND deleted_at IS NULL "
+              + "AND (:statusOpt < 0 OR status = :statusOpt) "
+              + "AND id < :cursorId "
+              + "ORDER BY created_at DESC, id DESC LIMIT :limit",
+      nativeQuery = true)
+  List<ReviewPlan> findListByStudentCursor(
+      @Param("studentId") Long studentId,
+      @Param("statusOpt") int statusOpt,
+      @Param("cursorId") Long cursorId,
+      @Param("limit") int limit);
+
+  /**
+   * BE-13 · POST /review-plans/batch-reset-by-ids · 按 plan_ids 批量软删 active plan.
+   *
+   * <p>只重置 status=0 (ACTIVE) · 已 mastered (status=1) 不动 · returns rowsAffected.
+   */
+  @Modifying
+  @Query(
+      value =
+          "UPDATE review_plan SET deleted_at = now() WHERE id IN (:planIds) "
+              + "AND status = 0 AND deleted_at IS NULL",
+      nativeQuery = true)
+  int softDeleteByIds(@Param("planIds") List<Long> planIds);
 }

@@ -1,9 +1,12 @@
 package com.longfeng.reviewplan.controller;
 
 import com.longfeng.common.dto.ApiResult;
+import com.longfeng.reviewplan.dto.BatchResetByIdsReq;
+import com.longfeng.reviewplan.dto.BatchResetByIdsResp;
 import com.longfeng.reviewplan.dto.CompleteReviewReq;
 import com.longfeng.reviewplan.dto.CompleteReviewResp;
 import com.longfeng.reviewplan.dto.DayViewResp;
+import com.longfeng.reviewplan.dto.ListReviewPlanResp;
 import com.longfeng.reviewplan.dto.ReviewPlanDto;
 import com.longfeng.reviewplan.dto.ReviewStatsResp;
 import com.longfeng.reviewplan.entity.ReviewPlan;
@@ -93,6 +96,33 @@ public class ReviewPlanController {
     return ApiResult.ok(new DayViewResp(items, calendarNodes, source));
   }
 
+  /**
+   * BE-13 · GET /review-plans/list · cursor 翻页 list.
+   *
+   * <p>spec: {@code userId} (required) · {@code status} opt (active|mastered) · {@code cursor} opt
+   * (numeric id) · {@code limit} default 20.
+   *
+   * <p>排序: created_at DESC + id DESC（cursor stable）.
+   */
+  @Operation(summary = "list cursor 翻页（BE-13 · 按 user + status filter）")
+  @ApiResponse(responseCode = "200", description = "list 成功")
+  @GetMapping("/review-plans/list")
+  public ApiResult<ListReviewPlanResp> listByCursor(
+      @RequestParam("user_id") Long userIdParam,
+      @RequestParam(value = "status", required = false) String status,
+      @RequestParam(value = "cursor", required = false) String cursor,
+      @RequestParam(value = "limit", required = false, defaultValue = "20") int limit) {
+    int statusOpt = parseStatusOpt(status);
+    Long cursorId = parseCursor(cursor);
+    List<ReviewPlan> rows = service.listByCursor(userIdParam, statusOpt, cursorId, limit);
+    List<ReviewPlanDto> items = rows.stream().map(ReviewPlanDto::from).collect(Collectors.toList());
+    String nextCursor =
+        rows.size() < limit || rows.isEmpty()
+            ? null
+            : String.valueOf(rows.get(rows.size() - 1).getId());
+    return ApiResult.ok(new ListReviewPlanResp(items, nextCursor));
+  }
+
   /** GET /review-plans/{id} · 单节点详情. */
   @Operation(summary = "单节点详情")
   @ApiResponse(responseCode = "200", description = "节点详情")
@@ -141,6 +171,26 @@ public class ReviewPlanController {
     return ApiResult.ok(null);
   }
 
+  /**
+   * BE-13 · POST /review-plans/batch-reset-by-ids · 按 plan_ids 批量重置 · 返 reset_count.
+   *
+   * <p>与 {@link #batchReset} 区分：旧端点是 admin 学期初清空整个学生，新端点是按指定 plan_ids 重置.
+   */
+  @Operation(summary = "按 plan_ids 批量重置（BE-13）")
+  @ApiResponse(responseCode = "200", description = "batch-reset-by-ids 成功")
+  @ApiResponse(responseCode = "400", description = "plan_ids 为空")
+  @PostMapping("/review-plans/batch-reset-by-ids")
+  public ApiResult<BatchResetByIdsResp> batchResetByIds(@Valid @RequestBody BatchResetByIdsReq req) {
+    List<Long> ids =
+        req.planIds().stream()
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Long::parseLong)
+            .collect(Collectors.toList());
+    int count = service.batchResetByIds(ids);
+    return ApiResult.ok(new BatchResetByIdsResp(count));
+  }
+
   /** GET /review-stats · 学情聚合 · SC-09.AC-1. */
   @Operation(summary = "学情聚合 — 日视图趋势 + Top N 薄弱项（SC-09.AC-1）")
   @ApiResponse(responseCode = "200", description = "学情聚合成功")
@@ -160,6 +210,26 @@ public class ReviewPlanController {
       return ZoneId.of(timezone);
     } catch (Exception e) {
       return ZoneId.of(DEFAULT_TZ);
+    }
+  }
+
+  /** -1 = 不过滤 / 0 = active / 1 = mastered（与 ReviewPlan.STATUS_* 对齐）. */
+  private static int parseStatusOpt(String status) {
+    if (status == null || status.isBlank()) return -1;
+    String s = status.trim().toLowerCase();
+    if ("active".equals(s) || "pending".equals(s)) return ReviewPlan.STATUS_ACTIVE;
+    if ("mastered".equals(s) || "completed".equals(s)) return ReviewPlan.STATUS_MASTERED;
+    if ("cancelled".equals(s) || "skipped".equals(s)) return ReviewPlan.STATUS_CANCELLED;
+    return -1;
+  }
+
+  /** cursor=null → 首页 (返 null) · 否则解析为 Long id（非数字 → 当作 null 兜底）. */
+  private static Long parseCursor(String cursor) {
+    if (cursor == null || cursor.isBlank()) return null;
+    try {
+      return Long.parseLong(cursor.trim());
+    } catch (NumberFormatException e) {
+      return null;
     }
   }
 }

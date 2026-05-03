@@ -114,3 +114,17 @@ mvn -pl review-plan-service -am verify -Dtest='*IT'   # Ebbinghaus/ForgotReset/M
 1. **C-14 ai-analysis 模块编译 fail** · S7 前端 P03 Analyzing 需 SSE 端点 · ai 模块编译 fail = SSE controller 跑不起来 = P03 e2e fail。**S3.5 必须先修** (升级 Spring AI 或改 OkHttp)。
 2. **C-06 ShedLock 缺** · 单机 dev OK · 生产多副本前必修
 3. **C-10 NSFW phase1 stub** · 法务合规阻塞上线 · S10 前必修
+
+## ⚠️ 2026-05-03 追加 · S3.5 stub 改动丢失 (BE-14 sub-agent 发现)
+
+`d486347 fix(s3.5/c-14): ai-analysis-service stub 化` commit 真实存在 + 改了 7 类文件 (ChatClientFactory / 4 ClientConfig / Advisor / QuestionAnalyzerImpl + 新 stub.* + AiModelsController)。但当前 HEAD (`82136c1`) 的 `backend/ai-analysis-service/src` **仅 4 个 skeleton 文件** (`Application` / `HealthController` / `OpenApiConfig` / `MockMvcSmokeIT`) — stub 改动被某次 merge 的"我们"策略覆盖回 skeleton 版。
+
+影响：
+- S9 e2e 不依赖真后端 ai-analysis (前端用 MSW mock) · **不阻塞当前 S9 验收**
+- 但 audit doc 之前所写"S3.5 stub 化已完成 · ai 模块编译过" **已不再成立**
+- 下次跑 `mvn -pl ai-analysis-service compile` 只编译 skeleton (能过 · 但功能为零)
+- A 轨 staging e2e 需真后端 → 必须重做 C-14 修复 (cherry-pick d486347 或重做)
+
+下一步建议：
+1. 在另一分支验证 cherry-pick d486347 是否能干净恢复
+2. 升级 plan 见 `backend/ai-analysis-service/UPGRADE-PLAN.md` (BE-14 sub-agent 输出 · 238 行)

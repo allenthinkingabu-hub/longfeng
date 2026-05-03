@@ -246,4 +246,28 @@ public class ReviewPlanService {
   /** complete 返回值 · 用于 Controller Response. */
   public record CompleteResult(
       Long planId, Instant nextReviewAt, BigDecimal easeFactorAfter, boolean mastered) {}
+
+  // =======================================================================
+  // BE-13 (S5 caveat) · cursor list + batch-reset-by-ids
+  // =======================================================================
+
+  /**
+   * BE-13 · GET /review-plans/list · cursor 翻页. statusOpt: -1=不过滤 / 0=ACTIVE / 1=MASTERED.
+   * cursorId=null → 首页（用 Long.MAX_VALUE 作 sentinel）. limit clamp 到 [1, 100].
+   */
+  @Transactional(readOnly = true)
+  public List<ReviewPlan> listByCursor(Long studentId, int statusOpt, Long cursorId, int limit) {
+    int safeLimit = Math.min(100, Math.max(1, limit));
+    Long safeCursor = cursorId == null ? Long.MAX_VALUE : cursorId;
+    return planRepo.findListByStudentCursor(studentId, statusOpt, safeCursor, safeLimit);
+  }
+
+  /**
+   * BE-13 · POST /review-plans/batch-reset-by-ids · 按 plan_ids 软删. 空列表 → 0. 返回实际 rowsAffected.
+   */
+  @Transactional
+  public int batchResetByIds(List<Long> planIds) {
+    if (planIds == null || planIds.isEmpty()) return 0;
+    return planRepo.softDeleteByIds(planIds);
+  }
 }
