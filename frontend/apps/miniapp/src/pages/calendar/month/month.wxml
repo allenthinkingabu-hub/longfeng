@@ -1,0 +1,60 @@
+
+<view class="page-cal" data-mood="B" data-test-id="{{tids.calendarMonth.root}}">
+
+  <view class="month-head">
+    <view class="month-nav" bindtap="onPrev">
+      <van-icon name="arrow-left" color="#1C1C1E" size="22px" />
+    </view>
+    <text class="month-title">{{monthLabel}}</text>
+    <view class="month-nav" bindtap="onNext">
+      <van-icon name="arrow" color="#1C1C1E" size="22px" />
+    </view>
+  </view>
+
+  <view class="weekday-row">
+    <text wx:for="{{weekdays}}" wx:key="*this" class="wday">{{item}}</text>
+  </view>
+
+  <view class="grid">
+    <block wx:for="{{cells}}" wx:key="key">
+      <view class="cell {{item.today?'today':''}} {{item.outside?'outside':''}}" bindtap="onCellTap" data-key="{{item.key}}" data-test-id="{{tids.calendarMonth['day-cell']}}">
+        <text class="d">{{item.d}}</text>
+        <view class="cell-dots">
+          <view wx:for="{{item.dots}}" wx:for-item="dot" wx:key="*this" class="dot dot-{{dot}}"></view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="legend">
+    <view class="lg-row"><view class="dot dot-done"></view><text>{{i.legend_done}}</text></view>
+    <view class="lg-row"><view class="dot dot-pending"></view><text>{{i.legend_pending}}</text></view>
+    <view class="lg-row"><view class="dot dot-event"></view><text>{{i.legend_event}}</text></view>
+  </view>
+
+  <view class="event-list" data-test-id="{{tids.calendarMonth['event-list']}}">
+    <view class="event-head">
+      <text class="card-t">{{selectedLabel}}</text>
+      <text class="event-meta">{{events.length}} 项</text>
+    </view>
+    <block wx:if="{{events.length}}">
+      <view wx:for="{{events}}" wx:key="id" class="event-row" bindtap="onEventTap" data-id="{{item.id}}">
+        <view class="event-ic event-ic-{{item.type}}"><van-icon name="{{item.icon}}" color="#fff" size="16px" /></view>
+        <view class="event-tx">
+          <view class="event-t">{{item.title}}</view>
+          <view class="event-s">{{item.time}} · {{item.subject}}</view>
+        </view>
+        <van-icon name="arrow" color="#8E8E93" size="14px" />
+      </view>
+    </block>
+    <view wx:else class="event-empty">{{i.no_events}}</view>
+  </view>
+
+  <view class="subscribe-area">
+    <view class="btn-primary" bindtap="onSubscribe" data-test-id="{{tids.calendarMonth['subscribe-btn']}}">
+      <van-icon name="bell" color="#fff" size="18px" />
+      <text>{{subscribed?i.subscribe_done:i.subscribe}}</text>
+    </view>
+  </view>
+
+</view>

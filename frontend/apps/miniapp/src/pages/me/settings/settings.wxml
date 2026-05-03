@@ -1,0 +1,54 @@
+
+<view class="page-settings" data-mood="B" data-test-id="{{tids.settings.root}}">
+
+  <!-- Profile hero -->
+  <view class="profile-card" data-test-id="{{tids.settings['profile-cell']}}">
+    <view class="avatar"><text>{{profile.initial}}</text></view>
+    <view class="profile-tx">
+      <view class="p-name">{{profile.name}}</view>
+      <view class="p-meta">{{profile.school}} · {{profile.grade}}</view>
+    </view>
+    <view class="tier-badge tier-{{profile.tier}}" data-test-id="{{tids.settings['tier-badge']}}">{{tierLabel}}</view>
+  </view>
+
+  <view class="cell-group">
+    <view class="cell" bindtap="onLang" data-test-id="{{tids.settings['lang-cell']}}">
+      <view class="cell-ic ic-blue"><van-icon name="font" color="#fff" size="16px" /></view>
+      <view class="cell-l">{{i.lang}}</view>
+      <view class="cell-r">{{langLabel}}</view>
+      <van-icon name="arrow" color="#8E8E93" size="14px" />
+    </view>
+
+    <view class="cell" bindtap="onAiModel" data-test-id="{{tids.settings['ai-model-cell']}}">
+      <view class="cell-ic ic-purple"><van-icon name="bulb-o" color="#fff" size="16px" /></view>
+      <view class="cell-l">{{i.ai_model}}</view>
+      <view class="cell-r">{{aiModelLabel}}</view>
+      <van-icon name="arrow" color="#8E8E93" size="14px" />
+    </view>
+
+    <view class="cell" bindtap="onNotifications">
+      <view class="cell-ic ic-orange"><van-icon name="bell" color="#fff" size="16px" /></view>
+      <view class="cell-l">{{i.notifications}}</view>
+      <view class="cell-r">{{notifyOn?'已开启':'已关闭'}}</view>
+      <van-icon name="arrow" color="#8E8E93" size="14px" />
+    </view>
+  </view>
+
+  <view class="cell-group">
+    <view class="cell" bindtap="onPrivacy">
+      <view class="cell-ic ic-green"><van-icon name="shield-o" color="#fff" size="16px" /></view>
+      <view class="cell-l">{{i.privacy}}</view>
+      <van-icon name="arrow" color="#8E8E93" size="14px" />
+    </view>
+    <view class="cell" bindtap="onAbout">
+      <view class="cell-ic ic-grey"><van-icon name="info-o" color="#fff" size="16px" /></view>
+      <view class="cell-l">{{i.about}}</view>
+      <view class="cell-r">v0.1.0</view>
+      <van-icon name="arrow" color="#8E8E93" size="14px" />
+    </view>
+  </view>
+
+  <view class="logout-area">
+    <view class="btn-ghost logout-btn" bindtap="onLogout" data-test-id="{{tids.settings['logout-btn']}}">{{i.logout}}</view>
+  </view>
+</view>

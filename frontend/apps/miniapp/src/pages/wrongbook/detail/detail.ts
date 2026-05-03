@@ -1,15 +1,33 @@
-// S7 miniapp · SC-02.AC-1 + SC-03.AC-1 · 详情 · Tag 编辑 + AI 讲解（request chunk 降级 · 微信无 SSE）+ 相似题
+// P06 wrongbook detail · Mood B · STYLE-TRUTH §3
+// 与 H5 WrongbookDetail 同 API · AI 讲解走 wx.request enableChunked (微信无 SSE)
 import { api, WrongItemVO } from '../../../utils/api';
+import { TEST_IDS } from '../../../utils/testids';
 import { t } from '../../../utils/i18n';
 
-const SUBJECT_POOL = ['math', 'physics', 'chemistry', 'english'];
+const SUBJECT_LABEL: Record<string, string> = {
+  math: '数学',
+  physics: '物理',
+  chemistry: '化学',
+  english: '英语',
+};
+const SUBJECT_POOL = ['基础', '提高', '错过 3 次以上', '考前重点'];
 
-interface SimilarItem { id: string; stem_text: string; distance: number; subject: string }
-interface SimilarResp { items: SimilarItem[] }
+interface SimilarItem {
+  id: string;
+  stem_text: string;
+  distance: number;
+  subject: string;
+}
+interface SimilarResp {
+  items: SimilarItem[];
+}
 
 Page({
   data: {
+    tids: TEST_IDS,
+    i: {} as Record<string, string>,
     item: null as WrongItemVO | null,
+    subjectLabel: '',
     similar: [] as SimilarItem[],
     explain: '',
     subjectPool: SUBJECT_POOL,
@@ -17,29 +35,37 @@ Page({
     localTags: [] as string[],
     customTag: '',
     savingTags: false,
-    i18n: {
-      tag_edit: t('wrongbook_detail.tag_edit'),
-      tag_save: t('wrongbook_detail.tag_save'),
-      explain_title: t('wrongbook_detail.explain_title'),
-      explain_loading: t('wrongbook_detail.explain_loading'),
-      similar_title: t('wrongbook_detail.similar_title'),
-    },
   },
 
-  reqTask: null as any,
+  reqTask: null as { abort?: () => void; onChunkReceived?: (cb: (r: { data: ArrayBuffer }) => void) => void } | null,
 
-  async onLoad(opt: { id?: string }) {
+  async onLoad(opt: Record<string, string>) {
     const id = opt.id;
+    this.setData({
+      i: {
+        tag_edit: t('wrongbook_detail.tag_edit'),
+        tag_save: t('wrongbook_detail.tag_save'),
+        explain_title: t('wrongbook_detail.explain_title'),
+        explain_loading: t('wrongbook_detail.explain_loading'),
+        similar_title: t('wrongbook_detail.similar_title'),
+        archive: t('wrongbook_detail.archive'),
+        mastery: t('wrongbook_detail.mastery'),
+      },
+    });
     if (!id) return wx.navigateBack();
     try {
-      const item = await api.get<WrongItemVO>(`/wrongbook/items/${id}`);
-      this.setData({ item, localTags: item.tags });
+      const item = await api.get<WrongItemVO>(`/wrong-items/${id}`);
+      this.setData({
+        item,
+        subjectLabel: SUBJECT_LABEL[item.subject] || item.subject,
+        localTags: item.tags || [],
+      });
       if (item.status === 'completed') {
         this.loadSimilar(id);
         this.subscribeExplain(id);
       }
     } catch {
-      wx.showToast({ title: t('common.error_network'), icon: 'none' });
+      wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
 
@@ -51,7 +77,7 @@ Page({
     try {
       const res = await api.get<SimilarResp>(`/analysis/${id}/similar`, { params: { k: 3 } });
       this.setData({
-        similar: res.items.map((s) => ({ ...s, distance: Number(s.distance.toFixed(2)) })),
+        similar: (res.items || []).map((s) => ({ ...s, distance: Number((s.distance ?? 0).toFixed(2)) })),
       });
     } catch {
       // silent
@@ -59,9 +85,8 @@ Page({
   },
 
   subscribeExplain(id: string) {
-    // 微信小程序无 EventSource · 降级 wx.request + enableChunked + onChunkReceived
     const token = wx.getStorageSync('access_token') || '';
-    this.reqTask = wx.request({
+    const task = wx.request({
       url: `https://api.longfeng.local/api/v1/analysis/${id}`,
       method: 'GET',
       header: {
@@ -69,24 +94,25 @@ Page({
         Accept: 'text/event-stream',
       },
       enableChunked: true,
-      success: () => {},
-      fail: () => {
-        this.setData({ explain: t('wrongbook_detail.explain_error') });
+      success: () => {
+        // ignore
       },
-    });
-    this.reqTask.onChunkReceived((res: { data: ArrayBuffer }) => {
+      fail: () => {
+        this.setData({ explain: '加载讲解失败' });
+      },
+    }) as unknown as { abort?: () => void; onChunkReceived?: (cb: (r: { data: ArrayBuffer }) => void) => void };
+    this.reqTask = task;
+    task.onChunkReceived?.((res) => {
       const text = this.decodeChunk(res.data);
-      // 简化解析 SSE 格式：`data: {"chunk":"..."}\n\n`
       const lines = text.split(/\n/);
       for (const line of lines) {
         if (!line.startsWith('data:')) continue;
         const body = line.slice(5).trim();
         if (!body || body === '[DONE]') continue;
         try {
-          const obj = JSON.parse(body);
+          const obj = JSON.parse(body) as { chunk?: string };
           if (obj.chunk) this.setData({ explain: this.data.explain + obj.chunk });
         } catch {
-          // 非 JSON 段 · 原样拼
           this.setData({ explain: this.data.explain + body });
         }
       }
@@ -97,7 +123,11 @@ Page({
     const arr = new Uint8Array(buf);
     let s = '';
     for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
-    try { return decodeURIComponent(escape(s)); } catch { return s; }
+    try {
+      return decodeURIComponent(escape(s));
+    } catch {
+      return s;
+    }
   },
 
   openTagSheet() {
@@ -108,8 +138,8 @@ Page({
     this.setData({ sheetOpen: false });
   },
 
-  toggleTag(e: WechatMiniprogram.CustomEvent & { currentTarget: { dataset: { tag: string } } }) {
-    const tag = e.currentTarget.dataset.tag;
+  toggleTag(e: WechatMiniprogram.TouchEvent) {
+    const tag = e.currentTarget.dataset.tag as string;
     const arr = this.data.localTags.slice();
     const i = arr.indexOf(tag);
     if (i >= 0) arr.splice(i, 1);
@@ -137,7 +167,7 @@ Page({
     if (!it) return;
     this.setData({ savingTags: true });
     try {
-      await api.patch(`/wrongbook/items/${it.id}/tags`, this.data.localTags, {
+      await api.patch(`/wrong-items/${it.id}/tags`, this.data.localTags, {
         headers: { 'If-Match': String(it.version) },
       });
       this.setData({
@@ -145,9 +175,35 @@ Page({
         sheetOpen: false,
         savingTags: false,
       });
-    } catch (e) {
+      wx.showToast({ title: '已保存', icon: 'success' });
+    } catch {
       this.setData({ savingTags: false });
-      wx.showToast({ title: t('common.error_network'), icon: 'none' });
+      wx.showToast({ title: '保存失败', icon: 'none' });
     }
+  },
+
+  onArchive() {
+    const it = this.data.item;
+    if (!it) return;
+    wx.showModal({
+      title: t('wrongbook_detail.archive'),
+      content: t('wrongbook_detail.archive_confirm'),
+      success: async (r) => {
+        if (!r.confirm) return;
+        try {
+          await api.patch(`/wrong-items/${it.id}/archive`, { archived: true }, { headers: { 'If-Match': String(it.version) } });
+          wx.showToast({ title: '已归档', icon: 'success' });
+          setTimeout(() => wx.navigateBack(), 800);
+        } catch {
+          wx.showToast({ title: '归档失败', icon: 'none' });
+        }
+      },
+    });
+  },
+
+  onReviewNow() {
+    const it = this.data.item;
+    if (!it) return;
+    wx.navigateTo({ url: `/pages/review/exec/exec?wrongItemId=${it.id}` });
   },
 });

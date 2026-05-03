@@ -1,0 +1,58 @@
+
+<view class="page-today" data-mood="A" data-test-id="{{tids.reviewToday.root}}">
+
+  <!-- Hero summary · §4.8 reviewhero card -->
+  <view class="reviewhero" data-test-id="{{tids.reviewToday['summary-hero']}}">
+    <view class="rh-blob rh-coral"></view>
+    <view class="rh-blob rh-mint"></view>
+    <view class="rh-top">
+      <view class="rh-left">
+        <view class="rh-kicker">{{i.title}}</view>
+        <view class="rh-title">今日 <text class="rh-em">{{summary.total}}</text> 道</view>
+        <view class="rh-sub">已完成 {{summary.done}} · 剩余约 {{summary.eta}} 分钟</view>
+      </view>
+      <view class="rh-circle">
+        <view class="rh-pct"><text class="rh-n">{{summary.percent}}</text><text class="rh-l">%</text></view>
+      </view>
+    </view>
+
+    <view class="rh-cta">
+      <view class="rh-btn" bindtap="onStartAll" data-test-id="{{tids.reviewToday['cta-start-all']}}">{{i.cta_start_all}}</view>
+    </view>
+  </view>
+
+  <!-- 时间分组列表 -->
+  <scroll-view class="scroll" scroll-y="true">
+
+    <block wx:if="{{!groups.length}}">
+      <view class="empty" data-test-id="{{tids.reviewToday.empty}}">
+        <van-empty description="{{i.empty}}" />
+      </view>
+    </block>
+
+    <block wx:for="{{groups}}" wx:key="key" wx:for-item="group">
+      <view class="time-group" data-test-id="{{tids.reviewToday['time-group']}}">
+        <view class="group-head">
+          <text class="group-t">{{group.label}}</text>
+          <text class="group-meta">{{group.items.length}} 道 · {{group.eta}} 分</text>
+        </view>
+        <block wx:for="{{group.items}}" wx:key="id" wx:for-item="sess">
+          <view class="sess-card" bindtap="onSessionTap" data-id="{{sess.id}}" data-test-id="{{tids.reviewToday['session-card']}}">
+            <view class="sess-time">{{sess.time}}</view>
+            <view class="sess-body">
+              <view class="sess-title">{{sess.subject}} · {{sess.title}}</view>
+              <view class="sess-meta">{{sess.itemCount}} 道 · 约 {{sess.eta}} 分钟</view>
+            </view>
+            <view class="sess-state state-{{sess.state}}">
+              <van-icon wx:if="{{sess.state==='done'}}" name="success" color="#34C759" size="22px" />
+              <van-icon wx:elif="{{sess.state==='active'}}" name="play" color="#007AFF" size="22px" />
+              <van-icon wx:else name="clock-o" color="#8E8E93" size="22px" />
+            </view>
+          </view>
+        </block>
+      </view>
+    </block>
+
+    <view style="height:80rpx"></view>
+  </scroll-view>
+</view>

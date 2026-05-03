@@ -1,0 +1,44 @@
+
+<view class="page-analyzing" data-mood="A" data-test-id="{{tids.analyzing.root}}">
+
+  <view class="hero">
+    <view class="hero-blob blob-purple"></view>
+    <view class="hero-blob blob-cyan"></view>
+
+    <view class="hsafe">
+      <view class="title">{{i.title}}</view>
+      <view class="sub">{{partialText || ''}}</view>
+
+      <!-- 进度环 · §4.8 rh-circle 风格 -->
+      <view class="ring" data-test-id="{{tids.analyzing.progress}}">
+        <view class="ring-num">{{progress}}<text class="pct">%</text></view>
+      </view>
+
+      <view class="stages" data-test-id="{{tids.analyzing.stage}}">
+        <view class="stage-row {{stage==='upload'||stage==='ocr'||stage==='analyze'||stage==='save'?'on':''}} {{passed.upload?'done':''}}">
+          <view class="stage-dot"></view>
+          <text>{{i.stage_upload}}</text>
+        </view>
+        <view class="stage-row {{stage==='ocr'||stage==='analyze'||stage==='save'?'on':''}} {{passed.ocr?'done':''}}">
+          <view class="stage-dot"></view>
+          <text>{{i.stage_ocr}}</text>
+        </view>
+        <view class="stage-row {{stage==='analyze'||stage==='save'?'on':''}} {{passed.analyze?'done':''}}">
+          <view class="stage-dot"></view>
+          <text>{{i.stage_analyze}}</text>
+        </view>
+        <view class="stage-row {{stage==='save'?'on':''}} {{passed.save?'done':''}}">
+          <view class="stage-dot"></view>
+          <text>{{i.stage_save}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{fallback}}" class="fallback" data-test-id="{{tids.analyzing.fallback}}">
+        <van-icon name="info-o" color="#FFD166" size="16px" />
+        <text>{{i.fallback}}</text>
+      </view>
+
+      <view class="cancel" bindtap="onCancel" data-test-id="{{tids.analyzing.cancel}}">{{i.cancel}}</view>
+    </view>
+  </view>
+</view>

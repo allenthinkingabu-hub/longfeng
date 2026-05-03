@@ -1,0 +1,40 @@
+
+<view class="page-done" data-mood="D" data-test-id="{{tids.reviewDone.root}}">
+
+  <view class="hero">
+    <view class="hero-blob blob-aurora-1"></view>
+    <view class="hero-blob blob-aurora-2"></view>
+
+    <!-- Confetti · 仅在 allDone 时渲染 (CLAUDE.md 铁律 3 庆祝有节制) -->
+    <view wx:if="{{allDone}}" class="confetti" data-test-id="{{tids.reviewDone.confetti}}">
+      <view class="confetti-bit b1"></view>
+      <view class="confetti-bit b2"></view>
+      <view class="confetti-bit b3"></view>
+      <view class="confetti-bit b4"></view>
+      <view class="confetti-bit b5"></view>
+      <view class="confetti-bit b6"></view>
+    </view>
+
+    <view class="hsafe">
+      <view class="trophy">
+        <view class="trophy-emoji">🏆</view>
+        <view class="trophy-pulse"></view>
+      </view>
+      <view class="title">{{i.title}}</view>
+      <view class="sub">{{summary}}</view>
+
+      <view class="metrics" data-test-id="{{tids.reviewDone['session-summary']}}">
+        <view class="metric"><text class="m-n">{{total}}</text><text class="m-l">本次复习</text></view>
+        <view class="metric"><text class="m-n">{{accuracy}}%</text><text class="m-l">正确率</text></view>
+        <view class="metric"><text class="m-n">{{durationMin}}</text><text class="m-l">分钟</text></view>
+      </view>
+
+      <view wx:if="{{allDone}}" class="all-done-hint">{{i.confetti_hint}}</view>
+    </view>
+  </view>
+
+  <view class="cta-dock">
+    <view class="btn-ghost-light" bindtap="onBack" data-test-id="{{tids.reviewDone['cta-back']}}">{{i.cta_back}}</view>
+    <view wx:if="{{!allDone}}" class="btn-celebrate" bindtap="onContinue" data-test-id="{{tids.reviewDone['cta-continue']}}">{{i.cta_continue}}</view>
+  </view>
+</view>

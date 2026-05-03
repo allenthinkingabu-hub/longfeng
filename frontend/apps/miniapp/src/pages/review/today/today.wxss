@@ -1,0 +1,220 @@
+/* P07 review today · Mood A · STYLE-TRUTH §3 + §4.8 reviewhero */
+
+.page-today {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* §4.8 reviewhero card */
+.reviewhero {
+  position: relative;
+  margin: 28rpx;
+  background: var(--tkn-grad-hero-card);
+  border-radius: var(--tkn-radius-card-lg);
+  padding: 36rpx 36rpx 32rpx;
+  color: var(--tkn-color-card);
+  overflow: hidden;
+  box-shadow: var(--tkn-shadow-hero-card);
+}
+
+.rh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40rpx);
+  opacity: 0.55;
+}
+
+.rh-coral {
+  width: 400rpx;
+  height: 400rpx;
+  background: var(--tkn-blob-coral);
+  top: -180rpx;
+  right: -140rpx;
+}
+
+.rh-mint {
+  width: 360rpx;
+  height: 360rpx;
+  background: var(--tkn-blob-mint);
+  bottom: -200rpx;
+  left: -100rpx;
+  opacity: 0.35;
+}
+
+.rh-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.rh-left {
+  flex: 1;
+}
+
+.rh-kicker {
+  font-size: var(--tkn-fs-eyebrow);
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  margin-bottom: 12rpx;
+}
+
+.rh-title {
+  font-size: 48rpx;
+  font-weight: 800;
+  letter-spacing: -0.4rpx;
+  line-height: 1.15;
+}
+
+.rh-em {
+  color: #FFD166;
+  font-style: normal;
+}
+
+.rh-sub {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 500;
+}
+
+.rh-circle {
+  position: relative;
+  width: 144rpx;
+  height: 144rpx;
+  flex: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  border: 6rpx solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rh-pct {
+  display: flex;
+  align-items: baseline;
+  color: var(--tkn-color-card);
+}
+
+.rh-n {
+  font-size: 44rpx;
+  font-weight: 800;
+  letter-spacing: -0.6rpx;
+}
+
+.rh-l {
+  font-size: 22rpx;
+  margin-left: 4rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rh-cta {
+  margin-top: 28rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.rh-btn {
+  height: 88rpx;
+  border-radius: var(--tkn-radius-sm);
+  background: var(--tkn-color-card);
+  color: var(--tkn-hero-stop-1);
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  letter-spacing: 0.4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 36rpx rgba(255, 255, 255, 0.2);
+}
+
+/* Scroll list */
+.scroll {
+  flex: 1;
+  padding: 0 28rpx 28rpx;
+}
+
+.empty {
+  padding: 96rpx 0;
+}
+
+.time-group {
+  margin-top: 28rpx;
+}
+
+.group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.group-t {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  color: var(--tkn-color-text);
+}
+
+.group-meta {
+  font-size: 22rpx;
+  color: var(--tkn-color-ter);
+  font-weight: 600;
+}
+
+.sess-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx 24rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-md);
+  box-shadow: var(--tkn-shadow-card);
+  margin-bottom: 12rpx;
+}
+
+.sess-time {
+  flex: none;
+  width: 96rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--tkn-color-blue);
+  letter-spacing: -0.3rpx;
+}
+
+.sess-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sess-title {
+  font-size: var(--tkn-fs-body-em);
+  font-weight: 700;
+  color: var(--tkn-color-text);
+}
+
+.sess-meta {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--tkn-color-sec);
+}
+
+.sess-state {
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-done {
+  opacity: 0.7;
+}

@@ -1,0 +1,160 @@
+/* P · AI Model Pref · Mood B · STYLE-TRUTH §3 */
+
+.page-pref {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  padding: 28rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  background: var(--tkn-grad-ebbing);
+  border: 1rpx solid rgba(88, 86, 214, 0.18);
+  border-radius: var(--tkn-radius-md);
+  margin-bottom: 20rpx;
+}
+
+.hint-tier {
+  flex: none;
+  padding: 6rpx 16rpx;
+  border-radius: var(--tkn-radius-pill);
+  font-size: 20rpx;
+  font-weight: 800;
+  letter-spacing: 0.6rpx;
+  text-transform: uppercase;
+}
+
+.tier-normal {
+  background: var(--tkn-color-bg);
+  color: var(--tkn-color-sec);
+}
+
+.tier-vip {
+  background: var(--tkn-grad-cta-orange);
+  color: var(--tkn-color-card);
+}
+
+.tier-vip_plus {
+  background: var(--tkn-grad-em-coral);
+  color: var(--tkn-color-card);
+}
+
+.hint-tx {
+  flex: 1;
+  font-size: var(--tkn-fs-body-sm);
+  color: var(--tkn-color-indigo);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.model-list {
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-card);
+  padding: 8rpx 28rpx;
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.model-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--tkn-color-sep);
+}
+
+.model-row:last-child {
+  border-bottom: none;
+}
+
+.model-row.disabled {
+  opacity: 0.4;
+}
+
+.m-ic {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--tkn-radius-3xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 26rpx;
+  color: var(--tkn-color-card);
+  flex: none;
+}
+
+.m-ic-auto {
+  background: var(--tkn-grad-icon-blue-deep);
+}
+
+.m-ic-openai {
+  background: linear-gradient(135deg, #10A37F, #0F8060);
+}
+
+.m-ic-claude {
+  background: linear-gradient(135deg, #C97B3F, #8B4513);
+}
+
+.m-ic-gemini {
+  background: linear-gradient(135deg, #4285F4, #34A853);
+}
+
+.m-ic-qwen {
+  background: linear-gradient(135deg, #C581F7, #8B87F6);
+}
+
+.m-tx {
+  flex: 1;
+  min-width: 0;
+}
+
+.m-t {
+  font-size: var(--tkn-fs-body)
+}
+
+.m-t {
+  font-size: var(--tkn-fs-body);
+  font-weight: 700;
+  color: var(--tkn-color-text);
+}
+
+.m-d {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: var(--tkn-color-sec);
+}
+
+.m-radio {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--tkn-color-ter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.m-radio.on {
+  border-color: var(--tkn-color-blue);
+}
+
+.m-radio-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: var(--tkn-color-blue);
+}
+
+.cta-dock {
+  margin-top: auto;
+  padding: 28rpx 0 0;
+}
+
+.btn-disabled {
+  opacity: 0.5;
+}

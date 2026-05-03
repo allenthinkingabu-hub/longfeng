@@ -1,0 +1,69 @@
+
+<view class="page-capture" data-mood="C" data-test-id="{{tids.capture.root}}">
+
+  <!-- 自定义状态栏占位 -->
+  <view class="status-pad"></view>
+
+  <!-- 顶部 nav · 玻璃态 · 暗底白字 -->
+  <view class="cam-nav">
+    <view class="nav-icon-btn" bindtap="onClose">
+      <van-icon name="cross" color="#fff" size="20px" />
+    </view>
+    <text class="nav-title">{{i.title}}</text>
+    <view class="nav-icon-btn" bindtap="onFlashToggle">
+      <van-icon name="bulb-o" color="#fff" size="20px" />
+    </view>
+  </view>
+
+  <!-- Viewfinder · 暗底径向 + 4 角黄 brackets + 黄扫描线 + 模拟纸面 -->
+  <view class="viewfinder">
+    <view class="paper">
+      <view class="paper-line">{{paperLine1}}</view>
+      <view class="paper-line">{{paperLine2}}</view>
+      <view class="paper-mark">{{paperMark}}</view>
+    </view>
+
+    <view class="bracket br-tl" data-test-id="{{tids.capture.bracket}}"></view>
+    <view class="bracket br-tr"></view>
+    <view class="bracket br-bl"></view>
+    <view class="bracket br-br"></view>
+
+    <view class="scan-line"></view>
+
+    <view class="detect-badge" data-test-id="{{tids.capture.detect}}">
+      <view class="detect-dot"></view>
+      <text>{{detectReady ? i.detect_ready : i.detect_align}}</text>
+    </view>
+  </view>
+
+  <!-- Tip · 玻璃态提示卡 -->
+  <view class="tip" data-test-id="{{tids.capture.tip}}">
+    <van-icon name="info-o" color="#FFCC00" size="18px" />
+    <text>{{i.tip}}</text>
+  </view>
+
+  <!-- 学科 chips -->
+  <view class="subj-row">
+    <view class="subj {{subject==='math'?'on':''}}" bindtap="onSubject" data-subject="math" data-test-id="{{tids.capture.subject}}">{{i.subj_math}}</view>
+    <view class="subj {{subject==='physics'?'on':''}}" bindtap="onSubject" data-subject="physics">{{i.subj_physics}}</view>
+    <view class="subj {{subject==='chemistry'?'on':''}}" bindtap="onSubject" data-subject="chemistry">{{i.subj_chemistry}}</view>
+    <view class="subj {{subject==='english'?'on':''}}" bindtap="onSubject" data-subject="english">{{i.subj_english}}</view>
+  </view>
+
+  <!-- Bottom dock · gallery / shutter / manual -->
+  <view class="cam-dock">
+    <view class="dock-side" bindtap="onGallery" data-test-id="{{tids.capture.gallery}}">
+      <van-icon name="photo-o" color="#fff" size="26px" />
+      <text>{{i.tab_gallery}}</text>
+    </view>
+    <view class="shutter" bindtap="onShutter" data-test-id="{{tids.capture.shutter}}">
+      <view class="shutter-core"></view>
+    </view>
+    <view class="dock-side" bindtap="onManual" data-test-id="{{tids.capture.manual}}">
+      <van-icon name="edit" color="#fff" size="26px" />
+      <text>{{i.tab_manual}}</text>
+    </view>
+  </view>
+
+  <van-toast id="van-toast" />
+</view>

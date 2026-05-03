@@ -1,24 +1,39 @@
 {
   "pages": [
+    "pages/landing/index/index",
+    "pages/camera/capture/capture",
+    "pages/camera/analyzing/analyzing",
+    "pages/camera/result/result",
     "pages/wrongbook/list/list",
-    "pages/wrongbook/capture/capture",
-    "pages/wrongbook/detail/detail"
+    "pages/wrongbook/detail/detail",
+    "pages/review/today/today",
+    "pages/review/exec/exec",
+    "pages/review/done/done",
+    "pages/calendar/month/month",
+    "pages/calendar/event/event",
+    "pages/notification/index/index",
+    "pages/me/settings/settings",
+    "pages/me/ai-model-pref/ai-model-pref"
   ],
   "window": {
     "backgroundTextStyle": "dark",
-    "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "错题本",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "AI 错题本",
     "navigationBarTextStyle": "black",
-    "enablePullDownRefresh": true
+    "enablePullDownRefresh": false,
+    "backgroundColor": "#F2F2F7"
   },
   "tabBar": {
-    "color": "#1d1d1f",
-    "selectedColor": "#0071e3",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "white",
+    "color": "#8E8E93",
+    "selectedColor": "#007AFF",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
     "list": [
+      { "pagePath": "pages/landing/index/index", "text": "首页" },
       { "pagePath": "pages/wrongbook/list/list", "text": "错题" },
-      { "pagePath": "pages/wrongbook/capture/capture", "text": "录入" }
+      { "pagePath": "pages/review/today/today", "text": "复习" },
+      { "pagePath": "pages/calendar/month/month", "text": "日历" },
+      { "pagePath": "pages/me/settings/settings", "text": "我的" }
     ]
   },
   "style": "v2",
@@ -28,9 +43,15 @@
     "kbone": false,
     "weui": false
   },
+  "permission": {
+    "scope.camera": { "desc": "用于拍摄错题题面" },
+    "scope.writePhotosAlbum": { "desc": "保存错题截图到相册" }
+  },
+  "requiredPrivateInfos": ["chooseLocation", "getLocation"],
   "usingComponents": {
     "van-button": "@vant/weapp/button/index",
     "van-cell": "@vant/weapp/cell/index",
+    "van-cell-group": "@vant/weapp/cell-group/index",
     "van-tag": "@vant/weapp/tag/index",
     "van-tab": "@vant/weapp/tab/index",
     "van-tabs": "@vant/weapp/tabs/index",
@@ -38,6 +59,15 @@
     "van-skeleton": "@vant/weapp/skeleton/index",
     "van-popup": "@vant/weapp/popup/index",
     "van-field": "@vant/weapp/field/index",
-    "van-picker": "@vant/weapp/picker/index"
+    "van-picker": "@vant/weapp/picker/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-toast": "@vant/weapp/toast/index",
+    "van-dialog": "@vant/weapp/dialog/index",
+    "van-progress": "@vant/weapp/progress/index",
+    "van-checkbox": "@vant/weapp/checkbox/index",
+    "van-switch": "@vant/weapp/switch/index",
+    "van-radio": "@vant/weapp/radio/index",
+    "van-radio-group": "@vant/weapp/radio-group/index"
   }
 }

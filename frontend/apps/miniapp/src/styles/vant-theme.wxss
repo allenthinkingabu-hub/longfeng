@@ -1,30 +1,45 @@
-/* S7 miniapp · Vant Weapp 主题变量绑定 Sd tokens · 禁硬编码色值 · 见 design/arch/s7-frontend-wrongbook.md §5.3 */
+/* S7-S8 miniapp · Vant Weapp 主题变量绑定 STYLE-TRUTH tokens · 禁硬编码
+ * 参考 design/system/STYLE-TRUTH.md §2 + design/arch/s7-frontend-wrongbook.md §5.3
+ */
 page {
-  --button-primary-background-color: var(--tkn-color-primary-default);
-  --button-primary-color: var(--tkn-color-white);
-  --button-default-color: var(--tkn-color-text-primary);
-  --button-default-background-color: var(--tkn-color-button-default-light);
-  --button-danger-background-color: var(--tkn-color-danger-default);
+  --button-primary-background-color: var(--tkn-color-blue);
+  --button-primary-color: var(--tkn-color-card);
+  --button-default-color: var(--tkn-color-text);
+  --button-default-background-color: var(--tkn-color-card);
+  --button-danger-background-color: var(--tkn-color-red);
+  --button-border-radius: var(--tkn-radius-sm);
 
-  --cell-background-color: var(--tkn-color-white);
-  --cell-border-color: var(--tkn-color-button-default-light);
-  --cell-text-color: var(--tkn-color-text-primary);
-  --cell-label-color: var(--tkn-color-text-secondary);
-  --cell-horizontal-padding: var(--tkn-spacing-6);
-  --cell-font-size: 14px;
+  --cell-background-color: var(--tkn-color-card);
+  --cell-border-color: var(--tkn-color-sep);
+  --cell-text-color: var(--tkn-color-text);
+  --cell-label-color: var(--tkn-color-sec);
+  --cell-horizontal-padding: var(--tkn-space-12);
+  --cell-vertical-padding: var(--tkn-space-12);
+  --cell-font-size: var(--tkn-fs-body);
 
-  --tag-default-color: var(--tkn-color-text-secondary);
-  --tag-primary-color: var(--tkn-color-primary-link);
-  --tag-success-color: var(--tkn-color-success-default);
-  --tag-warning-color: var(--tkn-color-warning-default);
-  --tag-danger-color: var(--tkn-color-danger-default);
+  --tag-default-color: var(--tkn-color-sec);
+  --tag-primary-color: var(--tkn-color-blue);
+  --tag-success-color: var(--tkn-color-green);
+  --tag-warning-color: var(--tkn-color-orange);
+  --tag-danger-color: var(--tkn-color-red);
 
-  --tabs-nav-background-color: var(--tkn-color-white);
-  --tabs-active-color: var(--tkn-color-primary-default);
+  --tabs-nav-background-color: var(--tkn-color-card);
+  --tabs-active-color: var(--tkn-color-blue);
 
-  --empty-description-color: var(--tkn-color-text-secondary);
+  --empty-description-color: var(--tkn-color-sec);
 
-  --field-label-color: var(--tkn-color-text-secondary);
-  --field-input-text-color: var(--tkn-color-text-primary);
-  --field-placeholder-text-color: var(--tkn-color-text-tertiary);
+  --field-label-color: var(--tkn-color-sec);
+  --field-input-text-color: var(--tkn-color-text);
+  --field-placeholder-text-color: var(--tkn-color-ter);
+
+  --popup-background-color: var(--tkn-color-card);
+
+  --skeleton-background-color: var(--tkn-color-bg);
+
+  --picker-background-color: var(--tkn-color-card);
+  --picker-toolbar-height: 88rpx;
+  --picker-action-padding: 0 var(--tkn-space-12);
+  --picker-action-font-size: var(--tkn-fs-body);
+  --picker-confirm-action-color: var(--tkn-color-blue);
+  --picker-cancel-action-color: var(--tkn-color-sec);
 }

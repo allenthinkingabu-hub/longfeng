@@ -1,0 +1,466 @@
+/* P-LANDING · Mood A · STYLE-TRUTH §3 + §4 · 小程序版（无 phone 整机壳） */
+
+.page-landing {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  position: relative;
+  padding-bottom: 200rpx;
+}
+
+/* Hero · §4.3 · 高度对应 H5 380px → rpx 760 */
+.hero {
+  position: relative;
+  height: 760rpx;
+  background: var(--tkn-grad-hero-landing);
+  overflow: hidden;
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40rpx);
+}
+
+.blob-purple {
+  width: 560rpx;
+  height: 560rpx;
+  top: -220rpx;
+  right: -200rpx;
+  background: radial-gradient(circle, var(--tkn-blob-purple), transparent 70%);
+}
+
+.blob-cyan {
+  width: 440rpx;
+  height: 440rpx;
+  bottom: -180rpx;
+  left: -120rpx;
+  background: radial-gradient(circle, var(--tkn-blob-cyan), transparent 70%);
+}
+
+.blob-pink {
+  width: 240rpx;
+  height: 240rpx;
+  top: 30%;
+  left: 55%;
+  background: radial-gradient(circle, var(--tkn-blob-pink), transparent 70%);
+  filter: blur(36rpx);
+}
+
+.hsafe {
+  position: relative;
+  z-index: 2;
+  padding: 116rpx 40rpx 0;
+  color: var(--tkn-color-card);
+}
+
+.brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo conic 彩虹方 · §4.6 */
+.logo-conic {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 20rpx;
+  background: conic-gradient(from 210deg, #FF5A4F, #FFB454, #F6D84C, #3CD47B, #4C9BFF, #8B87F6, #FF5A4F);
+  box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, 0.25), 0 8rpx 24rpx rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  letter-spacing: 1.2rpx;
+  color: var(--tkn-color-card);
+}
+
+/* Signin pill · §4.15 */
+.signin {
+  padding: 14rpx 28rpx;
+  border-radius: var(--tkn-radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10rpx);
+  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  font-size: 24rpx;
+  font-weight: 700;
+  letter-spacing: 0.4rpx;
+  color: var(--tkn-color-card);
+}
+
+/* Eyebrow · §4.16 */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 40rpx;
+  padding: 10rpx 20rpx;
+  border-radius: var(--tkn-radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16rpx);
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.eyebrow text {
+  font-size: var(--tkn-fs-eyebrow);
+  font-weight: 700;
+  letter-spacing: 2.4rpx;
+  color: rgba(255, 255, 255, 0.92);
+  text-transform: uppercase;
+}
+
+.eyebrow-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #FFD166;
+  box-shadow: var(--tkn-shadow-glow-yellow);
+}
+
+.hero-title {
+  margin-top: 28rpx;
+  font-size: var(--tkn-fs-hero-lg);
+  font-weight: 800;
+  letter-spacing: -1.2rpx;
+  line-height: 1.12;
+  color: var(--tkn-color-card);
+}
+
+.hero-title .em {
+  background: var(--tkn-grad-em-coral);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  margin-top: 18rpx;
+  font-size: var(--tkn-fs-body);
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+/* Metrics chips · §4.17 */
+.metrics {
+  margin-top: 36rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.mchip {
+  padding: 20rpx 16rpx;
+  border-radius: var(--tkn-radius-sm);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(24rpx);
+  border: 2rpx solid rgba(255, 255, 255, 0.22);
+  text-align: center;
+}
+
+.m-n {
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: -0.6rpx;
+  color: var(--tkn-color-card);
+}
+
+.m-l {
+  margin-top: 6rpx;
+  font-size: 19rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.6rpx;
+}
+
+/* Scroll overlap · §4.7 · 米白卡片盖在 hero 上 */
+.scroll {
+  position: relative;
+  margin-top: -100rpx;
+  padding: 28rpx;
+  background: var(--tkn-color-bg);
+  border-top-left-radius: 52rpx;
+  border-top-right-radius: 52rpx;
+  z-index: 3;
+}
+
+.sec {
+  margin: 36rpx 8rpx 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.sec-t {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  letter-spacing: 0.4rpx;
+  color: var(--tkn-color-text);
+}
+
+/* Sample 横滑卡 · §4.29 */
+.sample-row {
+  white-space: nowrap;
+  padding-bottom: 12rpx;
+}
+
+.sample {
+  display: inline-block;
+  width: 376rpx;
+  margin-right: 20rpx;
+  border-radius: var(--tkn-radius-md);
+  overflow: hidden;
+  background: var(--tkn-color-card);
+  box-shadow: var(--tkn-shadow-card-deep);
+  vertical-align: top;
+  white-space: normal;
+}
+
+.sample-thumb {
+  height: 216rpx;
+  position: relative;
+  padding: 20rpx;
+}
+
+.sample-math {
+  background: linear-gradient(140deg, #E3ECFF 0%, #C7DAFF 100%);
+}
+
+.sample-physics {
+  background: linear-gradient(140deg, #FFEAE4 0%, #FFD0C6 100%);
+}
+
+.sample-english {
+  background: linear-gradient(140deg, #E4F7EA 0%, #BAE7C5 100%);
+}
+
+.sample-chip {
+  display: inline-block;
+  padding: 6rpx 14rpx;
+  border-radius: var(--tkn-radius-4xs);
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 18rpx;
+  font-weight: 700;
+  letter-spacing: 0.4rpx;
+  text-transform: uppercase;
+  color: var(--tkn-color-text);
+}
+
+.sample-formula {
+  position: absolute;
+  bottom: 20rpx;
+  left: 20rpx;
+  right: 20rpx;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 30rpx;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--tkn-color-text);
+}
+
+.sample-body {
+  padding: 20rpx 24rpx 24rpx;
+}
+
+.sample-err {
+  font-size: 20rpx;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.4rpx;
+  color: var(--tkn-color-red);
+}
+
+.sample-kp {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  font-weight: 600;
+  color: var(--tkn-color-sec);
+  line-height: 1.4;
+}
+
+/* Feature 行 · §4.30 */
+.card {
+  padding: 24rpx 28rpx;
+  border-radius: var(--tkn-radius-card);
+  background: var(--tkn-color-card);
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.feat-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--tkn-color-sep);
+}
+
+.feat-row:last-child {
+  border-bottom: none;
+}
+
+.feat-ico {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--tkn-radius-2xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ico-a {
+  background: linear-gradient(135deg, #4C9BFF, #5856D6);
+}
+
+.ico-b {
+  background: linear-gradient(135deg, #FF9500, #FF3B30);
+}
+
+.ico-c {
+  background: linear-gradient(135deg, #34C759, #30B0C7);
+}
+
+.feat-tx {
+  flex: 1;
+}
+
+.feat-t {
+  font-size: var(--tkn-fs-body-em);
+  font-weight: 700;
+  color: var(--tkn-color-text);
+}
+
+.feat-d {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: var(--tkn-color-sec);
+  line-height: 1.45;
+}
+
+/* How 3 列 · §4.32 */
+.how {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.how-step {
+  position: relative;
+  padding: 36rpx 16rpx 24rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-xs);
+  text-align: center;
+}
+
+.how-n {
+  position: absolute;
+  top: -22rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: var(--tkn-color-card);
+  border: 3rpx solid var(--tkn-color-blue);
+  color: var(--tkn-color-blue);
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.how-tx {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--tkn-color-text);
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* Social proof · §4.31 */
+.social {
+  margin-top: 32rpx;
+  padding: 24rpx 28rpx;
+  border-radius: var(--tkn-radius-sm);
+  background: linear-gradient(135deg, rgba(255, 149, 0, 0.08), rgba(255, 59, 48, 0.06));
+  border: 2rpx solid rgba(255, 149, 0, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.social-stack {
+  display: flex;
+}
+
+.ava-mini {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  margin-left: -12rpx;
+  border: 2rpx solid var(--tkn-color-card);
+}
+
+.ava-mini:first-child {
+  margin-left: 0;
+}
+
+.ava-1 {
+  background: conic-gradient(from 210deg, #FFD166, #FF6B6B, #C581F7, #4C9BFF, #FFD166);
+}
+
+.ava-2 {
+  background: conic-gradient(from 90deg, #5AA3FF, #C581F7, #FFD166, #5AA3FF);
+}
+
+.ava-3 {
+  background: conic-gradient(from 30deg, #6DE895, #FFD166, #FF6B6B, #6DE895);
+}
+
+.ava-n {
+  background: var(--tkn-color-bg);
+  font-size: 18rpx;
+  font-weight: 700;
+  color: var(--tkn-color-sec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-tx {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--tkn-color-text);
+}
+
+.social-em {
+  color: var(--tkn-color-orange);
+  font-weight: 800;
+}
+
+/* CTA dock · §4.27 + §4.18 */
+.cta-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28rpx 32rpx 60rpx;
+  background: var(--tkn-grad-cta-dock);
+  z-index: 50;
+}
+
+.cta-try {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 104rpx;
+  border-radius: var(--tkn-radius-md);
+  background: var(--tkn-grad-cta-deep);
+  color: var(--tkn-color-card);
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow: var(--tkn-shadow-cta-deep);
+}
