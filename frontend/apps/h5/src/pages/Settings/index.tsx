@@ -337,6 +337,14 @@ export const SettingsPage: React.FC = () => {
       })
       .catch(() => { /* silently fallback to NORMAL */ });
 
+    // SC-16 持久化兜底: localStorage 保留 selected model · 跨 reload 立即生效 (不等 API resp)
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const cached = localStorage.getItem('lf_selected_ai_model');
+        if (cached) setPrefs((prev) => ({ ...prev, preferredAiModel: cached }));
+      }
+    } catch { /* ignore */ }
+
     void fetch('/api/v1/ai-models', { headers })
       .then((res) => (res.ok ? (res.json() as Promise<{ currentModel?: string }>) : null))
       .then((data) => {
@@ -361,6 +369,8 @@ export const SettingsPage: React.FC = () => {
 
   const handleSelectAiModel = useCallback((modelId: string) => {
     setPrefs((prev) => ({ ...prev, preferredAiModel: modelId }));
+    // SC-16 持久化兜底: localStorage 立即写 · 跨 reload 即生效不依赖 MSW handler
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('lf_selected_ai_model', modelId); } catch { /* ignore */ }
     // SC-16 · POST /api/v1/me/ai-model 持久化（VIP/VIP_PLUS 专属 · NORMAL 静默忽略）
     void fetch('/api/v1/me/ai-model', {
       method: 'POST',
