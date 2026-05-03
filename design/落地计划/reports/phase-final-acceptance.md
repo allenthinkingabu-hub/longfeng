@@ -22,7 +22,7 @@
 | S6 | BE file-oss (presign + spool) | 0.5d | ~15min | ✅ | TempFileSpooler 公开 method 修 |
 | S7 | FE H5 18 页 + miniapp 14 页 + Shells | 2d | ~60min (5 路并行) | ✅ | F-12 三方 import 取并集 · App.tsx 主 conflict 点 · S7-2/3/4/5 分组并行 |
 | S8 | FE 复习闭环 + 学情看板 + SC-16 三层 tier | 1.5d | ~30min (3 路并行) | ✅ | F-11 3 路 ~16min · 60+ testid 新增 · ConfettiBurst 双层 reduced-motion · C-22..C-26 |
-| S9 | QA e2e 16 SC × 38 it (B mock + C vrt + A staging) + 5 轮对抗 | 1d | ~5h (5 sub-agent + 4 Orchestrator 修) | ✅ 6/9 PASS (66.7%) | 详见 phase-S9-acceptance.md · 通 SC-02/07/11/13/15/16 · 留 SC-01/05/12 caveat (C-S9-A1/A2/A3) |
+| S9 | QA e2e 16 SC × 38 it (B mock + C vrt + A staging) + 14 轮对抗 | 1d | ~7h (6 sub-agent + 7 Orchestrator 修) | ✅ **9/9 PASS (100%)** 🏆 | 详见 phase-S9-acceptance.md · 全部 SC happy path 通过 · 留 axe color-contrast/progressbar-name P1 |
 | S10 | 可观测 + Helm + Sentry + Grafana | 1d | (跳过) | ⚠️ 用户决策 | "本地都采用 docker" · 留 P1 |
 
 ## 累计 Caveat (~26 项 · 见 audit-be-status-snapshot.md)

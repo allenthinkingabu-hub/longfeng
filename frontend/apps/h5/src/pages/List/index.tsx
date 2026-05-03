@@ -157,29 +157,35 @@ export const ListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* AC-WB-LIST-001 · 搜索框凹陷底 · 用 div role=button 避免嵌套 button (axe nested-interactive) */}
+        {/* AC-WB-LIST-001 · 搜索框凹陷底 · 用 div + role=group · 内嵌真 button 才合法 */}
         <div
-          role="button"
-          tabIndex={0}
+          role="group"
           className={s.search}
           data-testid="p05-page-header-search"
-          aria-label="搜索错题"
-          onClick={() => {/* TODO 搜索页 */}}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); /* TODO 搜索页 */ } }}
+          aria-label="搜索 + AI 语义"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-            <path d="m20 20-3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <span className={s.searchPlaceholder}>二次函数 顶点</span>
-          {/* AC-WB-LIST-010 · AI 语义 Badge · 内嵌真 button 现在合法 (外层是 div role=button) */}
+          {/* 真搜索按钮 · 仅 svg + placeholder 文案 */}
+          <button
+            type="button"
+            className={s.searchInner}
+            aria-label="搜索错题"
+            onClick={() => {/* TODO 搜索页 */}}
+            data-testid="p05-page-header-search-btn"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+              <path d="m20 20-3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <span className={s.searchPlaceholder}>二次函数 顶点</span>
+          </button>
+          {/* AC-WB-LIST-010 · AI 语义 Badge · 与搜索按钮平级 */}
           <button
             className={`${s.searchAi} ${semanticMode ? s.searchAiActive : ''}`}
             type="button"
             aria-pressed={semanticMode}
             data-testid="p05-page-header-semantic-badge"
             data-active={String(semanticMode)}
-            onClick={(e) => { e.stopPropagation(); setSemanticMode((v) => !v); }}
+            onClick={() => setSemanticMode((v) => !v)}
           >
             AI 语义
           </button>
