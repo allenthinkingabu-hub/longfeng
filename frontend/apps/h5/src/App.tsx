@@ -25,6 +25,12 @@ import { LandingPage } from './pages/Landing';
 import { GuestCapturePage } from './pages/GuestCapture';
 import { SharedPage } from './pages/Shared';
 
+// ── S8 FE-07 · 新实现页面 ────────────────────────────────────────────────────
+import { AuthPage } from './pages/Auth';
+import { HomePage } from './pages/Home';
+import { NotificationsPage } from './pages/Notifications';
+import { MePage } from './pages/Settings';
+
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
 const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
@@ -33,18 +39,14 @@ const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
   </div>
 );
 
-// 各占位（FE-02/03/06 已写真实页 import 在上 · 此处仅余未实现）
+// 各占位（FE-07 已替换 AuthPage / HomePage / NotificationsPage / MePage）
 const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 (P1)" />;
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
-const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;
-const AuthPage = () => <PlaceholderPage name="P00 登录" />;
 const ReviewTodayPage = () => <PlaceholderPage name="P07 今日复习" />;
 const ReviewExecPage = () => <PlaceholderPage name="P08 复习执行" />;
 const ReviewDonePage = () => <PlaceholderPage name="P09 复习完成" />;
 const CalendarMonthPage = () => <PlaceholderPage name="P10 日历月视图" />;
 const EventDetailPage = () => <PlaceholderPage name="P11 事件详情" />;
-const NotificationsPage = () => <PlaceholderPage name="P12 通知中心" />;
-const MePage = () => <PlaceholderPage name="P13 设置/我的" />;
 
 // ── App 路由 ─────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,373 @@
+/**
+ * P00 · 登录 · Auth.module.css
+ * Mood A (hero+overlap) · 深蓝 hero 380px + 3 blob + 微信主按钮
+ * archive ref: STYLE-TRUTH.md §6 缺失页指引
+ */
+
+/* ── 页面 ── */
+.page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #F2F2F7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── StatusBar ── */
+.statusbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  z-index: 40;
+}
+
+.statusRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Hero (Mood A · 380px · 深蓝渐变 + 3 blob) ── */
+.hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 380px;
+  background: linear-gradient(180deg, #1E3A8A 0%, #3B5BDB 45%, #5B8DEF 100%);
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* blob 1: 紫右上 */
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  top: -120px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(88, 86, 214, 0.55), transparent 70%);
+  filter: blur(22px);
+}
+
+/* blob 2: 青左下 */
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  bottom: -80px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(88, 214, 255, 0.45), transparent 70%);
+  filter: blur(20px);
+}
+
+/* blob 3: 粉中间偏左 */
+.blob {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  top: 35%;
+  left: 50%;
+  background: radial-gradient(circle, rgba(255, 45, 85, 0.35), transparent 70%);
+  filter: blur(18px);
+}
+
+/* ── Hero 内容区 ── */
+.heroContent {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+}
+
+/* Conic 彩虹 logo 方块 */
+.logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: conic-gradient(from 210deg, #FF5A4F, #FFB454, #F6D84C, #3CD47B, #4C9BFF, #8B87F6, #FF5A4F);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+  margin-bottom: 16px;
+}
+
+.logoText {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.appName {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.12;
+  margin-bottom: 10px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.slogan {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+/* ── Scroll area (overlap) ── */
+.scroll {
+  position: absolute;
+  top: 330px; /* hero高度 - 50px overlap */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  padding: 0 16px 32px;
+  overflow-y: auto;
+}
+
+/* 圆角白底盖在 hero 上 */
+.scroll::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 28px;
+  background: #F2F2F7;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+}
+
+/* ── 登录卡 ── */
+.loginCard {
+  background: #fff;
+  border-radius: 22px;
+  padding: 24px 20px 20px;
+  margin-top: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 22px rgba(40, 50, 90, 0.06);
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1C1C1E;
+  letter-spacing: -0.2px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.cardSubtitle {
+  font-size: 13px;
+  color: #8E8E93;
+  letter-spacing: 0.1px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── 微信按钮 (铁律 1 例外: wechat-brand) ── */
+.wechatBtn {
+  width: 100%;
+  height: 50px;
+  border-radius: 14px;
+  background: #07C160;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(7, 193, 96, 0.32);
+  transition: opacity 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  margin-bottom: 14px;
+}
+
+.wechatBtn:active {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+.wechatBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wechatIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* ── 其他登录方式 ── */
+.otherMethods {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.otherMethodsLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: #007AFF;
+  letter-spacing: 0.1px;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.otherMethodsLink:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+/* ── 协议勾选 ── */
+.consentBar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.checkboxWrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.checkboxVisual {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(60, 60, 67, 0.35);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms, border-color 150ms;
+}
+
+.checkboxInput:checked + .checkboxVisual {
+  background: #007AFF;
+  border-color: #007AFF;
+}
+
+.checkboxInput:focus-visible + .checkboxVisual {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+.consentText {
+  flex: 1;
+  font-size: 12px;
+  color: #8E8E93;
+  line-height: 1.5;
+  padding-top: 12px;
+}
+
+.consentLink {
+  color: #007AFF;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── 加载 Sheet ── */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.loadingSheet {
+  background: #fff;
+  width: 100%;
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0, 122, 255, 0.2);
+  border-top-color: #007AFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.loadingText {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1C1E;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── A11y: prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .wechatBtn {
+    transition: none;
+  }
+  .loadingSpinner {
+    animation: none;
+    opacity: 0.6;
+  }
+}

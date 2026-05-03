@@ -1,0 +1,632 @@
+/**
+ * P13 · 设置/我的 · Settings.module.css
+ * Mood B (pure-warm) · 米白底 + 白卡 + iOS 分组列表
+ * archive ref: _archive/13_settings.html
+ * spec: design/system/pages/P13-settings.spec.md
+ * SC-16: VIP AI 模型选择子区
+ */
+
+/* ── 页面 ── */
+.page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #F2F2F7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: #1C1C1E;
+}
+
+/* ── StatusBar (Mood B: 黑色字) ── */
+.statusbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  z-index: 30;
+  background: rgba(242, 242, 247, 0.78);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+}
+
+.statusRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Nav ── */
+.nav {
+  position: sticky;
+  top: 54px;
+  left: 0;
+  right: 0;
+  padding: 6px 20px 8px;
+  background: rgba(242, 242, 247, 0.78);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.14);
+  z-index: 20;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+}
+
+.navBack {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #007AFF;
+  font-size: 17px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.navEdit {
+  color: #007AFF;
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.navTitle {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.36px;
+  margin-top: 2px;
+  color: #1C1C1E;
+}
+
+/* ── Content ── */
+.content {
+  padding: 6px 16px 100px;
+}
+
+/* ── Profile card ── */
+.profile {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, #7AA8FF, #B993FF, #FF9FB5, #FFC96B, #7AA8FF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), 0 6px 18px rgba(90, 90, 140, 0.25);
+  flex-shrink: 0;
+}
+
+.profileMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.profileName {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1C1C1E;
+}
+
+.profileSub {
+  font-size: 13px;
+  color: #8E8E93;
+  margin-top: 2px;
+  letter-spacing: 0.1px;
+}
+
+.profileMetaRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chipTone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #F2F2F7;
+  color: #3C3C43;
+  font-size: 12px;
+  border: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.dotTone {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.chevron {
+  color: #C7C7CC;
+  flex-shrink: 0;
+}
+
+/* ── Group ── */
+.group {
+  margin-top: 22px;
+}
+
+.groupLabel {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: #8E8E93;
+  padding: 0 16px 6px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.list {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* ── Item ── */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  min-height: 44px;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.item:first-child {
+  border-top: none;
+}
+
+.item:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ico {
+  width: 29px;
+  height: 29px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.icoBlue   { background: #007AFF; }
+.icoRed    { background: #FF3B30; }
+.icoOrange { background: #FF9500; }
+.icoGreen  { background: #34C759; }
+.icoIndigo { background: #5856D6; }
+.icoYellow { background: #FFCC00; }
+.icoPink   { background: #FF2D55; }
+.icoGray   { background: #8E8E93; }
+.icoPurple { background: #AF52DE; }
+
+.itemTitle {
+  flex: 1;
+  font-size: 16px;
+  color: #1C1C1E;
+}
+
+.itemValue {
+  font-size: 15px;
+  color: #8E8E93;
+}
+
+.itemChev {
+  color: #C7C7CC;
+  flex-shrink: 0;
+}
+
+/* ── Switch ── */
+.switch {
+  width: 51px;
+  height: 31px;
+  background: #E9E9EB;
+  border-radius: 31px;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 200ms;
+  border: none;
+  padding: 0;
+}
+
+.switch:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+.switchOn {
+  background: #34C759;
+}
+
+.switchDot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: left 200ms;
+}
+
+.switchOnDot {
+  left: 22px;
+}
+
+.note {
+  font-size: 12px;
+  color: #8E8E93;
+  padding: 6px 16px 0;
+  line-height: 1.45;
+}
+
+/* ──────────────────────────────────────────── */
+/* SC-16 · VIP AI 模型选择子区                  */
+/* ──────────────────────────────────────────── */
+.aiSection {
+  margin-top: 22px;
+}
+
+/* NORMAL 用户: 升级提示 hint (不暴露选择器 · 防 tier 信号泄露) */
+.aiUpgradeHint {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aiUpgradeIco {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #C581F7, #8B87F6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.aiUpgradeContent {
+  flex: 1;
+}
+
+.aiUpgradeTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1C1E;
+  margin-bottom: 2px;
+}
+
+.aiUpgradeBody {
+  font-size: 12px;
+  color: #8E8E93;
+  line-height: 1.4;
+}
+
+.aiUpgradeChev {
+  color: #C7C7CC;
+}
+
+/* VIP 用户: 模型选择器 */
+.aiSelectorCard {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.aiSelectorHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+.aiSelectorTitle {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1C1E;
+}
+
+.aiSelectorCurrent {
+  font-size: 13px;
+  color: #8E8E93;
+}
+
+.aiModelItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.aiModelItem:first-child {
+  border-top: none;
+}
+
+.aiModelItem:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.aiModelItemSelected {
+  background: rgba(0, 122, 255, 0.04);
+}
+
+.aiModelDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid #C7C7CC;
+  flex-shrink: 0;
+  transition: background 150ms, border-color 150ms;
+}
+
+.aiModelDotSelected {
+  background: #007AFF;
+  border-color: #007AFF;
+}
+
+.aiModelContent {
+  flex: 1;
+}
+
+.aiModelName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1C1C1E;
+}
+
+.aiModelDesc {
+  font-size: 12px;
+  color: #8E8E93;
+  margin-top: 1px;
+  line-height: 1.35;
+}
+
+/* VIP badge */
+.vipBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #FFD166, #FF9500);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+
+/* Cost/latency meta (VIP_PLUS only) */
+.aiModelMeta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.aiModelMetaChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #F2F2F7;
+  font-size: 11px;
+  color: #636366;
+  font-weight: 500;
+}
+
+.aiModelMetaChipHigh { background: rgba(255, 59, 48, 0.1); color: #FF3B30; }
+.aiModelMetaChipLow  { background: rgba(52, 199, 89, 0.1); color: #34C759; }
+.aiModelMetaChipMid  { background: rgba(255, 149, 0, 0.1); color: #FF9500; }
+
+.aiHintNote {
+  font-size: 12px;
+  color: #8E8E93;
+  padding: 8px 14px 10px;
+  line-height: 1.45;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+}
+
+/* ── Danger Zone ── */
+.dangerZone {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  margin-top: 22px;
+}
+
+.dangerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.14);
+  cursor: pointer;
+}
+
+.dangerItem:first-child {
+  border-top: none;
+}
+
+.dangerIcon {
+  width: 29px;
+  height: 29px;
+  border-radius: 7px;
+  background: rgba(255, 59, 48, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dangerTitle {
+  flex: 1;
+  font-size: 16px;
+  color: #FF3B30;
+  font-weight: 500;
+}
+
+.dangerSubtitle {
+  font-size: 12px;
+  color: #8E8E93;
+  margin-top: 2px;
+}
+
+/* Version */
+.version {
+  text-align: center;
+  font-size: 12px;
+  color: #8E8E93;
+  padding: 14px 0 0;
+  letter-spacing: 0.2px;
+}
+
+/* ── Danger confirm modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.modalSheet {
+  background: #fff;
+  width: 100%;
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  padding: 24px 20px 40px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1C1C1E;
+  margin-bottom: 8px;
+}
+
+.modalBody {
+  font-size: 14px;
+  color: #636366;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.modalInput {
+  width: 100%;
+  height: 44px;
+  border: 1.5px solid rgba(60, 60, 67, 0.25);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 16px;
+  margin-bottom: 14px;
+  outline: none;
+}
+
+.modalInput:focus {
+  border-color: #007AFF;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+}
+
+.modalCancelBtn {
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(118, 118, 128, 0.12);
+  color: #1C1C1E;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.modalConfirmBtn {
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  background: #FF3B30;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.modalConfirmBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Home indicator ── */
+.homebar {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: #000;
+  opacity: 0.85;
+  z-index: 30;
+}
+
+/* ── A11y ── */
+@media (prefers-reduced-motion: reduce) {
+  .switch { transition: none; }
+  .switchDot { transition: none; }
+  .item:active { background: none; }
+  .aiModelItem:active { background: none; }
+}
