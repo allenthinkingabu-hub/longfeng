@@ -1,0 +1,35 @@
+
+<view class="page-notif" data-mood="B" data-test-id="{{tids.notification.root}}">
+
+  <view class="head-row">
+    <text class="head-t">{{i.title}}</text>
+    <view class="mark-all" bindtap="onMarkAll" data-test-id="{{tids.notification['mark-read']}}">{{i.mark_all_read}}</view>
+  </view>
+
+  <view wx:if="{{!subscribed}}" class="subscribe-card" data-test-id="{{tids.notification['subscribe-msg-cta']}}">
+    <view class="sub-ic"><van-icon name="bell" color="#fff" size="22px" /></view>
+    <view class="sub-tx">
+      <view class="sub-t">{{i.subscribe_cta}}</view>
+      <view class="sub-s">{{i.subscribe_hint}}</view>
+    </view>
+    <view class="sub-btn" bindtap="onSubscribe">开启</view>
+  </view>
+
+  <view wx:if="{{!list.length}}" class="empty" data-test-id="{{tids.notification.empty}}">
+    <van-empty description="{{i.empty}}" />
+  </view>
+
+  <view wx:else class="msgs">
+    <view wx:for="{{list}}" wx:key="id" class="msg {{item.unread?'unread':''}}" data-test-id="{{tids.notification['msg-card']}}" bindtap="onMsgTap" data-id="{{item.id}}">
+      <view class="msg-ic msg-ic-{{item.type}}">
+        <van-icon name="{{item.icon}}" color="{{iconColors[item.type]}}" size="16px" />
+      </view>
+      <view class="msg-tx">
+        <view class="msg-t">{{item.title}}</view>
+        <view class="msg-s">{{item.body}}</view>
+      </view>
+      <view class="msg-tm">{{item.time}}</view>
+    </view>
+  </view>
+
+</view>

@@ -1,0 +1,235 @@
+/* P10 calendar month · Mood B · STYLE-TRUTH §3 + §4 */
+
+.page-cal {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  padding: 28rpx 28rpx 60rpx;
+}
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-md);
+  box-shadow: var(--tkn-shadow-card);
+  margin-bottom: 16rpx;
+}
+
+.month-nav {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--tkn-radius-3xs);
+  background: var(--tkn-color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.month-title {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  color: var(--tkn-color-text);
+  letter-spacing: 0.4rpx;
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 12rpx 8rpx;
+}
+
+.wday {
+  text-align: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--tkn-color-ter);
+  letter-spacing: 0.6rpx;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-md);
+  padding: 12rpx;
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.cell {
+  min-height: 96rpx;
+  padding: 12rpx 0 8rpx;
+  border-radius: var(--tkn-radius-xs);
+  background: rgba(120, 120, 128, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  position: relative;
+}
+
+.cell.outside {
+  opacity: 0.35;
+}
+
+.cell.today {
+  background: var(--tkn-grad-icon-blue-deep);
+}
+
+.cell.today .d {
+  color: var(--tkn-color-card);
+}
+
+.d {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--tkn-color-text);
+  line-height: 1;
+}
+
+.cell-dots {
+  display: flex;
+  gap: 4rpx;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 64rpx;
+}
+
+.dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+}
+
+.dot-done {
+  background: var(--tkn-color-green);
+}
+
+.dot-pending {
+  background: var(--tkn-color-orange);
+}
+
+.dot-event {
+  background: var(--tkn-color-pink);
+}
+
+.cell.today .dot {
+  box-shadow: 0 0 0 2rpx rgba(255, 255, 255, 0.5);
+}
+
+.legend {
+  display: flex;
+  gap: 24rpx;
+  padding: 20rpx 8rpx 4rpx;
+  font-size: 22rpx;
+  color: var(--tkn-color-sec);
+}
+
+.lg-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-weight: 600;
+}
+
+.event-list {
+  margin-top: 24rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-md);
+  padding: 24rpx;
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.event-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16rpx;
+}
+
+.card-t {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  color: var(--tkn-color-text);
+}
+
+.event-meta {
+  font-size: 22rpx;
+  color: var(--tkn-color-ter);
+  font-weight: 600;
+}
+
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-top: 1rpx solid var(--tkn-color-sep);
+}
+
+.event-row:first-of-type {
+  border-top: none;
+}
+
+.event-ic {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--tkn-radius-3xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.event-ic-study {
+  background: var(--tkn-grad-icon-blue);
+}
+
+.event-ic-exam {
+  background: var(--tkn-grad-icon-red);
+}
+
+.event-ic-general {
+  background: var(--tkn-grad-icon-purple);
+}
+
+.event-tx {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-t {
+  font-size: var(--tkn-fs-body);
+  font-weight: 700;
+  color: var(--tkn-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-s {
+  font-size: 22rpx;
+  color: var(--tkn-color-sec);
+  margin-top: 4rpx;
+}
+
+.event-empty {
+  text-align: center;
+  padding: 48rpx 0;
+  color: var(--tkn-color-ter);
+  font-size: var(--tkn-fs-body-sm);
+}
+
+.subscribe-area {
+  margin-top: 24rpx;
+}
+
+.subscribe-area .btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}

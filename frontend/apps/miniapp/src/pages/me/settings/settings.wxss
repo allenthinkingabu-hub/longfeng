@@ -1,0 +1,154 @@
+/* P13 settings · Mood B · STYLE-TRUTH §3 + §4.5 conic avatar */
+
+.page-settings {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  padding: 28rpx 28rpx 60rpx;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx;
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-card);
+  box-shadow: var(--tkn-shadow-card);
+  margin-bottom: 20rpx;
+}
+
+/* §4.5 conic 彩虹圆头像 */
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, #FFD166, #FF6B6B, #C581F7, #4C9BFF, #FFD166);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.35), inset 0 0 0 4rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar text {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--tkn-color-card);
+  letter-spacing: 1rpx;
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.profile-tx {
+  flex: 1;
+  min-width: 0;
+}
+
+.p-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--tkn-color-text);
+}
+
+.p-meta {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--tkn-color-sec);
+}
+
+.tier-badge {
+  flex: none;
+  padding: 8rpx 16rpx;
+  border-radius: var(--tkn-radius-pill);
+  font-size: 20rpx;
+  font-weight: 800;
+  letter-spacing: 0.6rpx;
+  text-transform: uppercase;
+}
+
+.tier-normal {
+  background: var(--tkn-color-bg);
+  color: var(--tkn-color-sec);
+}
+
+.tier-vip {
+  background: var(--tkn-grad-cta-orange);
+  color: var(--tkn-color-card);
+}
+
+.tier-vip_plus {
+  background: var(--tkn-grad-em-coral);
+  color: var(--tkn-color-card);
+}
+
+.cell-group {
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-card);
+  padding: 8rpx 28rpx;
+  box-shadow: var(--tkn-shadow-card);
+  margin-bottom: 20rpx;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--tkn-color-sep);
+}
+
+.cell:last-child {
+  border-bottom: none;
+}
+
+.cell-ic {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--tkn-radius-3xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.ic-blue {
+  background: var(--tkn-grad-icon-blue);
+}
+
+.ic-purple {
+  background: var(--tkn-grad-icon-purple);
+}
+
+.ic-orange {
+  background: var(--tkn-grad-icon-orange);
+}
+
+.ic-green {
+  background: var(--tkn-grad-icon-green);
+}
+
+.ic-grey {
+  background: linear-gradient(135deg, #8E8E93, #636366);
+}
+
+.cell-l {
+  flex: 1;
+  font-size: var(--tkn-fs-body);
+  font-weight: 600;
+  color: var(--tkn-color-text);
+}
+
+.cell-r {
+  font-size: var(--tkn-fs-body-sm);
+  color: var(--tkn-color-sec);
+  margin-right: 8rpx;
+}
+
+.logout-area {
+  margin-top: 28rpx;
+}
+
+.logout-btn {
+  color: var(--tkn-color-red);
+  background: var(--tkn-color-card);
+  font-weight: 700;
+  box-shadow: var(--tkn-shadow-card);
+}

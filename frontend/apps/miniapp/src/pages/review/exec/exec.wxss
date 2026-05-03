@@ -1,0 +1,214 @@
+/* P08 review exec · Mood B + 自评例外 · STYLE-TRUTH §3 + CLAUDE.md 特殊页面 */
+
+.page-exec {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.exec-nav {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 28rpx;
+  background: var(--tkn-color-card);
+  border-bottom: 1rpx solid var(--tkn-color-sep);
+}
+
+.nav-back {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--tkn-radius-2xs);
+  background: var(--tkn-color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prog-bar {
+  flex: 1;
+  height: 12rpx;
+  border-radius: 6rpx;
+  background: rgba(118, 118, 128, 0.12);
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  background: var(--tkn-grad-icon-blue-deep);
+  border-radius: 6rpx;
+  transition: width 250ms ease;
+}
+
+.prog-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--tkn-color-sec);
+}
+
+.scroll {
+  flex: 1;
+  padding: 28rpx;
+}
+
+.qcard {
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-card);
+  padding: 32rpx 32rpx 36rpx;
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.q-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.subj-tag {
+  display: inline-flex;
+  padding: 4rpx 14rpx;
+  border-radius: var(--tkn-radius-4xs);
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 0.4rpx;
+}
+
+.tag-math {
+  background: rgba(196, 30, 58, 0.12);
+  color: var(--tkn-subject-math);
+}
+
+.tag-physics {
+  background: rgba(0, 87, 183, 0.12);
+  color: var(--tkn-subject-physics);
+}
+
+.tag-chemistry {
+  background: rgba(26, 107, 58, 0.12);
+  color: var(--tkn-subject-chemistry);
+}
+
+.tag-english {
+  background: rgba(156, 79, 0, 0.12);
+  color: var(--tkn-subject-english);
+}
+
+.q-no {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--tkn-color-ter);
+  letter-spacing: 0.6rpx;
+}
+
+.q-stem {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--tkn-color-text);
+  margin-bottom: 28rpx;
+}
+
+.handwrite-area {
+  height: 280rpx;
+  border: 2rpx dashed var(--tkn-color-sep);
+  border-radius: var(--tkn-radius-xs);
+  background: var(--tkn-color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28rpx;
+}
+
+.hw-hint {
+  font-size: var(--tkn-fs-body-sm);
+  color: var(--tkn-color-ter);
+}
+
+.reveal-cta {
+  margin-top: 16rpx;
+}
+
+.answer-box {
+  margin-top: 16rpx;
+  padding: 24rpx;
+  background: var(--tkn-grad-ans-right);
+  border: 1rpx solid rgba(52, 199, 89, 0.25);
+  border-radius: var(--tkn-radius-sm);
+}
+
+.ans-t {
+  font-size: 22rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+  color: var(--tkn-color-green);
+  text-transform: uppercase;
+}
+
+.ans-v {
+  margin-top: 10rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--tkn-color-text);
+}
+
+.ans-explain {
+  margin-top: 12rpx;
+  font-size: var(--tkn-fs-body-sm);
+  line-height: 1.5;
+  color: var(--tkn-color-sec);
+}
+
+/* 自评 dock · 铁律 1 例外色 (CLAUDE.md P08) */
+.grade-dock {
+  padding: 28rpx 32rpx 60rpx;
+  background: var(--tkn-color-card);
+  border-top: 1rpx solid var(--tkn-color-sep);
+}
+
+.grade-title {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  color: var(--tkn-color-text);
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.grade-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.grade-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 24rpx 16rpx;
+  border-radius: var(--tkn-radius-sm);
+  font-size: var(--tkn-fs-body-sm);
+  font-weight: 700;
+  color: var(--tkn-color-card);
+}
+
+.grade-forgot {
+  background: var(--tkn-mastery-forgot);
+  box-shadow: 0 6rpx 18rpx rgba(255, 59, 48, 0.28);
+}
+
+.grade-partial {
+  background: var(--tkn-mastery-partial);
+  box-shadow: 0 6rpx 18rpx rgba(255, 149, 0, 0.28);
+}
+
+.grade-mastered {
+  background: var(--tkn-mastery-mastered);
+  box-shadow: 0 6rpx 18rpx rgba(52, 199, 89, 0.28);
+}
+
+.grade-emoji {
+  font-size: 40rpx;
+  line-height: 1;
+}

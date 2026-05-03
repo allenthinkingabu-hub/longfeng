@@ -1,0 +1,73 @@
+
+<view class="page-exec" data-mood="B" data-test-id="{{tids.reviewExec.root}}">
+
+  <!-- Top progress -->
+  <view class="exec-nav">
+    <view class="nav-back" bindtap="onQuit" data-test-id="{{tids.reviewExec.quit}}">
+      <van-icon name="cross" color="#1C1C1E" size="22px" />
+    </view>
+    <view class="prog-bar">
+      <view class="prog-fill" style="width:{{progressPct}}%"></view>
+    </view>
+    <text class="prog-text">{{i.progress}}</text>
+  </view>
+
+  <scroll-view class="scroll" scroll-y="true">
+
+    <view wx:if="{{currentItem}}" class="qcard">
+      <view class="q-meta">
+        <view class="subj-tag tag-{{currentItem.subject}}">{{currentItem.subject_label}}</view>
+        <text class="q-no">第 {{cur+1}} 题</text>
+      </view>
+      <view class="q-stem" data-test-id="{{tids.reviewExec.stem}}">{{currentItem.stem_text}}</view>
+
+      <!-- 手写区 (placeholder · 真机用 canvas) -->
+      <view class="handwrite-area">
+        <text class="hw-hint">在这里作答 · 点击查看答案</text>
+      </view>
+
+      <view wx:if="{{!revealed}}" class="reveal-cta">
+        <view class="btn-primary" bindtap="onReveal" data-test-id="{{tids.reviewExec['reveal-btn']}}">{{i.reveal}}</view>
+      </view>
+
+      <view wx:if="{{revealed}}" class="answer-box">
+        <view class="ans-t">参考解</view>
+        <view class="ans-v">{{currentItem.answer || '−4, 2'}}</view>
+        <view class="ans-explain">{{currentItem.explain || '原方程化简为 x² = 4，开方时取 ±'}}</view>
+      </view>
+    </view>
+
+    <view style="height:280rpx"></view>
+  </scroll-view>
+
+  <!-- 自评 3 档 · 铁律 1 例外 (mastery 色) -->
+  <view wx:if="{{revealed}}" class="grade-dock">
+    <view class="grade-title">{{i.self_grade_title}}</view>
+    <view class="grade-row">
+      <view class="grade-btn grade-forgot"
+            bindtap="onGrade"
+            data-grade="forgot"
+            data-iron-rule-1-exception="self-grading"
+            data-test-id="{{tids.reviewExec['mastery-forgot']}}">
+        <view class="grade-emoji">😵</view>
+        <text>{{i.forgot}}</text>
+      </view>
+      <view class="grade-btn grade-partial"
+            bindtap="onGrade"
+            data-grade="partial"
+            data-iron-rule-1-exception="self-grading"
+            data-test-id="{{tids.reviewExec['mastery-partial']}}">
+        <view class="grade-emoji">🤔</view>
+        <text>{{i.partial}}</text>
+      </view>
+      <view class="grade-btn grade-mastered"
+            bindtap="onGrade"
+            data-grade="mastered"
+            data-iron-rule-1-exception="self-grading"
+            data-test-id="{{tids.reviewExec['mastery-mastered']}}">
+        <view class="grade-emoji">😎</view>
+        <text>{{i.mastered}}</text>
+      </view>
+    </view>
+  </view>
+</view>

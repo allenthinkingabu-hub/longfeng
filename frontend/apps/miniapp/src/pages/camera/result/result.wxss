@@ -1,0 +1,356 @@
+/* P04 result · Mood B pure-warm · STYLE-TRUTH §3 + §4.23-§4.26 */
+
+.page-result {
+  min-height: 100vh;
+  background: var(--tkn-color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll {
+  flex: 1;
+  padding: 28rpx;
+}
+
+/* §4.23 答案卡 */
+.ans {
+  position: relative;
+  border-radius: var(--tkn-radius-sm);
+  padding: 24rpx 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+}
+
+.ans.wrong {
+  background: var(--tkn-grad-ans-wrong);
+  border: 1rpx solid rgba(255, 59, 48, 0.25);
+}
+
+.ans.right {
+  background: var(--tkn-grad-ans-right);
+  border: 1rpx solid rgba(52, 199, 89, 0.25);
+}
+
+.ans-deco {
+  position: absolute;
+  bottom: -40rpx;
+  right: -40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  opacity: 0.15;
+}
+
+.wrong-deco {
+  background: var(--tkn-color-red);
+}
+
+.right-deco {
+  background: var(--tkn-color-green);
+}
+
+.ans-t {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 1.2rpx;
+  text-transform: uppercase;
+}
+
+.ans.wrong .ans-t {
+  color: var(--tkn-color-red);
+}
+
+.ans.right .ans-t {
+  color: var(--tkn-color-green);
+}
+
+.ans-v {
+  margin-top: 14rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  letter-spacing: 0.4rpx;
+  color: var(--tkn-color-text);
+}
+
+.ans-n {
+  margin-top: 8rpx;
+  font-size: var(--tkn-fs-cap);
+  color: var(--tkn-color-ter);
+}
+
+/* 通用卡 */
+.card {
+  background: var(--tkn-color-card);
+  border-radius: var(--tkn-radius-sm);
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--tkn-shadow-card);
+}
+
+.card-t {
+  font-size: var(--tkn-fs-card-t);
+  font-weight: 800;
+  color: var(--tkn-color-text);
+}
+
+/* §4.24 reason */
+.reason {
+  border-left: 8rpx solid var(--tkn-color-red);
+}
+
+.reason-head {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 16rpx;
+}
+
+.reason-ix {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: var(--tkn-radius-3xs);
+  background: var(--tkn-grad-icon-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reason-tx {
+  font-size: 27rpx;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--tkn-color-text);
+}
+
+.kw {
+  color: var(--tkn-color-red);
+  font-weight: 700;
+  background: rgba(255, 59, 48, 0.10);
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+/* §4.25 steps */
+.steps .card-t {
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--tkn-color-sep);
+}
+
+.step:first-of-type {
+  border-top: none;
+}
+
+.step-n {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: var(--tkn-grad-icon-blue-deep);
+  color: var(--tkn-color-card);
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--tkn-shadow-step-num);
+  flex: none;
+}
+
+.step-tx {
+  flex: 1;
+}
+
+.step-exp {
+  display: block;
+  font-size: 27rpx;
+  line-height: 1.5;
+  color: var(--tkn-color-text);
+}
+
+.step-fm {
+  display: inline-block;
+  margin-top: 10rpx;
+  padding: 6rpx 14rpx;
+  border-radius: var(--tkn-radius-4xs);
+  background: rgba(88, 86, 214, 0.08);
+  color: var(--tkn-color-indigo);
+  font-family: "Times New Roman", Times, serif;
+  font-style: italic;
+  font-size: 28rpx;
+}
+
+/* §4.12 kpcard */
+.kpcard {
+  position: relative;
+  margin-bottom: 20rpx;
+  background: var(--tkn-grad-kp);
+  border: 1rpx solid var(--tkn-kp-border);
+  border-radius: var(--tkn-radius-card);
+  padding: 28rpx 32rpx;
+  overflow: hidden;
+}
+
+.kpcard::after {
+  content: "";
+  position: absolute;
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 50%;
+  top: -120rpx;
+  right: -80rpx;
+  background: radial-gradient(circle, rgba(255, 45, 85, 0.18), transparent 70%);
+}
+
+.kp-head {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 12rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.kp-ic {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--tkn-radius-3xs);
+  background: var(--tkn-grad-icon-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kp-ttl {
+  font-size: var(--tkn-fs-body-em);
+  font-weight: 800;
+  color: var(--tkn-kp-text-title);
+  letter-spacing: 0.4rpx;
+}
+
+.kp-em {
+  color: var(--tkn-color-red);
+}
+
+.kp-body {
+  position: relative;
+  z-index: 2;
+  font-size: var(--tkn-fs-cap);
+  line-height: 1.55;
+  color: var(--tkn-kp-text-body);
+  margin-bottom: 18rpx;
+}
+
+.kp-strong {
+  font-weight: 800;
+  color: var(--tkn-kp-text-em);
+}
+
+.kp-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 16rpx;
+}
+
+.kpbtn {
+  flex: 1;
+  height: 72rpx;
+  border-radius: var(--tkn-radius-2xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--tkn-fs-cap);
+  font-weight: 700;
+}
+
+.kpbtn.pr {
+  background: var(--tkn-grad-cta-orange);
+  color: var(--tkn-color-card);
+  box-shadow: var(--tkn-shadow-cta-orange);
+}
+
+.kpbtn.sc {
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--tkn-kp-text-title);
+  border: 1rpx solid rgba(139, 69, 19, 0.2);
+}
+
+/* §4.26 ebbing */
+.ebbing {
+  background: var(--tkn-grad-ebbing);
+  border: 1rpx solid rgba(88, 86, 214, 0.18);
+  border-radius: var(--tkn-radius-md);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.ebb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+
+.ebb-sub {
+  font-size: 22rpx;
+  color: var(--tkn-color-indigo);
+  font-weight: 600;
+}
+
+.ebb-nodes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8rpx;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.node .pill {
+  width: 100%;
+  height: 16rpx;
+  border-radius: 8rpx;
+  background: #E5E5EA;
+}
+
+.node.first .pill {
+  background: linear-gradient(90deg, #5FA8FF, #007AFF);
+  box-shadow: 0 0 0 8rpx rgba(0, 122, 255, 0.18);
+}
+
+.node text {
+  font-size: 18rpx;
+  color: var(--tkn-color-sec);
+  font-weight: 600;
+}
+
+/* CTA dock · §4.27 */
+.cta-dock {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 32rpx 60rpx;
+  background: var(--tkn-grad-cta-dock);
+  border-top: 1rpx solid var(--tkn-color-sep);
+}
+
+.cta-dock .btn-ghost {
+  flex: 0 0 200rpx;
+}
+
+.cta-dock .btn-primary {
+  flex: 1;
+}

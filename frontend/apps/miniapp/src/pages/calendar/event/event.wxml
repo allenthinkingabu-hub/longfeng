@@ -1,0 +1,31 @@
+
+<view wx:if="{{event}}" class="page-event" data-mood="B" data-test-id="{{tids.eventDetail.root}}">
+
+  <view class="hero-card hero-{{event.type}}">
+    <view class="hero-ic"><van-icon name="{{event.icon}}" color="#fff" size="22px" /></view>
+    <view class="hero-tx">
+      <view class="hero-kicker">{{typeLabel}}</view>
+      <view class="hero-t" data-test-id="{{tids.eventDetail['event-title']}}">{{event.title}}</view>
+    </view>
+  </view>
+
+  <view class="card meta-card" data-test-id="{{tids.eventDetail['event-meta']}}">
+    <view class="meta-row"><text class="meta-l">时间</text><text class="meta-v">{{event.time}}</text></view>
+    <view class="meta-row"><text class="meta-l">学科</text><text class="meta-v">{{event.subject}}</text></view>
+    <view class="meta-row"><text class="meta-l">关联</text><text class="meta-v">{{event.relation || '错题节点'}}</text></view>
+    <view wx:if="{{event.note}}" class="meta-row"><text class="meta-l">备注</text><text class="meta-v">{{event.note}}</text></view>
+  </view>
+
+  <view wx:if="{{event.type==='study' && event.items && event.items.length}}" class="card items-card">
+    <view class="card-t">复习内容（{{event.items.length}}）</view>
+    <view wx:for="{{event.items}}" wx:key="id" class="item-row">
+      <view class="item-stem">{{item.stem_text}}</view>
+      <view class="item-meta">{{item.subject_label}} · 掌握 {{item.mastery}}%</view>
+    </view>
+  </view>
+
+  <view class="cta-dock">
+    <view class="btn-ghost" bindtap="onShare" data-test-id="{{tids.eventDetail['share-btn']}}">{{i.share}}</view>
+    <view wx:if="{{event.type==='study'}}" class="btn-primary" bindtap="onReviewNow" data-test-id="{{tids.eventDetail['cta-review-now']}}">{{i.review_now}}</view>
+  </view>
+</view>

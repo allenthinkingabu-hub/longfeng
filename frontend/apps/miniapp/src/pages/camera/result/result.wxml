@@ -1,0 +1,97 @@
+
+<view class="page-result" data-mood="B" data-test-id="{{tids.result.root}}">
+
+  <scroll-view class="scroll" scroll-y="true">
+
+    <!-- 答案卡 · §4.23 .ans -->
+    <view class="ans wrong" data-test-id="{{tids.result['ans-card']}}">
+      <view class="ans-deco wrong-deco"></view>
+      <view class="ans-t">
+        <van-icon name="cross" color="#FF3B30" size="14px" />
+        <text>{{i.ans_wrong}}</text>
+      </view>
+      <view class="ans-v">{{result.userAnswer || '−2, 2'}}</view>
+      <view class="ans-n">{{result.userNote || '你的答案'}}</view>
+    </view>
+
+    <view class="ans right" data-test-id="{{tids.result['ans-card']}}">
+      <view class="ans-deco right-deco"></view>
+      <view class="ans-t">
+        <van-icon name="success" color="#34C759" size="14px" />
+        <text>{{i.ans_right}}</text>
+      </view>
+      <view class="ans-v">{{result.correctAnswer || '−4, 2'}}</view>
+      <view class="ans-n">{{result.correctNote || '正确解'}}</view>
+    </view>
+
+    <!-- 错因诊断 · §4.24 .reason -->
+    <view class="card reason" data-test-id="{{tids.result.reason}}">
+      <view class="reason-head">
+        <view class="reason-ix">
+          <van-icon name="warn-o" color="#fff" size="16px" />
+        </view>
+        <text class="card-t">{{i.reason_title}}</text>
+      </view>
+      <view class="reason-tx">
+        <text>因式分解时漏写了 </text>
+        <text class="kw">±</text>
+        <text> 号，把 </text>
+        <text class="kw">x² = 4</text>
+        <text> 仅取正根。</text>
+      </view>
+    </view>
+
+    <!-- 解题步骤 · §4.25 .steps -->
+    <view class="card steps">
+      <text class="card-t">{{i.steps_title}}</text>
+      <view class="step" wx:for="{{steps}}" wx:key="n" data-test-id="{{tids.result.step}}">
+        <view class="step-n">{{item.n}}</view>
+        <view class="step-tx">
+          <text class="step-exp">{{item.exp}}</text>
+          <text wx:if="{{item.fm}}" class="step-fm">{{item.fm}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- KP 鼓励卡 · §4.12 .kpcard -->
+    <view class="kpcard" data-test-id="{{tids.result['kp-card']}}">
+      <view class="kp-head">
+        <view class="kp-ic"><van-icon name="bulb-o" color="#fff" size="14px" /></view>
+        <text class="kp-ttl">薄弱知识点 · <text class="kp-em">一元二次方程根式法</text></text>
+      </view>
+      <view class="kp-body">
+        本题命中你 <text class="kp-strong">最近 3 次错过</text> 的同一知识点，建议安排专项复习。
+      </view>
+      <view class="kp-actions">
+        <view class="kpbtn pr">收入复习</view>
+        <view class="kpbtn sc">查看详情</view>
+      </view>
+    </view>
+
+    <!-- 艾宾浩斯卡 · §4.26 .ebbing -->
+    <view class="ebbing" data-test-id="{{tids.result['ebbing-card']}}">
+      <view class="ebb-head">
+        <text class="card-t">{{i.ebbing_title}}</text>
+        <text class="ebb-sub">{{i.ebbing_first}}</text>
+      </view>
+      <view class="ebb-nodes">
+        <view class="node first"><view class="pill"></view><text>20:00</text></view>
+        <view class="node"><view class="pill"></view><text>明天</text></view>
+        <view class="node"><view class="pill"></view><text>3天</text></view>
+        <view class="node"><view class="pill"></view><text>7天</text></view>
+        <view class="node"><view class="pill"></view><text>15天</text></view>
+        <view class="node"><view class="pill"></view><text>30天</text></view>
+      </view>
+    </view>
+
+    <view style="height:160rpx"></view>
+  </scroll-view>
+
+  <!-- CTA dock -->
+  <view class="cta-dock">
+    <view class="btn-ghost" bindtap="onRetake" data-test-id="{{tids.result['cta-retake']}}">{{i.cta_retake}}</view>
+    <view class="btn-primary" bindtap="onSave" data-test-id="{{tids.result['cta-save']}}">{{i.cta_save}}</view>
+  </view>
+
+  <van-toast id="van-toast" />
+</view>

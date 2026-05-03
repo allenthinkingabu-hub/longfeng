@@ -1,11 +1,6 @@
 {
   "navigationBarTitleText": "错题详情",
-  "usingComponents": {
-    "van-tag": "@vant/weapp/tag/index",
-    "van-cell": "@vant/weapp/cell/index",
-    "van-button": "@vant/weapp/button/index",
-    "van-popup": "@vant/weapp/popup/index",
-    "van-field": "@vant/weapp/field/index",
-    "van-divider": "@vant/weapp/divider/index"
-  }
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F2F2F7"
 }

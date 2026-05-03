@@ -1,0 +1,90 @@
+
+<view class="page-landing" data-mood="A" data-test-id="{{tids.landing.root}}">
+
+  <!-- Hero · STYLE-TRUTH §3 Mood A · 深蓝渐变 + 3 blob -->
+  <view class="hero">
+    <view class="hero-blob blob-purple"></view>
+    <view class="hero-blob blob-cyan"></view>
+    <view class="hero-blob blob-pink"></view>
+
+    <view class="hsafe">
+      <view class="brand-row">
+        <view class="logo-conic"><text class="logo-text">AI</text></view>
+        <view class="signin" bindtap="onLoginTap" data-test-id="{{tids.landing['cta-login']}}">{{i.cta_login}}</view>
+      </view>
+
+      <view class="eyebrow">
+        <view class="eyebrow-dot"></view>
+        <text>{{i.eyebrow}}</text>
+      </view>
+
+      <view class="hero-title">让每一道错题<text class="em">都成为你的进步</text></view>
+      <view class="hero-sub">{{i.hero_sub}}</view>
+
+      <view class="metrics">
+        <view class="mchip"><view class="m-n">{{i.metric_users}}</view><view class="m-l">{{i.metric_users_l}}</view></view>
+        <view class="mchip"><view class="m-n">{{i.metric_acc}}</view><view class="m-l">{{i.metric_acc_l}}</view></view>
+        <view class="mchip"><view class="m-n">{{i.metric_save}}</view><view class="m-l">{{i.metric_save_l}}</view></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Scroll overlap · 米白底盖在 hero 上 -->
+  <view class="scroll">
+
+    <view class="sec"><text class="sec-t">{{i.sample_title}}</text></view>
+    <scroll-view class="sample-row" scroll-x="true">
+      <block wx:for="{{samples}}" wx:key="id">
+        <view class="sample" data-test-id="{{tids.landing.sample}}">
+          <view class="sample-thumb sample-{{item.subject}}">
+            <view class="sample-chip">{{item.subjectLabel}}</view>
+            <view class="sample-formula">{{item.formula}}</view>
+          </view>
+          <view class="sample-body">
+            <view class="sample-err">{{item.err}}</view>
+            <view class="sample-kp">{{item.kp}}</view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+
+    <view class="sec"><text class="sec-t">{{i.feature_title}}</text></view>
+    <view class="feat card">
+      <view class="feat-row" data-test-id="{{tids.landing.feature}}">
+        <view class="feat-ico ico-a"><van-icon name="bulb-o" color="#fff" size="18px" /></view>
+        <view class="feat-tx"><view class="feat-t">{{i.feature_a_t}}</view><view class="feat-d">{{i.feature_a_d}}</view></view>
+      </view>
+      <view class="feat-row" data-test-id="{{tids.landing.feature}}">
+        <view class="feat-ico ico-b"><van-icon name="clock-o" color="#fff" size="18px" /></view>
+        <view class="feat-tx"><view class="feat-t">{{i.feature_b_t}}</view><view class="feat-d">{{i.feature_b_d}}</view></view>
+      </view>
+      <view class="feat-row" data-test-id="{{tids.landing.feature}}">
+        <view class="feat-ico ico-c"><van-icon name="friends-o" color="#fff" size="18px" /></view>
+        <view class="feat-tx"><view class="feat-t">{{i.feature_c_t}}</view><view class="feat-d">{{i.feature_c_d}}</view></view>
+      </view>
+    </view>
+
+    <view class="sec"><text class="sec-t">{{i.how_title}}</text></view>
+    <view class="how">
+      <view class="how-step" data-test-id="{{tids.landing['how-step']}}"><view class="how-n">1</view><view class="how-tx">{{i.how_a}}</view></view>
+      <view class="how-step" data-test-id="{{tids.landing['how-step']}}"><view class="how-n">2</view><view class="how-tx">{{i.how_b}}</view></view>
+      <view class="how-step" data-test-id="{{tids.landing['how-step']}}"><view class="how-n">3</view><view class="how-tx">{{i.how_c}}</view></view>
+    </view>
+
+    <view class="social" data-test-id="{{tids.landing.social}}">
+      <view class="social-stack">
+        <view class="ava-mini ava-1"></view>
+        <view class="ava-mini ava-2"></view>
+        <view class="ava-mini ava-3"></view>
+        <view class="ava-mini ava-n">+N</view>
+      </view>
+      <view class="social-tx">已经有 <text class="social-em">1.2M+</text> 位同学一起学</view>
+    </view>
+
+  </view>
+
+  <!-- Bottom CTA dock -->
+  <view class="cta-dock">
+    <view class="cta-try" bindtap="onTryTap" data-test-id="{{tids.landing['cta-try']}}">{{i.cta_try}}</view>
+  </view>
+</view>

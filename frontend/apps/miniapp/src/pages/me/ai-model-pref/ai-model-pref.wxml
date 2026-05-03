@@ -1,0 +1,25 @@
+
+<view class="page-pref" data-mood="B" data-test-id="{{tids.aiModelPref.root}}">
+
+  <view class="hint" data-test-id="{{tids.aiModelPref['tier-hint']}}">
+    <view class="hint-tier tier-{{tier}}">{{tierLabel}}</view>
+    <text class="hint-tx">{{tierHint}}</text>
+  </view>
+
+  <view class="model-list">
+    <view wx:for="{{models}}" wx:key="key" class="model-row {{disabled?'disabled':''}}" bindtap="onPick" data-key="{{item.key}}" data-test-id="{{tids.aiModelPref['model-radio']}}">
+      <view class="m-ic m-ic-{{item.key}}"><text>{{item.iconChar}}</text></view>
+      <view class="m-tx">
+        <view class="m-t">{{item.label}}</view>
+        <view wx:if="{{item.desc}}" class="m-d">{{item.desc}}</view>
+      </view>
+      <view class="m-radio {{selected===item.key?'on':''}}">
+        <view wx:if="{{selected===item.key}}" class="m-radio-dot"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="cta-dock">
+    <view class="btn-primary {{disabled?'btn-disabled':''}}" bindtap="onSave" data-test-id="{{tids.aiModelPref['save-btn']}}">{{i.save}}</view>
+  </view>
+</view>
