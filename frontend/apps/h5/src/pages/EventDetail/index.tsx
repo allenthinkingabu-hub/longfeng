@@ -138,7 +138,7 @@ export const EventDetailPage: React.FC = () => {
   // ── LOADING ─────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className={s.root} data-mood="B">
+      <div className={s.root} data-mood="B" data-testid="p11-root">
         <TopBar
           backLabel={backLabel(from)}
           onBack={() => nav(-1)}
@@ -159,7 +159,7 @@ export const EventDetailPage: React.FC = () => {
   // ── ERROR / NOT FOUND ────────────────────────────────────────────
   if (isError || !data) {
     return (
-      <div className={s.root} data-mood="B">
+      <div className={s.root} data-mood="B" data-testid="p11-root">
         <TopBar
           backLabel={backLabel(from)}
           onBack={() => nav(-1)}
@@ -200,7 +200,7 @@ export const EventDetailPage: React.FC = () => {
   });
 
   return (
-    <div className={s.root} data-mood="B">
+    <div className={s.root} data-mood="B" data-testid="p11-root">
       {/* ── B0 · TopBar ─────────────────────────────────── */}
       <TopBar
         backLabel={backLabel(from)}

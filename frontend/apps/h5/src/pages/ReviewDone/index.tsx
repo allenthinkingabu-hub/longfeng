@@ -135,7 +135,7 @@ export const ReviewDonePage: React.FC = () => {
   // ── LOADING ─────────────────────────────────────────────────
   if (loading || !data) {
     return (
-      <div className={s.root} data-mood="D">
+      <div className={s.root} data-mood="D" data-testid={TEST_IDS.p09.root}>
         <div className={s.skeleton} aria-busy="true" aria-label="加载中">
           <div className={s.skeletonHero} />
           <div className={s.skeletonCard} />
@@ -158,7 +158,7 @@ export const ReviewDonePage: React.FC = () => {
     : null;
 
   return (
-    <div className={s.root} data-mood="D">
+    <div className={s.root} data-mood="D" data-testid={TEST_IDS.p09.root}>
       {/* Status bar (white · on green hero) */}
       <div className={s.status} aria-hidden="true">
         <span className={s.statusTime}>9:47</span>

@@ -272,7 +272,7 @@ export const CalendarMonthPage: React.FC = () => {
   const selectedCell = selectedCellIndex !== null ? cells[selectedCellIndex] : null;
 
   return (
-    <div className={s.root} data-mood="B">
+    <div className={s.root} data-mood="B" data-testid="p10-root">
       {/* ── Navbar ─────────────────────────────────────────── */}
       <header className={s.navbar}>
         <div className={s.navTop}>
