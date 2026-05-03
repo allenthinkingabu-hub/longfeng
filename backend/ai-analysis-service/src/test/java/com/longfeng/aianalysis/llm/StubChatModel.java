@@ -1,49 +1,40 @@
 package com.longfeng.aianalysis.llm;
 
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
-import org.springframework.ai.chat.metadata.ChatResponseMetadata;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.Prompt;
-import reactor.core.publisher.Flux;
+import com.longfeng.aianalysis.llm.AnalysisResult;
+import com.longfeng.aianalysis.stub.ChatClient;
+import java.util.List;
 
 /**
- * Test stub of {@link ChatModel} · returns canned JSON for {@link AnalysisResult} schema.
+ * Test stub of {@link ChatClient} · returns canned {@link AnalysisResult} for unit tests.
  *
- * <p>F-02/F-05/F-07 教训应用：纯 inline class · 不用 Mockito mock。
- * 避免触碰真实 LLM API · 测试速度 < 10ms。
+ * <p>C-14 修复：删除 Spring AI {@code ChatModel} 依赖 · 改为实现自定义 {@link ChatClient} 接口。
+ * F-02/F-05/F-07 教训应用：纯 inline class · 不用 Mockito mock。
+ * 避免触碰真实 LLM API · 测试速度 &lt; 10ms。
  */
-final class StubChatModel implements ChatModel {
+public final class StubChatModel implements ChatClient {
 
-  static final StubChatModel INSTANCE = new StubChatModel();
-
-  private static final String CANNED_JSON =
-      """
-      {
-        "stem": "求方程 x²-5x+6=0 的解",
-        "subject": "MATH",
-        "knowledgePoints": ["二次函数·根的判别式"],
-        "errorType": "CONCEPT",
-        "errorReason": "未运用韦达定理",
-        "solutionSteps": ["a=1, b=-5, c=6", "Δ=b²-4ac=1>0", "x=(5±1)/2 → x₁=3, x₂=2"],
-        "difficulty": 2,
-        "variants": ["求 x²-7x+12=0", "求 x²+3x-4=0"]
-      }
-      """;
+  public static final StubChatModel INSTANCE = new StubChatModel();
 
   private StubChatModel() {}
 
   @Override
-  public ChatResponse call(Prompt prompt) {
-    AssistantMessage msg = new AssistantMessage(CANNED_JSON);
-    Generation gen = new Generation(msg, ChatGenerationMetadata.NULL);
-    return new ChatResponse(java.util.List.of(gen), ChatResponseMetadata.builder().build());
+  public AnalysisResult analyze(String prompt, String imageBase64OrPath, String subject) {
+    return new AnalysisResult(
+        /* stem            */ "求方程 x²-5x+6=0 的解",
+        /* subject         */ "MATH",
+        /* knowledgePoints */ List.of("二次函数·根的判别式"),
+        /* errorType       */ "CONCEPT",
+        /* errorReason     */ "未运用韦达定理",
+        /* solutionSteps   */ List.of(
+            "a=1, b=-5, c=6",
+            "Δ=b²-4ac=1>0",
+            "x=(5±1)/2 → x₁=3, x₂=2"),
+        /* difficulty      */ 2,
+        /* variants        */ List.of("求 x²-7x+12=0", "求 x²+3x-4=0"));
   }
 
   @Override
-  public Flux<ChatResponse> stream(Prompt prompt) {
-    return Flux.just(call(prompt));
+  public String providerName() {
+    return "stub-test";
   }
 }

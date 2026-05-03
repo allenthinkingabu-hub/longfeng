@@ -148,10 +148,9 @@
     <module>common</module>
     <module>gateway</module>
     <module>wrongbook-service</module>
-    <!-- TEMP-EXCLUDE C-14 · Spring AI M1 → 1.0.0 GA API 大改 (builder pattern + Advisor 重命名)
-         模块代码已 commit 在 backend/ai-analysis-service/ 但暂不参与主仓 mvn 构建。
-         S3.5 / reviewer 修复后取消注释。详见 design/落地计划/reports/audit-be-status-snapshot.md C-14。 -->
-    <!-- <module>ai-analysis-service</module> -->
+    <!-- C-14 修复完成 (BE-12-ai-stub) · Spring AI M1 依赖已删除 · 改用自定义 stub ChatClient 接口。
+         S9 QA Agent b 轨 e2e 可跑 · A 轨真 LLM 留 user 后续接真 API key。 -->
+    <module>ai-analysis-service</module>
     <module>review-plan-service</module>
     <module>file-service</module>
     <module>anonymous-service</module>

@@ -56,7 +56,7 @@ public class AnalyzeWebSocketHandler implements WebSocketHandler {
     Sinks.Many<AnalysisChunk> sink = streamHub.getOrCreate(taskId);
 
     Flux<WebSocketMessage> heartbeat =
-        Flux.interval(HEARTBEAT_INTERVAL).map(t -> session.pingMessage(buf -> buf));
+        Flux.interval(HEARTBEAT_INTERVAL).map(t -> session.pingMessage(buf -> buf.allocateBuffer(0)));
 
     Mono<Void> outbound =
         session
