@@ -154,7 +154,7 @@ export function handleWebDeeplink(): string | null {
   if (typeof window === 'undefined') return null;
 
   // 方式 1: WebView 注入
-  const injected = (window as Record<string, unknown>).__WB_DEEPLINK__;
+  const injected = (window as unknown as Record<string, unknown>).__WB_DEEPLINK__;
   if (typeof injected === 'string' && injected.startsWith(WB_SCHEME)) {
     const route = parseDeeplink(injected);
     return deeplinkToPath(route);

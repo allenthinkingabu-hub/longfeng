@@ -58,7 +58,9 @@ function renderList(initialEntries = ['/wrongbook']) {
 }
 
 describe('P05 WrongbookList · B-轨 mock 单测', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   // ── Legacy compat ────────────────────────────────────────────
   it('renders root + active-tab + archive-tab testid (legacy compat)', async () => {
