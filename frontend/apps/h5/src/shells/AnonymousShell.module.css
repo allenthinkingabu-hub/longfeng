@@ -1,0 +1,243 @@
+/*
+ * S7 · AnonymousShell.module.css
+ * Mood A (P-LANDING / P-GUEST-CAPTURE / P-WELCOMEBACK) · hero+overlap
+ *
+ * STYLE-TRUTH §3 Mood A 规范：
+ *   - 深蓝渐变 hero (240-380px) + 3 blob blur
+ *   - scroll 区从 hero 底部 50px overlap（border-top-radius 24-26px）
+ *   - 状态条白字
+ *   - 无 Tab Bar（铁律：匿名 Shell 禁止 Tab Bar）
+ *
+ * ⚠️ 局部 CSS 变量覆盖（STYLE-TRUTH §2 真实值 vs tokens.css 历史偏差）：
+ *   --s-blue: #007AFF  (tokens.css 有 #0071e3，但 STYLE-TRUTH 规定 #007AFF)
+ *   --s-bg:   #F2F2F7  (iOS Light bg · STYLE-TRUTH §2.1)
+ *   --s-sep:  rgba(60,60,67,.14) (iOS separator)
+ *   --s-text: #1C1C1E  (STYLE-TRUTH §2.1)
+ *   --s-ter:  #8E8E93  (三级文字)
+ *
+ * 深蓝 hero token（STYLE-TRUTH §2.6 grad-hero-landing）：
+ *   linear-gradient(170deg, #0F1A3D 0%, #1F3C8C 40%, #5F5BDB 80%, #8B87F6 100%)
+ */
+
+/* ── 局部 STYLE-TRUTH 颜色变量覆盖 ── */
+.root {
+  --s-blue:        #007AFF;
+  --s-bg:          #F2F2F7;
+  --s-card:        #FFFFFF;
+  --s-sep:         rgba(60, 60, 67, 0.14);
+  --s-text:        #1C1C1E;
+  --s-sec:         #636366;
+  --s-ter:         #8E8E93;
+  --s-hero-stop-1: #0F1A3D;
+  --s-hero-stop-2: #1F3C8C;
+  --s-hero-stop-3: #5F5BDB;
+  --s-hero-stop-4: #8B87F6;
+  --s-blob-purple: rgba(88, 86, 214, 0.55);
+  --s-blob-cyan:   rgba(88, 214, 255, 0.45);
+  --s-blob-pink:   rgba(255, 45, 85, 0.35);
+
+  /* 布局 */
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--s-bg);
+  font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Hero 区（Mood A 深蓝渐变 + 3 blob）── */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  background: linear-gradient(
+    170deg,
+    var(--s-hero-stop-1) 0%,
+    var(--s-hero-stop-2) 40%,
+    var(--s-hero-stop-3) 80%,
+    var(--s-hero-stop-4) 100%
+  );
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Blob 1: 紫 · 右上（STYLE-TRUTH §4.3） */
+.hero::before {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  top: -80px;
+  right: -80px;
+  background: radial-gradient(circle, var(--s-blob-purple), transparent 70%);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+/* Blob 2: 青 · 左下 */
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  bottom: -60px;
+  left: -60px;
+  background: radial-gradient(circle, var(--s-blob-cyan), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* Blob 3: 粉 · 中央偏左 */
+.heroBlobPink {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  top: 50%;
+  left: 20%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, var(--s-blob-pink), transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+/* ── 匿名导航栏（Logo 左 · 登录 pill 右） ── */
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  padding: 0 var(--tkn-spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 30;
+}
+
+/* 状态条占位（刘海高度 54px · status bar 在 hero 上显示白字） */
+.statusbar {
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 var(--tkn-spacing-xl);
+  padding-bottom: var(--tkn-spacing-2);
+  justify-content: space-between;
+  position: relative;
+  z-index: 30;
+  color: var(--tkn-color-white);
+  font-size: 17px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Logo 区域 */
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: var(--tkn-spacing-2);
+  text-decoration: none;
+}
+
+/* Conic 彩虹方块 Logo（STYLE-TRUTH §4.6） */
+.logoBlock {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: conic-gradient(
+    from 210deg,
+    #FF5A4F, #FFB454, #F6D84C, #3CD47B, #4C9BFF, #8B87F6, #FF5A4F
+  );
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--tkn-color-white);
+}
+
+/* App 名字（hero 上白字） */
+.appName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tkn-color-white);
+  letter-spacing: 0.1px;
+  opacity: 0.92;
+}
+
+/* 登录 Pill 按钮（STYLE-TRUTH §4.15 signin pill） */
+.loginPill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--tkn-color-white);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity var(--tkn-motion-duration-fast) var(--tkn-motion-ease-apple-standard);
+}
+
+.loginPill:hover {
+  opacity: 0.85;
+}
+
+.loginPill:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+/* Focus ring (a11y) */
+.loginPill:focus-visible {
+  outline: 2px solid var(--tkn-color-white);
+  outline-offset: 2px;
+}
+
+/* ── 内容 Outlet（hero overlap · STYLE-TRUTH §4.7） ── */
+.outlet {
+  position: relative;
+  z-index: 25;
+  background: var(--s-bg);
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  margin-top: -50px;
+  /* 最小内容高度：视口高度 - hero 高度 + overlap */
+  min-height: calc(100vh - 190px);
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+
+/* Hero 文字安全区（hero 上方文字层） */
+.heroContent {
+  position: absolute;
+  bottom: 64px;
+  left: var(--tkn-spacing-md);
+  right: var(--tkn-spacing-md);
+  z-index: 20;
+  color: var(--tkn-color-white);
+}
+
+/* prefers-reduced-motion a11y 兜底 */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

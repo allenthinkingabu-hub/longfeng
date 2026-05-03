@@ -1,0 +1,154 @@
+/*
+ * S7 · TabShell.module.css
+ * 已登录主 Shell · 5 Tab Bar + 11 二级页路由
+ *
+ * STYLE-TRUTH §4.14 Tabbar 规范（archive 01_home.html 实测）：
+ *   background: rgba(242,242,247,0.86)
+ *   backdrop-filter: blur(22px) saturate(180%)
+ *   border-top: .5px solid var(--sep)
+ *   height: 84px · padding-top: 6px
+ *   tab: flex 列 gap:2px · svg 24×24 · font:10px weight:500
+ *   active: var(--blue) = #007AFF
+ *   badge: top:-2px right:28px min-width:16 height:16 radius:8 bg:#FF3B30
+ *
+ * ⚠️ 局部 STYLE-TRUTH 颜色变量覆盖：
+ *   --s-blue:  #007AFF  (iOS HIG 主色 · STYLE-TRUTH §2.1)
+ *   --s-bg:    #F2F2F7  (iOS Light bg)
+ *   --s-sep:   rgba(60,60,67,.14)
+ *   --s-ter:   #8E8E93  (非活跃 tab)
+ *   --s-red:   #FF3B30  (badge)
+ */
+
+/* ── 局部 STYLE-TRUTH 颜色变量覆盖 ── */
+.root {
+  --s-blue:     #007AFF;
+  --s-bg:       #F2F2F7;
+  --s-card:     #FFFFFF;
+  --s-sep:      rgba(60, 60, 67, 0.14);
+  --s-text:     #1C1C1E;
+  --s-ter:      #8E8E93;
+  --s-red:      #FF3B30;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--s-bg);
+  font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* ── 内容区（撑满剩余空间，底部留 tabbar 84px）── */
+.outlet {
+  flex: 1;
+  /* 底部安全区：tab bar 84px + safe area */
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  /* 滚动性能 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Tab Bar（固定底部 · STYLE-TRUTH §4.14）── */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 84px;
+  background: rgba(242, 242, 247, 0.86);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-top: 0.5px solid var(--s-sep);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 6px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 40;
+}
+
+/* ── Tab 单项 ── */
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--s-ter);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: normal;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  position: relative;
+  text-decoration: none;
+  transition: color var(--tkn-motion-duration-fast) var(--tkn-motion-ease-apple-standard);
+
+  /* 扩大点击区域 */
+  min-height: 48px;
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+
+.tab:focus-visible {
+  outline: none;
+  /* 可见焦点环 */
+  color: var(--s-blue);
+}
+
+/* Active tab */
+.tabActive {
+  color: var(--s-blue);
+}
+
+/* Tab icon */
+.tabIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tab label */
+.tabLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+/* ── 复习 Tab Badge（红色数字 · STYLE-TRUTH §4.14）── */
+.badge {
+  position: absolute;
+  top: -2px;
+  right: 28px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--s-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  /* 白圈外描（STYLE-TRUTH §4.10 weekcard dots 风格） */
+  border: 1.5px solid var(--s-card);
+}
+
+/* prefers-reduced-motion a11y 兜底 */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

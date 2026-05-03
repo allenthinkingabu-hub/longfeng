@@ -1,0 +1,395 @@
+/*
+ * S7 · ObserverShell.module.css
+ * Mood E · teal-observer（STYLE-TRUTH §3 Mood E）
+ *
+ * 参考：design/mockups/wrongbook/_archive/18_observer.html
+ *
+ * 关键特征（archive 反推）：
+ *   header: linear-gradient(160deg, #0F1A3D 0%, #1F3C8C 55%, #30B0C7 100%)
+ *   blob cyan: rgba(79,209,217,.45) right-top blur:26px
+ *   watermark: rotate(38deg) · rgba(255,255,255,.14) · user-select:none
+ *   identity card: rgba(0,0,0,.28) + blur(16px) · radius:18px
+ *   scope badge: rgba(79,209,217,.2) border rgba(79,209,217,.4) · teal text
+ *   tab ghost dock: rgba(242,242,247,.92) + blur(20px) · opacity:.45（非活跃）
+ *   写按钮: opacity:.55 + repeating-linear-gradient 斑马纹 + aria-disabled
+ *
+ * ⚠️ 局部 STYLE-TRUTH 颜色变量覆盖：
+ *   --s-blue:  #007AFF
+ *   --s-teal:  #30B0C7  (observer 主题色)
+ *   --s-bg:    #F2F2F7
+ *   --s-sep:   rgba(60,60,67,.14)
+ *   --s-ter:   #8E8E93
+ *   --s-red:   #FF3B30
+ */
+
+/* ── 局部 STYLE-TRUTH 颜色变量覆盖 ── */
+.root {
+  --s-blue:        #007AFF;
+  --s-teal:        #30B0C7;
+  --s-teal-rgba:   rgba(79, 209, 217, 0.45);
+  --s-teal-dim:    rgba(79, 209, 217, 0.2);
+  --s-teal-border: rgba(79, 209, 217, 0.4);
+  --s-bg:          #F2F2F7;
+  --s-card:        #FFFFFF;
+  --s-sep:         rgba(60, 60, 67, 0.14);
+  --s-text:        #1C1C1E;
+  --s-sec:         #636366;
+  --s-ter:         #8E8E93;
+  --s-red:         #FF3B30;
+  --s-hero-1:      #0F1A3D;
+  --s-hero-2:      #1F3C8C;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--s-bg);
+  font-family: var(--tkn-font-text), 'PingFang SC', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Hero Header（Mood E teal-observer · 260px）── */
+.header {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  background: linear-gradient(
+    160deg,
+    var(--s-hero-1) 0%,
+    var(--s-hero-2) 55%,
+    var(--s-teal) 100%
+  );
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Blob cyan · 右上（archive 18_observer.html 实测） */
+.header::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  top: -120px;
+  right: -100px;
+  background: radial-gradient(circle, var(--s-teal-rgba), transparent 70%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+/* ── SCOPE=READ 水印（C4 红线 · 必须存在 · user-select:none）── */
+.watermark {
+  position: absolute;
+  top: 108px;
+  right: -28px;
+  transform: rotate(38deg);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.14);
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+  padding: 6px 42px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  z-index: 8;
+  white-space: nowrap;
+}
+
+/* ── 匿名 Nav（返回 · brand · 退出）── */
+.anonNav {
+  position: absolute;
+  top: 62px;
+  left: 18px;
+  right: 18px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tkn-color-white);
+  cursor: pointer;
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid var(--tkn-color-white);
+  outline-offset: 2px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.brandDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4FD1D9;
+  box-shadow: 0 0 6px #4FD1D9;
+}
+
+.brandName {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tkn-color-white);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.exitBtn {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.22);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 59, 48, 0.4);
+  color: var(--tkn-color-white);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.exitBtn:focus-visible {
+  outline: 2px solid var(--tkn-color-white);
+  outline-offset: 2px;
+}
+
+/* ── Observer Identity Card（archive 18_observer.html §identity）── */
+.identityCard {
+  position: absolute;
+  top: 110px;
+  left: 18px;
+  right: 18px;
+  z-index: 20;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  color: var(--tkn-color-white);
+}
+
+.idRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.idRole {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.idAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4FD1D9, #5856D6);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tkn-color-white);
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.idTx {
+  display: flex;
+  flex-direction: column;
+}
+
+.idKey {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.idValue {
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+.idValueEm {
+  font-style: normal;
+  color: #FFD166;
+  font-size: 10.5px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* SCOPE = READ badge */
+.scopeBadge {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--s-teal-dim);
+  border: 1px solid var(--s-teal-border);
+  color: var(--s-teal);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.idMeta {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.idMetaItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.idMetaKey {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.idMetaValue {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+  color: var(--tkn-color-white);
+}
+
+.idMetaEm {
+  font-style: normal;
+  color: #4FD1D9;
+}
+
+/* ── 内容 Outlet（scroll · overlap · archive 实测：top:300px）── */
+.outlet {
+  position: absolute;
+  top: 300px;
+  left: 0;
+  right: 0;
+  /* 底部留 ghost tabbar 84px */
+  bottom: 84px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 20px 14px 30px;
+  z-index: 20;
+  background: var(--s-bg);
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+}
+
+/* ── Ghost Tab Dock（只读 · C4 红线）── */
+/*
+ * 观察者模式：Tab dock 以 aria-disabled + 斑马纹半透明遮罩实现"写禁止"视觉。
+ * archive 18_observer.html：opacity:.45（非活跃）· opacity:1（active - wrongbook）
+ */
+.tabghost {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 84px;
+  padding: 10px 16px 26px;
+  background: rgba(242, 242, 247, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 0.5px solid var(--s-sep);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 45;
+}
+
+/* 单个 ghost tab（写禁止 · 半透明 · ARIA aria-disabled）*/
+.ghostTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.45;
+  cursor: not-allowed;
+  position: relative;
+  /* 斑马纹覆盖（archive .btn::before 风格）*/
+  /* 注：via CSS，不用额外 DOM */
+}
+
+/* 活跃 tab（错题本 - 只读可看）*/
+.ghostTabActive {
+  opacity: 1;
+  cursor: default;
+}
+
+/* 所有写 tab 被 ARIA 禁用后，通过 attr 选择器添加斑马纹 */
+.ghostTab[aria-disabled="true"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0 6px,
+    rgba(60, 60, 67, 0.04) 6px 7px
+  );
+  pointer-events: none;
+}
+
+.ghostTabIcon {
+  width: 22px;
+  height: 22px;
+  color: var(--s-sec);
+}
+
+.ghostTabLabel {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--s-sec);
+}
+
+/* prefers-reduced-motion a11y 兜底 */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
