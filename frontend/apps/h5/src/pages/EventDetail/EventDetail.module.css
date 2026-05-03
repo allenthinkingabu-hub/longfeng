@@ -1,0 +1,825 @@
+/* P11 · 事件详情三形态 · EventDetail.module.css
+ * Archive reference: design/mockups/wrongbook/_archive/11_event_detail.html
+ * STYLE-TRUTH §3 Mood B pure-warm: #F2F2F7 bg + #FFFFFF 白卡 + iOS nav 玻璃态
+ * 三形态同壳: variant = 'study' | 'general' | 'shared'
+ *
+ * Local vars (STYLE-TRUTH §2 approved values · no #0071e3 · no #2C2A26):
+ *   --ios-blue   : #007AFF
+ *   --ios-red    : #FF3B30
+ *   --ios-orange : #FF9500
+ *   --ios-green  : #34C759
+ *   --ios-indigo : #5856D6
+ *   --ios-teal   : #30B0C7
+ *   --ios-pink   : #FF2D55
+ *   --ios-bg     : #F2F2F7
+ *   --ios-card   : #FFFFFF
+ *   --ios-text   : #1C1C1E
+ *   --ios-sec    : #636366
+ *   --ios-ter    : #8E8E93
+ *   --ios-sep    : rgba(60,60,67,0.14)
+ *   --nav-glass  : rgba(247,247,249,0.82)
+ */
+
+.root {
+  --ios-blue:   #007AFF;
+  --ios-red:    #FF3B30;
+  --ios-orange: #FF9500;
+  --ios-green:  #34C759;
+  --ios-indigo: #5856D6;
+  --ios-teal:   #30B0C7;
+  --ios-pink:   #FF2D55;
+  --ios-bg:     #F2F2F7;
+  --ios-card:   #FFFFFF;
+  --ios-text:   #1C1C1E;
+  --ios-sec:    #636366;
+  --ios-ter:    #8E8E93;
+  --ios-sep:    rgba(60,60,67,0.14);
+  --nav-glass:  rgba(247,247,249,0.82);
+  --label2:     rgba(60,60,67,0.6);
+  --label3:     rgba(60,60,67,0.3);
+
+  --subj-math:    var(--tkn-subject-math,    #C41E3A);
+  --subj-phys:    var(--tkn-subject-physics,  #0057B7);
+  --subj-chem:    var(--tkn-subject-chemistry,#1A6B3A);
+  --subj-eng:     var(--tkn-subject-english,  #9C4F00);
+
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--ios-bg);
+  font-family: var(--tkn-font-text, -apple-system, 'PingFang SC', sans-serif);
+  color: var(--ios-text);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 100px; /* bottom CTA space */
+}
+
+/* ── Top Bar (B0) ────────────────────────────────────────────────── */
+.topnav {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--nav-glass);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 0.5px solid var(--ios-sep);
+  z-index: 20;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ios-blue);
+  font-size: 17px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.topTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ios-text);
+  letter-spacing: -0.2px;
+}
+
+.editBtn {
+  color: var(--ios-blue);
+  font-size: 17px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.editBtn:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── B1 · MorphRibbon (12px color band) ─────────────────────────── */
+.morphRibbon {
+  height: 12px;
+  width: 100%;
+}
+
+/* ── Scroll content area ─────────────────────────────────────────── */
+.scroll {
+  padding: 18px 16px 32px;
+}
+
+/* ── B2 · EventHeroCard ──────────────────────────────────────────── */
+.heroCard {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(120,115,240,0.55), transparent 60%),
+    radial-gradient(100% 80% at 0% 110%, rgba(10,132,255,0.55), transparent 60%),
+    linear-gradient(180deg, #17244E 0%, #2D2B5F 50%, #4C3A82 100%);
+  padding: 18px 18px 20px;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(40,40,110,0.28);
+}
+
+.heroCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 50% at 80% 30%, rgba(255,255,255,0.14), transparent 70%);
+  pointer-events: none;
+}
+
+/* Variant: STUDY — indigo tones (default, same as archive) */
+/* Variant: EXAM — red tones */
+.heroCardExam {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(255,59,48,0.45), transparent 60%),
+    radial-gradient(100% 80% at 0% 110%, rgba(200,30,20,0.40), transparent 60%),
+    linear-gradient(180deg, #3D0A07 0%, #7D1A14 50%, #B32018 100%);
+}
+
+/* Variant: FAMILY — warm orange */
+.heroCardFamily {
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(255,149,0,0.45), transparent 60%),
+    radial-gradient(100% 80% at 0% 110%, rgba(255,90,0,0.40), transparent 60%),
+    linear-gradient(180deg, #3D2008 0%, #7D4514 50%, #C06020 100%);
+}
+
+.eventBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #fff;
+  margin-bottom: 12px;
+  border: 0.5px solid rgba(255,255,255,0.22);
+}
+
+.badgeDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #9F9CFF, #6E6CEB);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.badgeDotExam {
+  background: linear-gradient(135deg, #FF6B6B, #FF3B30);
+}
+
+.badgeDotFamily {
+  background: linear-gradient(135deg, #FFB454, #FF9500);
+}
+
+.heroTitle {
+  font-size: 24px;
+  line-height: 1.18;
+  letter-spacing: -0.4px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.heroSubtitle {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.72);
+  margin-top: 6px;
+  letter-spacing: 0.1px;
+}
+
+.countRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 14px;
+  position: relative;
+}
+
+.countLabel {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.countVal {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  font-feature-settings: "tnum" 1;
+  line-height: 1;
+  color: #fff;
+}
+
+.countUnit {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  margin-left: 3px;
+}
+
+.heroMeta {
+  margin-top: 10px;
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  flex-wrap: wrap;
+}
+
+.heroMetaItem::before {
+  content: "·";
+  margin-right: 8px;
+  color: rgba(255,255,255,0.4);
+}
+
+.heroMetaItem:first-child::before {
+  content: "";
+  margin: 0;
+}
+
+/* ── Section card (shared chrome) ───────────────────────────────── */
+.section {
+  background: var(--ios-card);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+}
+
+.sectionHd {
+  padding: 14px 16px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label2);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 0.5px solid rgba(60,60,67,0.08);
+  min-height: 50px;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.rowIc {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  flex: 0 0 28px;
+}
+
+.rowK {
+  flex: 0 0 82px;
+  font-size: 14px;
+  color: var(--label2);
+  font-weight: 500;
+}
+
+.rowV {
+  flex: 1;
+  font-size: 15px;
+  color: var(--ios-text);
+  font-weight: 500;
+  text-align: right;
+  letter-spacing: -0.1px;
+}
+
+.rowVDim {
+  color: var(--label2);
+  font-weight: 400;
+  margin-left: 6px;
+  font-size: 13px;
+}
+
+.rowNav .rowV {
+  color: var(--ios-blue);
+}
+
+.chev {
+  color: var(--label3);
+  flex: 0 0 12px;
+}
+
+/* ── B3a · Study form: thumb card ───────────────────────────────── */
+.thumbCard {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--ios-card);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+}
+
+.thumbImg {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  flex: 0 0 90px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, #F8F9FE, #EDEEF5);
+  border: 0.5px solid rgba(60,60,67,0.12);
+  display: grid;
+  place-items: center;
+}
+
+.thumbInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.thumbQuestion {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ios-text);
+  letter-spacing: -0.1px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.chipSubject {
+  background: rgba(10,132,255,0.1);
+  color: var(--ios-blue);
+}
+
+.chipKp {
+  background: rgba(88,86,214,0.1);
+  color: var(--ios-indigo);
+}
+
+.chipGrade {
+  background: rgba(52,199,89,0.1);
+  color: #1F8F42;
+}
+
+.thumbStat {
+  font-size: 11px;
+  color: var(--label2);
+  letter-spacing: 0.1px;
+}
+
+.thumbStatDanger {
+  color: var(--ios-red);
+  font-weight: 600;
+}
+
+/* ── B3a · Memory Curve ─────────────────────────────────────────── */
+.curveCard {
+  background: var(--ios-card);
+  border-radius: 16px;
+  padding: 16px 16px 10px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.curveHdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.curveTtl {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--ios-text);
+}
+
+.curveRight {
+  font-size: 12px;
+  color: var(--label2);
+}
+
+.curveRightVal {
+  color: var(--ios-indigo);
+  font-weight: 700;
+  font-feature-settings: "tnum" 1;
+}
+
+.curveGraph {
+  position: relative;
+  height: 120px;
+  margin: 0 2px;
+}
+
+.nodes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -4px;
+  padding: 0 2px;
+}
+
+.nodeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.nodeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #E5E5EA;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #D1D1D6;
+}
+
+.nodeDotDone {
+  background: #34C759;
+  box-shadow: 0 0 0 1px #34C759;
+}
+
+.nodeDotToday {
+  width: 14px;
+  height: 14px;
+  background: var(--ios-indigo);
+  box-shadow: 0 0 0 2px rgba(88,86,214,0.2), 0 0 0 1px var(--ios-indigo);
+  animation: pulseDot 1.8s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(88,86,214,0.2), 0 0 0 1px var(--ios-indigo);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(88,86,214,0.08), 0 0 0 1px var(--ios-indigo);
+  }
+}
+
+.nodeLabel {
+  font-size: 10px;
+  color: var(--label2);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.nodeLabelToday {
+  color: var(--ios-indigo);
+}
+
+.nodeDate {
+  font-size: 9px;
+  color: var(--label3);
+  font-weight: 500;
+  font-feature-settings: "tnum" 1;
+}
+
+.curveFooter {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 0.5px solid rgba(60,60,67,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.retainText {
+  font-size: 12px;
+  color: var(--label2);
+}
+
+.retainGreen {
+  color: #1F8F42;
+  font-weight: 700;
+  font-feature-settings: "tnum" 1;
+}
+
+.nextText {
+  font-size: 12px;
+  color: var(--label2);
+  text-align: right;
+}
+
+.nextTextBold {
+  color: var(--ios-text);
+  font-weight: 600;
+}
+
+/* Cancelled node state (AC-P11-009) */
+.cancelledStudy {
+  background: var(--ios-card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+  font-size: 13px;
+  color: var(--ios-sec);
+  text-align: center;
+}
+
+/* ── B3b · Family form ───────────────────────────────────────────── */
+.familyCard {
+  background: var(--ios-card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+}
+
+.familyNote {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ios-text);
+  margin-bottom: 10px;
+}
+
+.familyMeta {
+  font-size: 12px;
+  color: var(--ios-sec);
+}
+
+/* ── B3c · Exam form ─────────────────────────────────────────────── */
+.examCard {
+  background: var(--ios-card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(20,25,55,0.06);
+}
+
+.examSubjectChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.examLocation {
+  font-size: 14px;
+  color: var(--ios-text);
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.examCountdown {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ios-red);
+  letter-spacing: -0.3px;
+}
+
+.examCountdownLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ios-sec);
+  margin-left: 4px;
+}
+
+.examFrom {
+  font-size: 12px;
+  color: var(--ios-sec);
+  margin-top: 8px;
+}
+
+/* ── B4 · MetaRow ─────────────────────────────────────────────────── */
+/* (reuses .section + .row styles above) */
+
+/* ── Shared info (P11 variant=shared) ────────────────────────────── */
+.sharedBanner {
+  background: rgba(48,176,199,0.08);
+  border: 0.5px solid rgba(48,176,199,0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #30B0C7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sharedBannerIcon {
+  font-size: 16px;
+}
+
+/* ── B5 · Bottom CTA ─────────────────────────────────────────────── */
+.actbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  padding: 12px 16px 14px;
+  background: linear-gradient(180deg, rgba(247,247,249,0), rgba(247,247,249,0.96) 30%, #F7F7F9);
+  display: flex;
+  gap: 10px;
+  z-index: 18;
+}
+
+.btnPrimary {
+  flex: 1;
+  height: 50px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  background: linear-gradient(180deg, #5FA8FF, #007AFF);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0,122,255,0.28);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--tkn-motion-duration-fast, 150ms) var(--tkn-motion-ease-apple-standard, cubic-bezier(0.25,0.46,0.45,0.94));
+}
+
+.btnPrimary:active {
+  transform: scale(0.97);
+}
+
+.btnPrimary:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnGhost {
+  flex: 0 0 110px;
+  height: 50px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 500;
+  background: var(--ios-card);
+  color: var(--ios-text);
+  border: 0.5px solid #E5E5EA;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--tkn-motion-duration-fast, 150ms) var(--tkn-motion-ease-apple-standard, cubic-bezier(0.25,0.46,0.45,0.94));
+}
+
+.btnGhost:active {
+  transform: scale(0.97);
+}
+
+.btnGhost:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+}
+
+/* ── Loading / Error states ─────────────────────────────────────── */
+.skeleton {
+  padding: 18px 16px;
+}
+
+.skeletonBar {
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(120,120,128,0.12);
+  margin-bottom: 16px;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonHero {
+  height: 180px;
+  border-radius: 22px;
+  background: rgba(120,120,128,0.12);
+  margin-bottom: 14px;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonCard {
+  height: 100px;
+  border-radius: 16px;
+  background: rgba(120,120,128,0.12);
+  margin-bottom: 14px;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1.0; }
+}
+
+.errorPage {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.errorText {
+  font-size: 15px;
+  color: var(--ios-sec);
+  margin-bottom: 16px;
+}
+
+.retryBtn {
+  color: var(--ios-blue);
+  font-size: 15px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ghostBtn {
+  color: var(--ios-sec);
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── prefers-reduced-motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar,
+  .skeletonHero,
+  .skeletonCard       { animation: none; }
+  .btnPrimary:active,
+  .btnGhost:active    { transform: none; }
+  .btnPrimary,
+  .btnGhost           { transition: none; }
+  .nodeDotToday       { animation: none; }
+}

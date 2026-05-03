@@ -25,6 +25,10 @@ import { LandingPage } from './pages/Landing';
 import { GuestCapturePage } from './pages/GuestCapture';
 import { SharedPage } from './pages/Shared';
 
+// ── S8 FE-05 实现 ──────────────────────────────────────────────────────────
+import { CalendarMonthPage } from './pages/CalendarMonth';
+import { EventDetailPage } from './pages/EventDetail';
+
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
 const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
@@ -41,8 +45,8 @@ const AuthPage = () => <PlaceholderPage name="P00 登录" />;
 const ReviewTodayPage = () => <PlaceholderPage name="P07 今日复习" />;
 const ReviewExecPage = () => <PlaceholderPage name="P08 复习执行" />;
 const ReviewDonePage = () => <PlaceholderPage name="P09 复习完成" />;
-const CalendarMonthPage = () => <PlaceholderPage name="P10 日历月视图" />;
-const EventDetailPage = () => <PlaceholderPage name="P11 事件详情" />;
+// P10 CalendarMonthPage · FE-05 实现 · 见 pages/CalendarMonth/index.tsx
+// P11 EventDetailPage   · FE-05 实现 · 见 pages/EventDetail/index.tsx
 const NotificationsPage = () => <PlaceholderPage name="P12 通知中心" />;
 const MePage = () => <PlaceholderPage name="P13 设置/我的" />;
 

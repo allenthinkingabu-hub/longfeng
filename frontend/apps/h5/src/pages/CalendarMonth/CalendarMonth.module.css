@@ -1,0 +1,664 @@
+/* P10 · 日历月视图 · CalendarMonth.module.css
+ * Archive reference: design/mockups/wrongbook/_archive/10_calendar_month.html
+ * STYLE-TRUTH §3 Mood B pure-warm: #F2F2F7 bg + #FFFFFF 白卡 + iOS nav 玻璃态
+ *
+ * Local vars (STYLE-TRUTH §2 approved values):
+ *   --ios-blue      : #007AFF  (not #0071e3)
+ *   --ios-red       : #FF3B30
+ *   --ios-orange    : #FF9500
+ *   --ios-green     : #34C759
+ *   --ios-indigo    : #5856D6
+ *   --ios-yellow    : #FFCC00
+ *   --ios-pink      : #FF2D55
+ *   --ios-teal      : #30B0C7
+ *   --ios-bg        : #F2F2F7  (ios bg-light · NOT #FAF8F4)
+ *   --ios-card      : #FFFFFF
+ *   --ios-text      : #1C1C1E  (NOT #2C2A26 / NOT #1d1d1f)
+ *   --ios-sec       : #636366
+ *   --ios-ter       : #8E8E93
+ *   --ios-sep       : rgba(60,60,67,0.14)
+ *   --nav-glass     : rgba(242,242,247,0.82)
+ *   --label3        : rgba(60,60,67,0.30)
+ */
+
+.root {
+  --ios-blue:   #007AFF;
+  --ios-red:    #FF3B30;
+  --ios-orange: #FF9500;
+  --ios-green:  #34C759;
+  --ios-indigo: #5856D6;
+  --ios-yellow: #FFCC00;
+  --ios-pink:   #FF2D55;
+  --ios-teal:   #30B0C7;
+  --ios-bg:     #F2F2F7;
+  --ios-card:   #FFFFFF;
+  --ios-text:   #1C1C1E;
+  --ios-sec:    #636366;
+  --ios-ter:    #8E8E93;
+  --ios-sep:    rgba(60,60,67,0.14);
+  --nav-glass:  rgba(242,242,247,0.82);
+  --label3:     rgba(60,60,67,0.30);
+
+  /* Subject colors from STYLE-TRUTH §2.1 */
+  --subj-math:    var(--tkn-subject-math,    #C41E3A);
+  --subj-phys:    var(--tkn-subject-physics,  #0057B7);
+  --subj-chem:    var(--tkn-subject-chemistry,#1A6B3A);
+  --subj-eng:     var(--tkn-subject-english,  #9C4F00);
+  --exam-color:   var(--tkn-color-danger-default, #FF3B30);
+  --family-color: var(--ios-orange);
+
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--ios-bg);
+  font-family: var(--tkn-font-text, -apple-system, 'PingFang SC', sans-serif);
+  color: var(--ios-text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Navbar (Mood B glass) ──────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 22;
+  background: var(--nav-glass);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 0.5px solid var(--ios-sep);
+}
+
+.navTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 17px;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ios-blue);
+  font-size: 17px;
+  font-weight: 400;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.navCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.navTitle {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  color: var(--ios-text);
+  /* aria-live polite for month change announcement */
+}
+
+.navSub {
+  font-size: 10px;
+  color: var(--ios-sec);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+.navIconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: rgba(120,120,128,0.12);
+  display: grid;
+  place-items: center;
+  border: none;
+  cursor: pointer;
+  color: var(--ios-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.navIconBtn:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+}
+
+/* Sub-nav: segment + filter */
+.subNav {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 10px;
+  align-items: center;
+}
+
+.segControl {
+  background: rgba(120,120,128,0.12);
+  border-radius: 9px;
+  padding: 2px;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ios-text);
+  flex: 0 0 auto;
+}
+
+.segItem {
+  padding: 6px 12px;
+  border-radius: 7px;
+  color: var(--ios-sec);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segItemActive {
+  background: var(--ios-card);
+  color: var(--ios-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 3px 8px rgba(0,0,0,0.04);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.filterBtn {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0,122,255,0.12);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ios-blue);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterBtn:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+  border-radius: 9px;
+}
+
+/* ── Month Navigation (B1) ───────────────────────────────────────── */
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+
+.monthNavBtn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  color: var(--ios-blue);
+  cursor: pointer;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--tkn-motion-duration-fast, 150ms) var(--tkn-motion-ease-apple-standard, cubic-bezier(0.25,0.46,0.45,0.94));
+}
+
+.monthNavBtn:active {
+  background: rgba(0,122,255,0.1);
+}
+
+.monthNavBtn:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+}
+
+.monthNavTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--ios-text);
+}
+
+.todayLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ios-blue);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  display: block;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.todayLink:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Week Header (B2) ──────────────────────────────────────────── */
+.weekHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 12px 4px;
+  color: var(--ios-sec);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.weekDayWknd {
+  color: var(--ios-red);
+  opacity: 0.85;
+}
+
+/* ── Month Grid (B3) ──────────────────────────────────────────── */
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 0 10px 8px;
+}
+
+/* Skeleton state */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 0 10px 8px;
+}
+
+.skeletonCell {
+  height: 52px;
+  border-radius: 10px;
+  background: rgba(120,120,128,0.1);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1.0; }
+}
+
+.cell {
+  height: 52px;
+  border-radius: 10px;
+  padding: 5px 3px 3px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--tkn-motion-duration-fast, 150ms) var(--tkn-motion-ease-apple-standard, cubic-bezier(0.25,0.46,0.45,0.94));
+}
+
+.cell:active {
+  transform: scale(0.97);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 1px;
+  border-radius: 10px;
+}
+
+.cellToday {
+  background: rgba(10,132,255,0.08);
+}
+
+.cellOutOfMonth {
+  /* muted appearance handled by .dayNum */
+}
+
+.dayNum {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--ios-text);
+  line-height: 1;
+}
+
+.dayNumToday {
+  background: var(--ios-blue);
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(10,132,255,0.35);
+}
+
+.dayNumOutOfMonth {
+  color: var(--label3);
+}
+
+.dayNumWeekend {
+  color: var(--ios-red);
+}
+
+/* Today badge override - weekend on today */
+.dayNumTodayWeekend {
+  background: var(--ios-red);
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(255,59,48,0.35);
+}
+
+/* Event count bar */
+.eventBar {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--ios-indigo);
+  background: rgba(88,86,214,0.12);
+  padding: 1px 3px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.eventBarToday {
+  background: #fff;
+  color: var(--ios-blue);
+}
+
+/* Dots row */
+.dots {
+  margin-top: 3px;
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 38px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex: 0 0 5px;
+}
+
+.dotMath    { background: var(--subj-math); }
+.dotPhysics { background: var(--subj-phys); }
+.dotChem    { background: var(--subj-chem); }
+.dotEnglish { background: var(--subj-eng); }
+.dotExam    { background: var(--ios-red); }
+.dotFamily  { background: var(--ios-orange); }
+
+.overflowBadge {
+  font-size: 7px;
+  font-weight: 800;
+  color: var(--ios-ter);
+  background: rgba(142,142,147,0.15);
+  padding: 1px 3px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+  margin-top: 2px;
+}
+
+/* ── Day Events Bottom Sheet (panel within page) ────────────────── */
+.dayList {
+  background: var(--ios-card);
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  padding: 12px 16px 16px;
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.05);
+  margin-top: 4px;
+  overflow-y: auto;
+  max-height: 268px;
+}
+
+.dayListHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.dayListTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: var(--ios-text);
+}
+
+.dayListSub {
+  color: var(--ios-sec);
+  font-size: 12px;
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.dayListMore {
+  color: var(--ios-blue);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.eventRow {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid rgba(60,60,67,0.08);
+  align-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--tkn-motion-duration-fast, 150ms);
+}
+
+.eventRow:last-child {
+  border-bottom: 0;
+}
+
+.eventRow:active {
+  opacity: 0.7;
+}
+
+.eventRowBar {
+  width: 3.5px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: 0 0 3.5px;
+}
+
+.eventRowContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventRowTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ios-text);
+}
+
+.studyTag {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--ios-indigo);
+  background: rgba(88,86,214,0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.eventTag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.2px;
+}
+
+.eventMeta {
+  display: flex;
+  gap: 6px;
+  color: var(--ios-sec);
+  font-size: 11px;
+  margin-top: 3px;
+  font-weight: 500;
+  align-items: center;
+}
+
+.metaSep {
+  opacity: 0.5;
+}
+
+.eventTime {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--ios-text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.eventTimeSub {
+  color: var(--ios-sec);
+  font-size: 10px;
+  font-weight: 600;
+  display: block;
+  margin-top: 2px;
+  letter-spacing: 0.4px;
+}
+
+/* ── Legend Bar (B4) ─────────────────────────────────────────── */
+.legendBar {
+  padding: 8px 16px 12px;
+  background: var(--ios-card);
+  border-top: 0.5px solid var(--ios-sep);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ios-sec);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+}
+
+/* ── Readonly banner (Observer state) ─────────────────────────── */
+.readonlyBanner {
+  background: rgba(88,214,255,0.12);
+  border-bottom: 0.5px solid rgba(48,176,199,0.3);
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #30B0C7;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Error / Empty state ─────────────────────────────────────── */
+.errorState {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--ios-sec);
+}
+
+.errorText {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.retryBtn {
+  color: var(--ios-blue);
+  font-size: 14px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.emptyHint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  color: var(--ios-ter);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* ── Scroll body area ─────────────────────────────────────────── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 84px; /* leave room for tabbar */
+}
+
+/* ── prefers-reduced-motion ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCell { animation: none; }
+  .cell:active  { transform: none; }
+  .cell { transition: none; }
+}
