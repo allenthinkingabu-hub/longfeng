@@ -115,6 +115,23 @@ mvn -pl review-plan-service -am verify -Dtest='*IT'   # Ebbinghaus/ForgotReset/M
 2. **C-06 ShedLock 缺** · 单机 dev OK · 生产多副本前必修
 3. **C-10 NSFW phase1 stub** · 法务合规阻塞上线 · S10 前必修
 
+## ⚠️ 2026-05-03 追加 · review-plan testCompile 旧破 (BE-13 commit 后 mvn test 验证发现)
+
+`MultiPodSweepIT.java` 在 S5 (e5f1d3b) 当时 `NotificationFeignClient` 是 single-method functional interface · 用 lambda OK。S6 (ef56cea / 0c06539) 给该 interface 加了多个方法 → MultiPodSweepIT lambda 不再合法 · `testCompile` fail。
+
+证据：
+- BE-13 写完跑 `mvn -pl review-plan-service -am compile -q` PASS
+- 跑 `mvn test -Dtest=Be13EndpointsIT` fail 在 MultiPodSweepIT 行 119/124/128/130/264/265 (lambda + Optional)
+- 跟 BE-13 新加的 4 文件 (BatchResetByIdsReq/Resp · ListReviewPlanResp · Be13EndpointsIT) 无关
+
+影响：
+- BE-13 production 代码 (controller/service/repo/dto) 编译 + 静态正确 · 已 commit
+- BE-13 IT 6 测试无法跑 (因全项 testCompile 卡 MultiPodSweepIT)
+- 已知 47/47 IT 通过率仅 main 版引用 · 实际未在最新 HEAD 重跑过
+- 修复方式: 把 MultiPodSweepIT 的 2 个 lambda 改 anonymous class 实现 NotificationFeignClient 全部方法 (no-op 其他)
+
+新增 caveat C-27: MultiPodSweepIT testCompile fail 自 S6 起 · BE-13 IT 验收阻断 · P1 修
+
 ## ⚠️ 2026-05-03 追加 · S3.5 stub 改动丢失 (BE-14 sub-agent 发现)
 
 `d486347 fix(s3.5/c-14): ai-analysis-service stub 化` commit 真实存在 + 改了 7 类文件 (ChatClientFactory / 4 ClientConfig / Advisor / QuestionAnalyzerImpl + 新 stub.* + AiModelsController)。但当前 HEAD (`82136c1`) 的 `backend/ai-analysis-service/src` **仅 4 个 skeleton 文件** (`Application` / `HealthController` / `OpenApiConfig` / `MockMvcSmokeIT`) — stub 改动被某次 merge 的"我们"策略覆盖回 skeleton 版。
