@@ -1,12 +1,20 @@
 {
   "name": "@longfeng/e2e",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "S7 · Playwright smoke + miniprogram-automator · V-S7-11/12/20d 视觉回归",
+  "description": "S9 · Playwright 16 SC × 78 TC + 19 POM + 5 fixtures · 三轨独立运行（B mock / C vrt / A e2e）",
   "scripts": {
     "test": "playwright test",
-    "smoke": "playwright test --reporter=list",
-    "install:browsers": "playwright install chromium"
+    "smoke": "playwright test --grep @smoke --reporter=list",
+    "e2e:smoke": "E2E_TRACK=mock-b playwright test --grep @smoke --reporter=list",
+    "e2e:full": "E2E_TRACK=mock-b playwright test --reporter=list",
+    "e2e:mock-b": "E2E_TRACK=mock-b BASE_URL=http://localhost:5173 playwright test",
+    "e2e:e2e-a": "E2E_TRACK=e2e-a playwright test --grep @a-track",
+    "e2e:vrt": "E2E_TRACK=vrt playwright test --grep @vrt --update-snapshots=missing",
+    "e2e:vrt-check": "E2E_TRACK=vrt playwright test --grep @vrt",
+    "e2e:miniapp": "node ./miniprogram/run-all.js",
+    "report": "playwright show-report reports/html",
+    "install:browsers": "playwright install chromium webkit"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.0",
