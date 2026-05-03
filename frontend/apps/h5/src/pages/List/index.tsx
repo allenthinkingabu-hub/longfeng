@@ -82,6 +82,9 @@ export const ListPage: React.FC = () => {
       const hasAnalyzing = pages.some((p) => p.items.some((i) => i.status === 'analyzing'));
       return hasAnalyzing ? 3000 : false;
     },
+    // SC-01: 复返列表必须 refetch 看到刚 save 的新 item · 默认 staleTime 60s 会用 cache
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const allItems = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
