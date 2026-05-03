@@ -25,6 +25,11 @@ import { LandingPage } from './pages/Landing';
 import { GuestCapturePage } from './pages/GuestCapture';
 import { SharedPage } from './pages/Shared';
 
+// ── S8 FE-04 复习三页（P07/P08/P09）──────────────────────────────────────────
+import { ReviewTodayPage } from './pages/ReviewToday';
+import { ReviewExecPage } from './pages/ReviewExec';
+import { ReviewDonePage } from './pages/ReviewDone';
+
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
 const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
@@ -38,9 +43,7 @@ const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
 const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;
 const AuthPage = () => <PlaceholderPage name="P00 登录" />;
-const ReviewTodayPage = () => <PlaceholderPage name="P07 今日复习" />;
-const ReviewExecPage = () => <PlaceholderPage name="P08 复习执行" />;
-const ReviewDonePage = () => <PlaceholderPage name="P09 复习完成" />;
+// ReviewTodayPage, ReviewExecPage, ReviewDonePage — imported above from real pages (S8 FE-04)
 const CalendarMonthPage = () => <PlaceholderPage name="P10 日历月视图" />;
 const EventDetailPage = () => <PlaceholderPage name="P11 事件详情" />;
 const NotificationsPage = () => <PlaceholderPage name="P12 通知中心" />;
