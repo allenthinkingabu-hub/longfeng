@@ -1,9 +1,7 @@
 package com.longfeng.aianalysis.llm;
 
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
+import com.longfeng.aianalysis.stub.ChatClient;
+import com.longfeng.aianalysis.stub.StubChatClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -14,8 +12,8 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>激活条件：{@code longfeng.ai.provider=local-vllm}。
  *
- * <p>实现策略：vLLM serving 默认提供 OpenAI 兼容端点
- * ({@code http://localhost:8000/v1})，复用 {@link OpenAiChatModel}。
+ * <p>C-14 修复：删除 Spring AI 1.0.0-M1 依赖 · 返回 {@link StubChatClient}（stub impl）。
+ * vLLM serving 默认提供 OpenAI 兼容端点，A 轨实现只需换 okhttp 封装。
  *
  * <p>典型用法：staging 环境无外网时切到本地，或 D-AI-Tier-Policy VIP_PLUS 用户启用 BGE-LLaVA。
  */
@@ -27,13 +25,9 @@ public class LocalVllmClientConfig {
   ChatClient localVllmChatClient(
       @Value("${longfeng.ai.local-vllm.api-key:not-needed}") String apiKey,
       @Value("${longfeng.ai.local-vllm.base-url:http://localhost:8000/v1}") String baseUrl,
-      @Value("${longfeng.ai.local-vllm.model:bge-llava}") String model,
-      @Value("${longfeng.ai.local-vllm.temperature:0.2}") double temperature) {
-
-    OpenAiApi api = new OpenAiApi(baseUrl, apiKey);
-    OpenAiChatOptions options =
-        OpenAiChatOptions.builder().withModel(model).withTemperature((float) temperature).build();
-    OpenAiChatModel chatModel = new OpenAiChatModel(api, options);
-    return ChatClient.builder(chatModel).build();
+      @Value("${longfeng.ai.local-vllm.model:bge-llava}") String model) {
+    // C-14 stub: 不调真 LLM · 返回确定性 placeholder
+    // TODO(A 轨): 用 okhttp 封装真实 vLLM 调用 · apiKey + baseUrl + model 已绑定
+    return new StubChatClient("local-vllm");
   }
 }

@@ -75,13 +75,10 @@
       <version>${okhttp.version}</version>
     </dependency>
 
-    <!-- S3 (BE-07-ai) · Spring AI 1.0.0-M1 (BOM in parent) · D-AI 多供应商 + ChatClient 抽象。
-         注意：只引一档 client starter (openai) 作为 ChatClient 协议；其他三家走 protocol-only
-         配置 + Spring AI 通用 ChatClient API（参 plan §5.S3 ChatClientFactory）。 -->
-    <dependency>
-      <groupId>org.springframework.ai</groupId>
-      <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-    </dependency>
+    <!-- C-14 修复：删除 Spring AI 1.0.0-M1 依赖（M1 → 1.0.0 GA API 大改 · builder pattern + Advisor 重命名）。
+         已用自定义 com.longfeng.aianalysis.stub.ChatClient 接口替代。
+         A 轨真 LLM：用 okhttp 封装 ChatClient 实现 · 不再依赖 spring-ai-openai-spring-boot-starter。
+         okhttp 保留（留给 future 真 LLM 自封实现）。 -->
     <!-- WebFlux for SSE Sinks.Many + WebSocket handler (D-SSE / D-WS · §8.3 §8.4) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

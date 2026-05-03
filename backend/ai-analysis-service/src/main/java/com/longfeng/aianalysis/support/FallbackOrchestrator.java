@@ -92,7 +92,7 @@ public class FallbackOrchestrator {
    * <p>注意：返回的不是 throw · 因为业务侧需要"链路降级但流程不断"——前端拿到 placeholder 后
    * 弹出手填表单 · 学生 fill 后另发 {@code POST /api/wb/questions/{qid}:save} 写错因。
    */
-  AnalysisResult manualFallbackPlaceholder() {
+  public AnalysisResult manualFallbackPlaceholder() {
     return new AnalysisResult(
         "",
         null,

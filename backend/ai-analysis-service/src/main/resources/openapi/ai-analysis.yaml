@@ -9,6 +9,8 @@ servers:
 tags:
 - name: analysis
   description: AI 错题分析 · S4 域端点
+- name: ai-models
+  description: D-AI-Model-Catalog · AI 模型目录 SC-16
 - name: health
   description: 探针
 paths:
@@ -134,6 +136,31 @@ paths:
                   provider:
                     type: string
                     example: dashscope
+  /api/ai/models:
+    get:
+      tags:
+      - ai-models
+      summary: 获取可用 AI 模型目录
+      description: "D-AI-Model-Catalog SC-16 · 按 X-User-Tier 过滤可用模型列表 · NORMAL/VIP/VIP_PLUS 三档"
+      operationId: listModels
+      parameters:
+      - name: X-User-Tier
+        in: header
+        description: "用户订阅档位 · NORMAL / VIP / VIP_PLUS · 默认 NORMAL"
+        required: false
+        schema:
+          type: string
+          enum: [NORMAL, VIP, VIP_PLUS]
+          default: NORMAL
+      responses:
+        "200":
+          description: 模型列表（按 tier 过滤）
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiModelInfo'
   /health:
     get:
       tags:
@@ -271,3 +298,42 @@ components:
           type: string
         traceId:
           type: string
+    AiModelInfo:
+      type: object
+      description: "D-AI-Model-Catalog · AI 模型信息 · SC-16"
+      properties:
+        id:
+          type: string
+          description: "provider:model 唯一标识"
+          example: "qianwen:qwen-vl-max"
+        provider:
+          type: string
+          description: "供应商标识"
+          example: "qianwen"
+        displayName:
+          type: string
+          description: "用户可读展示名"
+          example: "通义千问 VL Max"
+        vipOnly:
+          type: boolean
+          description: "是否需要 VIP 或以上订阅"
+          example: false
+        supportedSubjects:
+          type: array
+          items:
+            type: string
+          description: "支持的学科列表"
+          example: ["MATH", "PHYSICS"]
+        costTier:
+          type: string
+          description: "成本档位：L=低 M=中 H=高"
+          enum: [L, M, H]
+          example: "M"
+        avgLatencyMs:
+          type: integer
+          format: int32
+          description: "平均延迟 ms（stub 估算）"
+          example: 1200
+        notes:
+          type: string
+          description: "备注：特性 / 限制 / 推荐场景"
