@@ -264,7 +264,95 @@ export const TEST_IDS = {
       me:        'observer-ghost-tab-me',
     },
   },
+
+  // ── S8 FE-04 · Review Pages (P07/P08/P09) ──────────────────────────────
+
+  // P07 · ReviewToday · AC-REVIEW-TODAY-001 ~ 010
+  p07: {
+    root:                 'p07-root',
+    todayReviewCard:      'today-review-card',
+    heroTotal:            'today-review-card-total',
+    heroDone:             'today-review-card-done',
+    heroEstMin:           'today-review-card-est-min',
+    heroProgressBar:      'today-review-card-progress-bar',
+    heroProgressPct:      'p07-hero-progress-pct',
+    heroMasteryPct:       'today-review-card-mastery-pct',
+    heroParticles:        'today-review-card-particles',
+    emptyState:           'p07-empty-state',
+    emptyCaptureBtn:      'p07-empty-capture-btn',
+    bottomCta:            'p07-bottom-cta',
+    bottomCtaStartAllBtn: 'p07-bottom-cta-start-all-btn',
+  },
+
+  // P08 · ReviewExec · AC-P08-001 ~ 010
+  p08: {
+    root:              'p08-root',
+    topbar:            'p08-topbar',
+    topbarCursor:      'p08-topbar-cursor',
+    progressBar:       'p08-progress-bar',
+    metaChips:         'p08-meta-chips',
+    questionHero:      'p08-question-hero',
+    answerArea:        'p08-answer-area',
+    revealBtn:         'p08-reveal-btn',
+    revealContent:     'p08-reveal-content',
+    revealCheckmark:   'p08-reveal-checkmark',
+    memoryCurve:       'memory-curve',
+    gradeButtons:      'p08-grade-buttons',
+    gradeBtnForgot:    'p08-grade-buttons-forgot',
+    gradeBtnPartial:   'p08-grade-buttons-partial',
+    gradeBtnMastered:  'p08-grade-buttons-mastered',
+    closeBtn:          'p08-close-btn',
+    exitConfirmSheet:  'p08-exit-confirm-sheet',
+  },
+
+  // P09 · ReviewDone · AC-P09-001 ~ 011
+  p09: {
+    root:               'p09-root',
+    celebrateHero:      'celebrate-hero',
+    heroTitle:          'p09-hero-title',
+    heroCheckmark:      'p09-hero-checkmark',
+    heroStreakNumber:    'celebrate-hero-streak-number',
+    confettiBurst:      'confetti-burst',
+    memoryCurve:        'memory-curve',
+    advanceBanner:      'p09-advance-banner',
+    advanceBannerText:  'p09-advance-banner-text',
+    nextDueCard:        'p09-next-due-card',
+    addCalendarBtn:     'p09-next-due-card-add-calendar-btn',
+    statsRow:           'p09-stats-row',
+    statsMastered:      'p09-stats-row-mastered',
+    statsPartial:       'p09-stats-row-partial',
+    statsForgot:        'p09-stats-row-forgot',
+    kpChart:            'p09-kp-chart',
+    ctaRow:             'p09-cta-row',
+    ctaContinueBtn:     'p09-cta-row-continue-btn',
+    ctaEndBtn:          'p09-cta-row-end-btn',
+  },
 } as const;
+
+// ── S8 FE-04 · Dynamic testid helpers (functions · not in const for type safety) ──
+
+/** P07 slot dynamic testids */
+export const p07Ids = {
+  slotHeader:        (key: string) => `p07-slot-${key}-header`,
+  slotTitle:         (key: string) => `p07-slot-${key}-title`,
+  slotItem:          (key: string, idx: number) => `p07-slot-${key}-item-${idx}`,
+  slotItemTime:      (key: string, idx: number) => `p07-slot-${key}-item-${idx}-time`,
+  slotItemTLevel:    (key: string, idx: number) => `p07-slot-${key}-item-${idx}-tlevel`,
+  slotItemCountdown: (key: string, idx: number) => `p07-slot-${key}-item-${idx}-countdown`,
+};
+
+/** P08 dynamic testids */
+export const p08Ids = {
+  revealStep:      (n: number) => `p08-reveal-step-${n}`,
+  memoryCurveNode: (tLevel: string) => `memory-curve-node-${tLevel}`,
+};
+
+/** P09 dynamic testids */
+export const p09Ids = {
+  confettiParticle: (n: number) => `confetti-burst-particle-${n}`,
+  memoryCurveNode:  (tLevel: string) => `memory-curve-node-${tLevel}`,
+  kpChartBarNew:    (n: number) => `p09-kp-chart-row-${n}-bar-new`,
+};
 
 /** 工具：取叶子值（deep-flatten 枚举 · ESLint 规则消费）. */
 export type TestIdValue = typeof TEST_IDS extends infer T ? ExtractLeafValues<T> : never;

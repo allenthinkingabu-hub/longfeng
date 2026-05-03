@@ -25,9 +25,14 @@ import { LandingPage } from './pages/Landing';
 import { GuestCapturePage } from './pages/GuestCapture';
 import { SharedPage } from './pages/Shared';
 
-// ── S8 FE-05 实现 ──────────────────────────────────────────────────────────
+// ── S8 FE-05 实现 (P10/P11) ──────────────────────────────────────────────────
 import { CalendarMonthPage } from './pages/CalendarMonth';
 import { EventDetailPage } from './pages/EventDetail';
+
+// ── S8 FE-04 复习三页 (P07/P08/P09) ──────────────────────────────────────────
+import { ReviewTodayPage } from './pages/ReviewToday';
+import { ReviewExecPage } from './pages/ReviewExec';
+import { ReviewDonePage } from './pages/ReviewDone';
 
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
@@ -42,11 +47,9 @@ const WelcomeBackPage = () => <PlaceholderPage name="P-WELCOMEBACK 回流唤起 
 const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页" />;
 const HomePage = () => <PlaceholderPage name="P-HOME 今日聚合首页" />;
 const AuthPage = () => <PlaceholderPage name="P00 登录" />;
-const ReviewTodayPage = () => <PlaceholderPage name="P07 今日复习" />;
-const ReviewExecPage = () => <PlaceholderPage name="P08 复习执行" />;
-const ReviewDonePage = () => <PlaceholderPage name="P09 复习完成" />;
-// P10 CalendarMonthPage · FE-05 实现 · 见 pages/CalendarMonth/index.tsx
-// P11 EventDetailPage   · FE-05 实现 · 见 pages/EventDetail/index.tsx
+// P07/P08/P09 ReviewToday/Exec/Done · FE-04 实现 · import 在上
+// P10 CalendarMonthPage · FE-05 实现 · import 在上
+// P11 EventDetailPage   · FE-05 实现 · import 在上
 const NotificationsPage = () => <PlaceholderPage name="P12 通知中心" />;
 const MePage = () => <PlaceholderPage name="P13 设置/我的" />;
 
