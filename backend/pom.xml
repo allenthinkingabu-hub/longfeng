@@ -148,7 +148,10 @@
     <module>common</module>
     <module>gateway</module>
     <module>wrongbook-service</module>
-    <module>ai-analysis-service</module>
+    <!-- TEMP-EXCLUDE C-14 · Spring AI M1 → 1.0.0 GA API 大改 (builder pattern + Advisor 重命名)
+         模块代码已 commit 在 backend/ai-analysis-service/ 但暂不参与主仓 mvn 构建。
+         S3.5 / reviewer 修复后取消注释。详见 design/落地计划/reports/audit-be-status-snapshot.md C-14。 -->
+    <!-- <module>ai-analysis-service</module> -->
     <module>review-plan-service</module>
     <module>file-service</module>
     <module>anonymous-service</module>
