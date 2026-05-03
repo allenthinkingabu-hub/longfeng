@@ -16,9 +16,34 @@ type WBItem = {
   [k: string]: unknown;
 };
 
-export const WRONGBOOK_LIST: WBItem[] = JSON.parse(
-  JSON.stringify(fixture.listResponse.items),
-) as WBItem[];
+// SC-01: 持久化到 sessionStorage 让 list state 跨 page.goto() (full reload) 保留
+// e2e POM 用 page.goto('/wrongbook') 完整 reload · 模块重新 init · 之前必丢 push
+const WRONGBOOK_STORAGE_KEY = 'msw:wrongbook:list';
+
+function loadWrongbookList(): WBItem[] {
+  try {
+    if (typeof sessionStorage === 'undefined') {
+      return JSON.parse(JSON.stringify(fixture.listResponse.items)) as WBItem[];
+    }
+    const raw = sessionStorage.getItem(WRONGBOOK_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as WBItem[];
+    const seed = JSON.parse(JSON.stringify(fixture.listResponse.items)) as WBItem[];
+    sessionStorage.setItem(WRONGBOOK_STORAGE_KEY, JSON.stringify(seed));
+    return seed;
+  } catch {
+    return JSON.parse(JSON.stringify(fixture.listResponse.items)) as WBItem[];
+  }
+}
+
+function saveWrongbookList(items: WBItem[]): void {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(WRONGBOOK_STORAGE_KEY, JSON.stringify(items));
+    }
+  } catch { /* ignore quota */ }
+}
+
+export const WRONGBOOK_LIST: WBItem[] = loadWrongbookList();
 
 // 给 capture / share / 其他 handler 调用以注入新 item（按需 push 顶部）
 export function pushWrongbookItem(item: WBItem): void {
@@ -29,6 +54,7 @@ export function pushWrongbookItem(item: WBItem): void {
   } else {
     WRONGBOOK_LIST.unshift(item); // 最新在顶部
   }
+  saveWrongbookList(WRONGBOOK_LIST);
 }
 
 export const wrongbookHandlers = [

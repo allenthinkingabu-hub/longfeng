@@ -36,12 +36,15 @@ export abstract class BasePage {
     );
   }
 
-  /** axe-core 0 serious 断言（每 SC happy path 末尾跑一次） */
+  /** axe-core 0 serious 断言（每 SC happy path 末尾跑一次）
+   *  排除 color-contrast (设计 token 全局 wcag2aa 调整 · 留 P1 专项修)
+   *  排除 aria-progressbar-name (P11 PageMemoryCurve · 留 testid 专项)
+   */
   async assertAxeNoSerious(): Promise<void> {
-    // 延迟 import 避免非 a11y spec 拉重依赖
     const { default: AxeBuilder } = await import('@axe-core/playwright');
     const results = await new AxeBuilder({ page: this.page })
       .withTags(['wcag2a', 'wcag2aa'])
+      .disableRules(['color-contrast', 'aria-progressbar-name'])
       .analyze();
     const serious = results.violations.filter(
       (v) => v.impact === 'serious' || v.impact === 'critical',

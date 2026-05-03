@@ -372,6 +372,7 @@ export const ReviewExecPage: React.FC = () => {
                 className={`${s.nodeDot} ${nd.status === 'done' ? s.nodeDone : nd.status === 'current' ? s.nodeCurrent : ''}`}
                 data-testid={p08Ids.memoryCurveNode(nd.tLevel)}
                 data-status={nd.status === 'current' ? 'current' : nd.status}
+                role="img"
                 aria-label={`${nd.tLevel} ${nd.status}`}
               />
               {i < plannedNodes.length - 1 && (

@@ -323,8 +323,8 @@ export const ListPage: React.FC = () => {
         </svg>
       </button>
 
-      {/* TabBar */}
-      <nav className={s.tabbar} role="navigation" aria-label="底部导航">
+      {/* TabBar · role=tablist 让 button[role=tab] 满足 axe aria-required-parent */}
+      <nav className={s.tabbar} role="tablist" aria-label="底部导航">
         <button className={s.tab} role="tab" aria-selected={false} onClick={() => nav('/')} data-testid="wrongbook.list.tab-home">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 11 L12 3 L21 11 V20 a1 1 0 0 1 -1 1 H14 V14 H10 V21 H4 a1 1 0 0 1 -1 -1 Z"
