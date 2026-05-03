@@ -60,6 +60,53 @@ export const TEST_IDS = {
     'error-banner': 'common.error.banner',
     'confirm-modal': 'common.confirm.modal',
   },
+
+  // ── S7 FE-01 · Shells & Bootstrap ──────────────────────────────────────────
+
+  // AnonymousShell · 匿名 Shell
+  anonShell: {
+    root:      'anon-shell',
+    nav:       'anon-shell-nav',
+    logo:      'anon-shell-logo',
+    loginBtn:  'anon-shell-login-btn',
+    outlet:    'anon-shell-outlet',
+  },
+
+  // TabShell · 已登录主 Shell（5 Tab）
+  tabShell: {
+    root:    'tab-shell',
+    tabbar:  'tab-shell-tabbar',
+    outlet:  'tab-shell-outlet',
+    tabs: {
+      home:      'tab-home',
+      wrongbook: 'tab-wrongbook',
+      capture:   'tab-capture',
+      review:    'tab-review',
+      me:        'tab-me',
+    },
+    badges: {
+      review: 'tab-review-badge',
+    },
+  },
+
+  // ObserverShell · 观察者 Shell（scope=READ · C4 红线）
+  observerShell: {
+    root:          'observer-shell',
+    watermark:     'observer-watermark',
+    nav:           'observer-shell-nav',
+    backBtn:       'observer-back-btn',
+    exitBtn:       'observer-exit-btn',
+    identityCard:  'observer-identity-card',
+    scopeBadge:    'observer-scope-badge',
+    outlet:        'observer-shell-outlet',
+    ghostTabs: {
+      home:      'observer-ghost-tab-home',
+      wrongbook: 'observer-ghost-tab-wrongbook',
+      capture:   'observer-ghost-tab-capture',
+      review:    'observer-ghost-tab-review',
+      me:        'observer-ghost-tab-me',
+    },
+  },
 } as const;
 
 /** 工具：取叶子值（deep-flatten 枚举 · ESLint 规则消费）. */
