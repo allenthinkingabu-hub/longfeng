@@ -12,13 +12,15 @@
     "e2e:e2e-a": "E2E_TRACK=e2e-a playwright test --grep @a-track",
     "e2e:vrt": "E2E_TRACK=vrt playwright test --grep @vrt --update-snapshots=missing",
     "e2e:vrt-check": "E2E_TRACK=vrt playwright test --grep @vrt",
-    "e2e:miniapp": "node ./miniprogram/run-all.js",
+    "e2e:miniapp": "tsx ./miniprogram/run-all.ts",
+    "e2e:miniapp:smoke": "tsx ./miniprogram/all-pages-reachable.ts",
     "report": "playwright show-report reports/html",
     "install:browsers": "playwright install chromium webkit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.42.0",
     "@axe-core/playwright": "^4.9.1",
-    "miniprogram-automator": "^0.11.0"
+    "@playwright/test": "^1.42.0",
+    "miniprogram-automator": "^0.11.0",
+    "tsx": "^4.21.0"
   }
 }

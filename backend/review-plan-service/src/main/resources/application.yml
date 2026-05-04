@@ -35,6 +35,8 @@ review:
     quality-penalty-step: 0.2
   mq:
     enabled: false                # IT 测试默认关 · 生产 override 为 true
+  push:
+    relay-interval-ms: 30000   # PushTaskRelayJob @Scheduled 间隔 · §9 D-MultiPush
 
 # Feign + Sentinel · SC-10.AC-1
 feign:
@@ -47,10 +49,6 @@ calendar:
 
 notification:
   url: ${NOTIFICATION_URL:http://localhost:18090}
-
-review:
-  push:
-    relay-interval-ms: 30000   # PushTaskRelayJob @Scheduled 间隔 · §9 D-MultiPush
 
 # Springdoc OpenAPI
 springdoc:
