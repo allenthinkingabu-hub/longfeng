@@ -85,10 +85,12 @@ export const ReviewExecPage: React.FC = () => {
   const { nodeId } = useParams<{ nodeId: string }>();
   const nav = useNavigate();
 
+  // Demo route (/review/demo/exec) shows revealed state by default to match mockup
+  const isDemoRoute = nodeId === 'demo';
   const [data, setData] = useState<ExecPageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [revealed, setRevealed] = useState(false);
-  const [revealPopped, setRevealPopped] = useState(false);
+  const [revealed, setRevealed] = useState(isDemoRoute);
+  const [revealPopped, setRevealPopped] = useState(isDemoRoute);
   const [grading, setGrading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [answerDraft, setAnswerDraft] = useState('');
@@ -282,7 +284,17 @@ export const ReviewExecPage: React.FC = () => {
         <div className={s.work}>
           <div className={s.paper}>
             <div className={s.handwritten} contentEditable suppressContentEditableWarning onInput={e => setAnswerDraft((e.target as HTMLElement).innerText)}>
-              <span className={s.cursor} aria-hidden="true" />
+              {isDemoRoute ? (
+                <>
+                  f(x) = x² − 4x + 3<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;= (x² − 4x + 4) − 4 + 3<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;= (x − 2)² − 1<br/>
+                  <span style={{ color: '#636366' }}>∴ 顶点</span> (2, −1)
+                  <span className={s.cursor} aria-hidden="true" />
+                </>
+              ) : (
+                <span className={s.cursor} aria-hidden="true" />
+              )}
             </div>
           </div>
           <div className={s.workTools}>
