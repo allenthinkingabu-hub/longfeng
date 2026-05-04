@@ -332,3 +332,33 @@ verdict 处理：
 - ✅ `PASS` → 可 commit
 - ❌ `FAIL` → 修复循环 · 不交付（按 issues[].suggested_fix 改 · 重跑直到 PASS）
 - ⚠️ `AMBIGUOUS` → ask user 决策 · 不假设
+
+### §15.1 例外 · KPI banner mockup-diff tolerance (临时 · BUG-LF-08)
+
+> **状态**：临时例外 · 待设计师补 mockup 后撤销
+> **决策日期**：2026-05-04
+> **决策方**：QA + user (Option C of BUG-LF-08)
+> **撤销条件**：`_archive/14_landing.html` 补 KPI section 与 spec §3 B5 + §8 AC-LANDING-005 对齐 · mockup-diff 自然降回 ≤ 5% · 此节随之删除
+
+**背景**：
+
+`spec.md §3 B5` + `§8 AC-LANDING-005` 明确要求 P-LANDING 渲染 KPI banner（"已分析 100w+ 错题 · 7 日留存 47%"），实施已完成（commit 3a7c905）。但权威 mockup `_archive/14_landing.html` **没有** KPI section（grep 0 matches），导致 mockup-diff 持续 ~30%（其中 ~15-20pp 来自 KPI 视觉差 · 另 ~10-15pp 来自 Times New Roman 字体在 chromium 与 Safari 的渲染差异 · 不可消）。
+
+**临时方案**：
+
+`e2e/specs/mockup-vs-impl.spec.ts:58` 的 P-LANDING tolerance 从 0.05 升至 **0.35**：
+
+```typescript
+// BUG-LF-08 例外
+{ id: 'P-LANDING', ..., tolerance: 0.35 },  // was 0.05
+```
+
+**风险/代价**：
+- ❌ 失去自动化 visual gate 价值（35% 容差几乎不会 fail · 任何视觉回归都不易 catch）
+- ⚠️ 需要 vrt-multi (1% 容差) + design-reviewer (vision audit) 兜底替代 mockup-diff
+
+**Round 2 行动**（设计师执行）：
+1. 在 `design/mockups/wrongbook/_archive/14_landing.html` 加 `<section class="kpi">已分析 100w+ 错题 · 7 日留存 47%</section>` 区段
+2. 跑 `pnpm e2e:mockup-diff -- --grep P-LANDING` · 期望 diff ≤ 10%
+3. 把本节 §15.1 删除 · 把 `mockup-vs-impl.spec.ts` tolerance 改回 `0.05`
+4. 关 BUG-LF-08（已经 RESOLVED）

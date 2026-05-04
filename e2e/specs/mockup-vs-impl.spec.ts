@@ -55,7 +55,8 @@ const PAGES: PageDef[] = [
   { id: 'P12',             mockup: '_archive/12_notifications.html',    route: '/notifications',   pageRootSelector: '[data-testid="notifications-page"]',    tolerance: 0.05 },
   { id: 'P13',             mockup: '_archive/13_settings.html',         route: '/me/settings',     pageRootSelector: '[data-testid="settings-page"]',         tolerance: 0.05 },
   // 匿名 / 访客 / 分享 / 回访
-  { id: 'P-LANDING',       mockup: '_archive/14_landing.html',          route: '/welcome',         pageRootSelector: '[data-testid="landing-page"]',          tolerance: 0.05 },
+  // BUG-LF-08 例外 · KPI banner spec 要求 / mockup 未同步 → tolerance 0.05 → 0.35 (待设计师补 mockup 后降回 0.05) · 见 spec.md §15
+  { id: 'P-LANDING',       mockup: '_archive/14_landing.html',          route: '/welcome',         pageRootSelector: '[data-testid="landing-page"]',          tolerance: 0.35 },
   { id: 'P-GUEST-CAPTURE', mockup: '_archive/15_guest_capture.html',    route: '/guest/capture',   pageRootSelector: '[data-testid="guest-capture-page"]',    tolerance: 0.05 },
   { id: 'P-SHARED',        mockup: '_archive/16_shared.html',           route: '/s/demo-token',    pageRootSelector: '[data-testid="shared-page"]',           tolerance: 0.05 },
   { id: 'P-OBSERVER',      mockup: '_archive/18_observer.html',         route: '/observer/demo',   pageRootSelector: '[data-testid="observer-page"]',         tolerance: 0.05 },

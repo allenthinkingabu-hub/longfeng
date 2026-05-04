@@ -1,4 +1,4 @@
-**Status:** ⚠️ BLOCKED · 需 user/PM 决策
+**Status:** ✅ RESOLVED · Option C (tolerance 0.05 → 0.35 临时) · user 决策 2026-05-04
 **Severity:** P1 (设计真相冲突 · 影响 mockup-diff 比对)
 **Spec ref:** P-LANDING.spec.md §3 B5 + §8 AC-LANDING-005 vs. design/mockups/wrongbook/_archive/14_landing.html
 **Discovered in:** design-reviewer P-LANDING-post-lf01.json LF01-02
@@ -40,3 +40,16 @@
 ### Round 0 — discovered (2026-05-04 18:38)
 - design-reviewer 报告中作为 critical 列出
 - 标 BLOCKED · 等 user 给方向
+
+### Round 2 — RESOLVED (2026-05-04 19:00) · user 选 Option C
+
+**实施**：
+1. `e2e/specs/mockup-vs-impl.spec.ts:58` · P-LANDING tolerance `0.05` → `0.35` (加注释指向 BUG-LF-08)
+2. `design/system/pages/P-LANDING.spec.md` 加 §15.1 临时例外说明（标"待设计师补 mockup 后撤销"）
+3. 跑 `pnpm e2e:mockup-diff -- --grep P-LANDING` · **1 passed** ✅ (实际 31.11% ≤ 35% tolerance)
+
+**Round 2 行动 (设计师)**：
+1. 在 `_archive/14_landing.html` 加 KPI section · 跟 spec §3 B5 对齐
+2. mockup-diff 应自然降回 ≤ 10%
+3. 把 spec §15.1 删除 · tolerance 改回 0.05
+4. close BUG-LF-08 (此节)
