@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mockup Chrome Attr Example · F 机制示范</title>
+<style>
+  body {
+    margin: 0;
+    background: #e5e5ea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  /* phone shell · iPhone 边框装饰 (chrome) */
+  .phone {
+    position: relative;
+    width: 393px;
+    height: 852px;
+    background: #fff;
+    border-radius: 54px;
+    box-shadow: inset 0 0 0 6px #111, 0 24px 64px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+  }
+  /* notch · CSS pseudo-element · 无 DOM 节点 · 无需 attr */
+  .phone::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 11px;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 37px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 50;
+  }
+  .statusbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 32px 0;
+    color: #fff;
+    z-index: 40;
+  }
+  .homebar {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    border-radius: 3px;
+    background: #000;
+    opacity: .8;
+  }
+  /* page content · 真实要实现的部分 · 不加 chrome attr */
+  .content {
+    position: absolute;
+    top: 54px;
+    left: 0;
+    right: 0;
+    bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #007AFF, #5856D6);
+    color: #fff;
+  }
+  .hero { font-size: 32px; font-weight: 700; margin-top: 100px; }
+  .cta {
+    margin-top: 40px;
+    padding: 14px 24px;
+    background: #fff;
+    color: #007AFF;
+    border-radius: 16px;
+    text-align: center;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  IMPLEMENTATION BOUNDARIES · F 机制 · 必读 · MUST
+  ══════════════════════════════════════════════════════════════════════
+  - data-mockup-chrome="iphone-frame"     · iPhone 黑色边框 · ❌ 不实现
+  - data-mockup-chrome="iphone-statusbar" · 9:41 / 信号 / 电池 · ❌ 不实现
+  - data-mockup-chrome="iphone-homebar"   · 底部 home indicator · ❌ 不实现
+  - 其他元素 (.content / .hero / .cta · 任何未标 chrome 的) · ✅ 实现 (100% viewport)
+
+  浏览器原生提供时间 / 信号 / 电池 status; iPhone 边框 + notch + home indicator 是 mockup 装饰。
+  notch 用 .phone::before pseudo · 无 DOM 节点 · 无需 attr (vision agent 也读不到 pseudo)
+-->
+
+<div class="phone" data-mockup-chrome="iphone-frame">
+  <!-- 顶部状态栏 chrome · 9:41 时间 + 右侧信号/wifi/电池 -->
+  <div class="statusbar" data-mockup-chrome="iphone-statusbar">
+    <span>9:41</span>
+    <span>●●● ▮▮ 100%</span>
+  </div>
+
+  <!-- 真实页面内容 · 不加 data-mockup-chrome attr -->
+  <div class="content">
+    <h1 class="hero">Hello World</h1>
+    <p>这是真实页面内容 · FE 必须实现 · 100% viewport 适配</p>
+    <button class="cta">Try Now</button>
+  </div>
+
+  <!-- 底部 home indicator chrome -->
+  <div class="homebar" data-mockup-chrome="iphone-homebar"></div>
+</div>
+
+</body>
+</html>

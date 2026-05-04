@@ -1,0 +1,35 @@
+name: Design Sign-Off Gate (G 机制)
+
+# 触发: PR 改动了高保真页面 (frontend/apps/h5/src/pages/[A-Z]*)
+# 要求: PR 必须含 'designer-approved' label · 否则阻断 merge
+# 紧急绕过: 用 'design-emergency-bypass' label (留 audit 痕迹)
+# Plan: docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer3 G
+
+on:
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, synchronize]
+    paths:
+      - 'frontend/apps/h5/src/pages/**'
+      - 'design/mockups/**'
+      - 'design/system/pages/**'
+
+jobs:
+  design-sign-off:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check labels
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          echo "PR labels: $LABELS"
+          if [[ "$LABELS" == *"design-emergency-bypass"* ]]; then
+            echo "⚠️ Emergency bypass label detected · skipping sign-off check (留 audit 痕迹)"
+            echo "::warning::PR merged with design-emergency-bypass · 设计师必须 7 日内补 review"
+            exit 0
+          fi
+          if [[ "$LABELS" != *"designer-approved"* ]]; then
+            echo "::error::❌ Missing 'designer-approved' label · 需 PM/设计师 review 三联截图后打标 (per CLAUDE.md §2.11 · docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer3 G)"
+            echo "::error::紧急情况可用 'design-emergency-bypass' label override · 但留审计痕迹"
+            exit 1
+          fi
+          echo "✅ Designer-approved label present · gate passed"
