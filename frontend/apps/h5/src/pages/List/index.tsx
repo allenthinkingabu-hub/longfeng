@@ -395,7 +395,6 @@ export const ListPage: React.FC = () => {
         </button>
       </nav>
 
-      <div className={s.homebar} aria-hidden="true" />
     </div>
   );
 };

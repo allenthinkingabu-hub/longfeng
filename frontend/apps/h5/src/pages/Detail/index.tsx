@@ -594,7 +594,6 @@ export const DetailPage: React.FC = () => {
         </button>
       </nav>
 
-      <div className={s.homebar} aria-hidden="true" />
 
       {/* Image Viewer Modal */}
       {imageViewerOpen && (

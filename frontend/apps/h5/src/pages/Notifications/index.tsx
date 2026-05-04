@@ -284,11 +284,7 @@ export const NotificationsPage: React.FC = () => {
       data-testid="p12-root"
       data-mood="B"
     >
-      {/* ── StatusBar ── */}
-      <div className={s.statusbar} role="presentation">
-        <span>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* StatusBar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* ── Nav ── */}
       <nav className={s.nav} role="navigation" aria-label="通知中心导航">
@@ -428,7 +424,6 @@ export const NotificationsPage: React.FC = () => {
         )}
       </div>
 
-      <div className={s.homebar} aria-hidden="true" />
     </main>
   );
 };

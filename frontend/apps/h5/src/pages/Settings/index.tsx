@@ -398,11 +398,7 @@ export const SettingsPage: React.FC = () => {
       data-testid="p13-root"
       data-mood="B"
     >
-      {/* ── StatusBar ── */}
-      <div className={s.statusbar} role="presentation">
-        <span>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* StatusBar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* ── Nav ── */}
       <nav className={s.nav} role="navigation" aria-label="设置页导航">
@@ -842,7 +838,6 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      <div className={s.homebar} aria-hidden="true" />
     </main>
   );
 };

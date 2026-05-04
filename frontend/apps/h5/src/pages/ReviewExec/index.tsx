@@ -478,7 +478,6 @@ export const ReviewExecPage: React.FC = () => {
         </button>
       </nav>
 
-      <div className={s.homebar} aria-hidden="true" />
 
       {/* AC-P08-009 · Exit confirm sheet (D-Cancel-Race) */}
       {showExitConfirm && (

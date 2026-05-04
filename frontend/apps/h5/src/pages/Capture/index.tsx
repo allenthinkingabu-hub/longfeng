@@ -141,33 +141,7 @@ export const CapturePage: React.FC = () => {
       data-testid={TEST_IDS.p02.root}
       data-mood="C"
     >
-      {/* ── Status bar ─────────────────────────────────────── */}
-      <div className={s.statusbar}>
-        <span>9:41</span>
-        <div className={s.statusIcons}>
-          {/* Signal */}
-          <svg width="17" height="11" viewBox="0 0 17 11" aria-hidden="true">
-            <g fill="#fff">
-              <rect x="0" y="7" width="3" height="4" rx=".5"/>
-              <rect x="4.5" y="5" width="3" height="6" rx=".5"/>
-              <rect x="9" y="3" width="3" height="8" rx=".5"/>
-              <rect x="13.5" y="1" width="3" height="10" rx=".5"/>
-            </g>
-          </svg>
-          {/* WiFi */}
-          <svg width="16" height="11" viewBox="0 0 16 11" fill="none" aria-hidden="true">
-            <path d="M8 3c2 0 3.8.7 5.2 1.9l1.4-1.4C12.8 1.9 10.5 1 8 1S3.2 1.9 1.4 3.5l1.4 1.4C4.2 3.7 6 3 8 3Z" fill="#fff"/>
-            <path d="M8 6c1.2 0 2.3.4 3.2 1.1l1.4-1.4C11.3 4.6 9.7 4 8 4s-3.3.6-4.6 1.7l1.4 1.4C5.7 6.4 6.8 6 8 6Z" fill="#fff"/>
-            <circle cx="8" cy="9" r="1.4" fill="#fff"/>
-          </svg>
-          {/* Battery */}
-          <svg width="26" height="12" viewBox="0 0 26 12" aria-hidden="true">
-            <rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#fff" opacity=".55"/>
-            <rect x="2" y="2" width="17" height="8" rx="1.6" fill="#fff"/>
-            <rect x="23" y="4" width="2" height="4" rx="1" fill="#fff" opacity=".55"/>
-          </svg>
-        </div>
-      </div>
+      {/* StatusBar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* ── Nav ────────────────────────────────────────────── */}
       <header className={s.nav} data-testid={TEST_IDS.p02.topbar} role="banner">

@@ -153,11 +153,7 @@ export const AnalyzingPage: React.FC = () => {
       data-testid={TEST_IDS.p03.root}
       data-mood="C"
     >
-      {/* ── Status bar ─────────────────────────────────────── */}
-      <div className={s.statusbar} data-testid={TEST_IDS.p03.statusbar}>
-        <span>9:41</span>
-        <span>●●● ▮▮ 100%</span>
-      </div>
+      {/* StatusBar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* ── Page ───────────────────────────────────────────── */}
       <section className={s.page} data-mood="C" data-section="analyzing">

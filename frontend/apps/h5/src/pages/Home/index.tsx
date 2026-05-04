@@ -205,11 +205,7 @@ export const HomePage: React.FC = () => {
       data-testid="p-home-root"
       data-mood="A"
     >
-      {/* ── StatusBar ── */}
-      <div className={s.statusbar} role="presentation">
-        <span>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* StatusBar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* ── Hero (Mood A 240px 深蓝 + 3 blob) ── */}
       <header className={s.hero} role="banner" aria-label={`${data?.studentName ?? '...'}的今日摘要`}>
