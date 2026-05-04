@@ -34,14 +34,19 @@ async function bootstrap() {
     window.history.replaceState(null, '', deeplinkPath);
   }
 
-  // ── 2. Mock 服务（dev only）
-  if (import.meta.env.DEV) {
+  // ── 2. Mock 服务（dev only · VITE_DISABLE_MSW=1 强制关 · 用于 L3 hybrid 真链路测试）
+  const mswDisabled = import.meta.env.VITE_DISABLE_MSW === '1' || import.meta.env.VITE_DISABLE_MSW === 'true';
+  if (import.meta.env.DEV && !mswDisabled) {
     try {
       const { worker } = await import('./__mocks__/browser');
       await worker.start({ onUnhandledRequest: 'bypass' });
     } catch {
       // service workers unavailable (e2e with sw blocked)
     }
+  }
+  if (mswDisabled) {
+    // 标记给 e2e supervisor 验证 (MSW 真关 · 不是 silent fallback)
+    (window as unknown as { __lf_msw_disabled__: boolean }).__lf_msw_disabled__ = true;
   }
 
   // ── 3. 同步快速判断（首帧渲染决策）
