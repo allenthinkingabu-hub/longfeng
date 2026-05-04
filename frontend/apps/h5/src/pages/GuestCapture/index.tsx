@@ -233,7 +233,7 @@ export const GuestCapturePage: React.FC = () => {
             立即注册 · 解锁无限次
           </button>
         </div>
-        <div className={s.homebar} aria-hidden="true" />
+        {/* homebar 已删 · iOS chrome */}
       </div>
     );
   }
@@ -244,11 +244,7 @@ export const GuestCapturePage: React.FC = () => {
       data-testid="p-guest-capture"
       data-mood="C"
     >
-      {/* B1 StatusBar */}
-      <div className={s.statusbar} data-testid="p-guest-capture-statusbar" aria-hidden="true">
-        <span className={s.time}>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* B1 StatusBar 已删 · 浏览器原生提供时间/信号/电池 · _archive 中是 mockup chrome */}
 
       {/* B3 Camera viewport (Mood C dark-camera) */}
       <div
@@ -441,7 +437,7 @@ export const GuestCapturePage: React.FC = () => {
         </div>
       )}
 
-      <div className={s.homebar} aria-hidden="true" />
+      {/* homebar 已删 · iOS chrome · _archive data-mockup-chrome="iphone-homebar" */}
     </div>
   );
 };

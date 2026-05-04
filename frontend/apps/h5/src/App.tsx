@@ -140,13 +140,14 @@ const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页
  */
 export const App: React.FC = () => (
   <Routes>
-    {/* P-LANDING 独立挂 · 自带 hero/nav/CTA dock (per _archive/14_landing.html) · 不进 shell · 避免 shell nav + page nav 双重渲染 */}
+    {/* P-LANDING / P-GUEST-CAPTURE / P-SHARED 独立挂 · 自带 hero/nav/CTA · 不进 shell ·
+        避免 shell nav + page nav 双重渲染 (per _archive/14|15|16_*.html data-mockup-chrome) */}
     <Route path="/welcome" element={<LandingPage />} />
+    <Route path="/guest/capture" element={<GuestCapturePage />} />
+    <Route path="/s/:shareToken" element={<SharedPage />} />
 
-    {/* ── 匿名 Shell（Mood A · 无 TabBar）── */}
+    {/* ── 匿名 Shell（Mood A · 无 TabBar · 仅 P-WELCOMEBACK 用）── */}
     <Route element={<AnonymousShell loginRoute="/auth" />}>
-      <Route path="/guest/capture" element={<GuestCapturePage />} />
-      <Route path="/s/:shareToken" element={<SharedPage />} />
       <Route path="/welcome-back" element={<WelcomeBackPage />} />
       {/* SC-14 异常 spec 用 /welcomeback (无横线) · alias 兼容 */}
       <Route path="/welcomeback" element={<WelcomeBackPage />} />

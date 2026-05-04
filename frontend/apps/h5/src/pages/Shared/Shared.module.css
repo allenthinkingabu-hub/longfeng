@@ -27,29 +27,19 @@
   --sh-shadow-cta: 0 12px 30px -6px rgba(31, 60, 140, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* ── phone shell ── */
+/* ── page root ──
+ * 修复: 之前 .phone 写死 393×852 + iPhone 边框/notch · 把 mockup 的 iPhone chrome
+ * 装饰当成页面元素了。_archive HTML 已标 data-mockup-chrome="iphone-frame" 表明
+ * 这是装饰。改 100% viewport 自适应 (跟 P-LANDING 13cb862 同 pattern)。
+ */
 .phone {
   position: relative;
-  width: 393px;
-  height: 852px;
+  width: 100%;
+  min-height: 100vh;
   background: var(--sh-bg);
-  border-radius: 54px;
-  box-shadow: inset 0 0 0 6px #111, 0 24px 64px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-.phone::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 11px;
-  transform: translateX(-50%);
-  width: 126px;
-  height: 37px;
-  background: #000;
-  border-radius: 20px;
-  z-index: 50;
 }
 
 /* ── StatusBar ── */

@@ -268,7 +268,7 @@ export const SharedPage: React.FC = () => {
     return (
       <div className={s.phone} data-testid="p-shared" data-mood="E">
         <TokenErrorScreen type="TOKEN_EXPIRED" onNavigate={navigateToLanding} />
-        <div className={s.homebar} aria-hidden="true" />
+        {/* homebar 已删 · iOS chrome */}
       </div>
     );
   }
@@ -276,7 +276,7 @@ export const SharedPage: React.FC = () => {
     return (
       <div className={s.phone} data-testid="p-shared" data-mood="E">
         <TokenErrorScreen type="TOKEN_INVALID" onNavigate={navigateToLanding} />
-        <div className={s.homebar} aria-hidden="true" />
+        {/* homebar 已删 · iOS chrome */}
       </div>
     );
   }
@@ -284,7 +284,7 @@ export const SharedPage: React.FC = () => {
     return (
       <div className={s.phone} data-testid="p-shared" data-mood="E">
         <TokenErrorScreen type="TOKEN_REVOKED" onNavigate={navigateToLanding} />
-        <div className={s.homebar} aria-hidden="true" />
+        {/* homebar 已删 · iOS chrome */}
       </div>
     );
   }
@@ -293,15 +293,12 @@ export const SharedPage: React.FC = () => {
   if (pageState === 'LOADING') {
     return (
       <div className={s.phone} data-testid="p-shared" data-mood="E" aria-busy="true" aria-label="加载分享内容">
-        <div className={s.statusbar} aria-hidden="true">
-          <span className={s.time}>9:41</span>
-          <StatusIcons />
-        </div>
+        {/* statusbar 已删 · iOS chrome */}
         <div className={s.header} />
         <div className={s.scroll} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 60 }}>
           <div aria-label="加载中" style={{ color: '#8E8E93', fontSize: 14 }}>加载中…</div>
         </div>
-        <div className={s.homebar} aria-hidden="true" />
+        {/* homebar 已删 · iOS chrome */}
       </div>
     );
   }
@@ -321,11 +318,7 @@ export const SharedPage: React.FC = () => {
       data-testid="p-shared"
       data-mood="E"
     >
-      {/* B1 StatusBar */}
-      <div className={s.statusbar} data-testid="p-shared-statusbar" aria-hidden="true">
-        <span className={s.time}>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* B1 StatusBar 已删 · 浏览器原生提供 · _archive data-mockup-chrome="iphone-statusbar" */}
 
       {/* Teal header (Mood E) */}
       <header
