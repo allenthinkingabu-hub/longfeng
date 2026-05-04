@@ -101,12 +101,27 @@
 </style>
 </head>
 <body>
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  IMPLEMENTATION BOUNDARIES · F 机制 · 必读 · MUST
+  ══════════════════════════════════════════════════════════════════════
+  - data-mockup-chrome="iphone-frame"     · iPhone 黑色边框 · ❌ 不实现
+  - data-mockup-chrome="iphone-statusbar" · 9:41 / 信号 / 电池 · ❌ 不实现
+  - data-mockup-chrome="iphone-homebar"   · 底部 home indicator · ❌ 不实现
+  - 其他元素 (screen / nav / groups / timeline / tabbar 等) · ✅ 实现 (100% viewport)
+
+  浏览器原生提供 status; iPhone 边框/notch/home indicator 是 mockup 装饰展示。
+  外层 .stage / .caption 也是 mockup 容器 (跳过 attr · 但应理解为非 page content)。
+  See: docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer4 F · spec.md §X 实现边界
+-->
+
   <div class="stage">
     <div class="caption">6 / 8 · Today review · time-grouped · countdowns</div>
-    <div class="phone">
+    <div class="phone" data-mockup-chrome="iphone-frame">
       <div class="screen">
 
-        <div class="status">
+        <div class="status" data-mockup-chrome="iphone-statusbar">
           <span>9:41</span>
           <div class="r">
             <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#111"><rect x="0" y="7" width="3" height="4" rx=".5"/><rect x="4.5" y="5" width="3" height="6" rx=".5"/><rect x="9" y="3" width="3" height="8" rx=".5"/><rect x="13.5" y="1" width="3" height="10" rx=".5"/></g></svg>
@@ -218,7 +233,7 @@
           <div class="tab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.8" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.8 4.2-5.6 7.5-5.6s6.3 1.8 7.5 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>我的</span></div>
         </div>
 
-        <div class="homebar"></div>
+        <div class="homebar" data-mockup-chrome="iphone-homebar"></div>
       </div>
     </div>
   </div>

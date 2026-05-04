@@ -103,8 +103,22 @@
 </style>
 </head>
 <body>
-<div class="phone">
-  <div class="statusbar">
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  IMPLEMENTATION BOUNDARIES · F 机制 · 必读 · MUST
+  ══════════════════════════════════════════════════════════════════════
+  - data-mockup-chrome="iphone-frame"     · iPhone 黑色边框 · ❌ 不实现
+  - data-mockup-chrome="iphone-statusbar" · 9:41 / 信号 / 电池 · ❌ 不实现
+  - data-mockup-chrome="iphone-homebar"   · 底部 home indicator · ❌ 不实现
+  - 其他元素 (shared content / hero / cta / 等) · ✅ 实现 (100% viewport)
+
+  浏览器原生提供 status; iPhone 边框/notch/home indicator 是 mockup 装饰展示。
+  See: docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer4 F · spec.md §X 实现边界
+-->
+
+<div class="phone" data-mockup-chrome="iphone-frame">
+  <div class="statusbar" data-mockup-chrome="iphone-statusbar">
     <span class="time">9:41</span>
     <div class="icons">
       <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1" width="3" height="11" rx="1"/><rect x="15" y="-2" width="3" height="14" rx="1" opacity=".45"/></svg>
@@ -208,7 +222,7 @@
     </button>
   </div>
 
-  <div class="homebar"></div>
+  <div class="homebar" data-mockup-chrome="iphone-homebar"></div>
 </div>
 </body>
 </html>

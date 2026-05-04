@@ -602,12 +602,27 @@
 </head>
 
 <body>
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  IMPLEMENTATION BOUNDARIES · F 机制 · 必读 · MUST
+  ══════════════════════════════════════════════════════════════════════
+  - data-mockup-chrome="iphone-frame"     · iPhone 黑色边框 · ❌ 不实现
+  - data-mockup-chrome="iphone-statusbar" · 9:41 / 信号 / 电池 · ❌ 不实现
+  - data-mockup-chrome="iphone-homebar"   · 底部 home indicator · ❌ 不实现
+  - 其他元素 (screen / nav / filters / list / tabbar 等) · ✅ 实现 (100% viewport)
+
+  浏览器原生提供 status; iPhone 边框/notch/home indicator 是 mockup 装饰展示。
+  外层 .stage / .caption 也是 mockup 容器 (跳过 attr · 但应理解为非 page content)。
+  See: docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer4 F · spec.md §X 实现边界
+-->
+
   <div class="stage">
     <div class="caption">4 / 8 · Wrong-question book · subject + mastery filters</div>
-    <div class="phone">
+    <div class="phone" data-mockup-chrome="iphone-frame">
       <div class="screen">
 
-        <div class="status">
+        <div class="status" data-mockup-chrome="iphone-statusbar">
           <span>9:41</span>
           <div class="r">
             <svg width="17" height="11" viewBox="0 0 17 11">
@@ -820,7 +835,7 @@
             </svg><span>我的</span></div>
         </div>
 
-        <div class="homebar"></div>
+        <div class="homebar" data-mockup-chrome="iphone-homebar"></div>
       </div>
     </div>
   </div>

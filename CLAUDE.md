@@ -50,3 +50,52 @@ Key routing rules:
 - `P02` / `P15` 拍题相机 — Mood C 全屏 `#0B0F1A` 实色 + 黄色检测元素 + 模拟纸面 viewfinder
 - `P08` 复习自评 — 三按钮带 `data-iron-rule-1-exception="self-grading"`（mastery-{forgot|partial|mastered} 色，不是 primary 蓝）
 - `P09` 复习完成 — Mood D 绿渐变 + ConfettiBurst 仅在"今日全部完成"触发（铁律 3 庆祝有节制）
+
+---
+
+## 设计实施铁律 v2 · §2.0 边界识别 + §2.11 自检 design-review（H 机制 · MUST）
+
+> **背景**：P-LANDING 实施暴露 FE Agent 把 mockup HTML 的 iPhone 边框/notch/status chrome 当成页面元素 · 导致 iPad/Desktop 视觉错位 · E2E 没 catch。F+H 机制治本：mockup HTML 加 `data-mockup-chrome` attr · CLAUDE.md 强制 AI 读边界 + 完成后自检。
+>
+> **完整方案**：`docs/DESIGN-AUDIT-SYSTEM-PLAN.md`
+
+### §2.0 边界识别（在 GUIDANCE.md §2 10 步流程之前 · 必做）
+
+任何"实现 / 修 / 写 / 画"页面任务 · **第 0 步必做**：
+
+1. **打开 mockup HTML**: `design/mockups/wrongbook/_archive/{N}_{name}.html`
+2. **grep `[data-mockup-chrome]`** 列出所有 chrome 元素：
+   ```bash
+   grep -nE 'data-mockup-chrome' design/mockups/wrongbook/_archive/{N}_{name}.html
+   ```
+   - `iphone-frame` → 整个 phone wrapper · 是装饰 · 不实现 (改 width:100% / min-height:100vh)
+   - `iphone-statusbar` → 9:41 + 信号 + 电池 chrome · 不实现 (浏览器原生提供)
+   - `iphone-homebar` → 底部 home indicator · 不实现
+   - `iphone-notch` → 凹槽 / Dynamic Island · 不实现
+3. **读 spec.md `§X 实现边界`** 段（Phase D2 起每个 spec 必有此段）
+4. **如果 mockup 缺 `data-mockup-chrome` attr OR spec 缺 §X 段**：
+   ❗ **立即停 · ask user**: "请确认 X 是 chrome 装饰还是实现内容"
+   ❗ **不要凭推断实施** · 这正是 P-LANDING bug 的源头
+
+### §2.11 自检 design-review（实施完成后 · commit 前 · 必做）
+
+实施完成 commit **之前** · 主动派 `design-reviewer` agent 跑：
+
+```bash
+# 单页验证
+pnpm e2e:mockup-diff -- --grep {page_id}
+pnpm e2e:vrt-multi -- --grep {page_id}
+# 派 design-reviewer agent
+# 用 Agent 工具 · subagent_type: design-reviewer · 输入 page_id
+```
+
+收到 verdict 处理：
+- ✅ `PASS` → 可 commit
+- ❌ `FAIL` → 进入修复循环 · 不交付（按 issues[].suggested_fix 修 · 重跑直到 PASS）
+- ⚠️ `AMBIGUOUS` → ask user 决策 · 不假设 (可能 mockup/spec 缺 attr/§X 段)
+
+### 禁止 (v2 新增)
+
+- ❌ 不 grep `[data-mockup-chrome]` 直接出代码 = 跳步 = 自我阻断
+- ❌ 不跑 `design-reviewer` 自检就 commit = 跳步 = 自我阻断
+- ❌ 凭推断实施 chrome 元素 (statusbar / homebar / iPhone 边框 / notch) — 必须以 mockup `data-mockup-chrome` 为准
