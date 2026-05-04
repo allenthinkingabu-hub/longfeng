@@ -1,6 +1,6 @@
 # Gateway · Spring Cloud Gateway 4.1 · 落地计划 §6.7 Step 8
 server:
-  port: 8080
+  port: 9880
 
 spring:
   application:
@@ -9,25 +9,59 @@ spring:
     web-application-type: reactive
   cloud:
     gateway:
+      httpclient:
+        # SSE 不被 buffer · 大于 AnalyzeController 的 SSE_TOTAL_TIMEOUT_MS (60s)
+        response-timeout: 65s
       routes:
+        # ── 新路由 (跟 FE /api/{module}/* 对齐) ────────────────
+        - id: anon-landing
+          uri: http://localhost:9885
+          predicates:
+            - Path=/api/landing/**
+        - id: anon-guest
+          uri: http://localhost:9885
+          predicates:
+            - Path=/api/guest/**
+        - id: anon-analytics
+          uri: http://localhost:9885
+          predicates:
+            - Path=/api/analytics/**
+        - id: file-api
+          uri: http://localhost:9884
+          predicates:
+            - Path=/api/file/**
+        - id: ai-api
+          uri: http://localhost:9882
+          predicates:
+            - Path=/api/ai/**
         - id: wrongbook-api
-          uri: http://localhost:8081
+          uri: http://localhost:9881
+          predicates:
+            - Path=/api/wb/**
+        - id: review-api
+          uri: http://localhost:9883
+          predicates:
+            - Path=/api/review/**
+
+        # ── 旧 v1 路由保留 (deprecated · 后续 sprint 删除) ──────
+        - id: legacy-wrongbook-v1
+          uri: http://localhost:9881
           predicates:
             - Path=/api/v1/wrongbook/**
-        - id: ai-api
-          uri: http://localhost:8082
+        - id: legacy-ai-v1
+          uri: http://localhost:9882
           predicates:
             - Path=/api/v1/ai/**
-        - id: review-api
-          uri: http://localhost:8083
+        - id: legacy-review-v1
+          uri: http://localhost:9883
           predicates:
             - Path=/api/v1/review/**
-        - id: file-api
-          uri: http://localhost:8084
+        - id: legacy-file-v1
+          uri: http://localhost:9884
           predicates:
             - Path=/api/v1/file/**
-        - id: anon-api
-          uri: http://localhost:8085
+        - id: legacy-anon-v1
+          uri: http://localhost:9885
           predicates:
             - Path=/api/v1/anon/**
 
@@ -43,7 +77,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: [health, info]
+        include: [health, info, gateway]
+  endpoint:
+    gateway:
+      enabled: true   # Spring Cloud Gateway 4.x · actuator route inspector
 
 jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH:docs/dev/jwt-dev-pubkey.pem}
