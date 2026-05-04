@@ -27,6 +27,13 @@ storybook-static/
 /e2e/playwright-report/
 /e2e/blob-report/
 /e2e/playwright/.cache/
+/e2e/reports/                    # design-audit 输出 · 含 mockup-diff PNG / design-review JSON
+/test-results/                   # root playwright artifact
+
+# Claude Code 临时文件
+/.claude/scheduled_tasks.lock
+/.claude/settings.json           # local user config · 不进 git
+/.claude/worktrees/              # sub-agent 临时 worktree
 
 # IDE / OS
 .idea/

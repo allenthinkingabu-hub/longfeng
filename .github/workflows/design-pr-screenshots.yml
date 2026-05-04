@@ -1,0 +1,87 @@
+name: Design PR Screenshots (D 机制)
+
+# 触发: PR 改动 H5 page 或 mockup
+# 行为: 跑 mockup-vs-impl + 生成三联截图 markdown · post comment 到 PR
+# 配套: G 机制 (design-sign-off.yml) · 打 designer-approved label 才能 merge
+# Plan: docs/DESIGN-AUDIT-SYSTEM-PLAN.md §Layer3 D
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'frontend/apps/h5/src/pages/**'
+      - 'design/mockups/**'
+
+jobs:
+  screenshots:
+    runs-on: macos-latest  # vrt 需 macOS 字体一致性
+    timeout-minutes: 20
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install playwright browsers
+        run: cd e2e && pnpm exec playwright install --with-deps chromium
+
+      - name: Start vite dev server (background)
+        run: |
+          cd frontend/apps/h5
+          pnpm dev &
+          # wait for vite ready
+          for i in {1..30}; do
+            if curl -sf -o /dev/null http://localhost:5173/; then
+              echo "vite ready"; break
+            fi
+            sleep 1
+          done
+
+      - name: Generate PR screenshots + diff report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/pr-screenshots.ts ${{ github.event.pull_request.number }}
+
+      - name: Upload screenshot artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-pr-screenshots-${{ github.event.pull_request.number }}
+          path: |
+            e2e/reports/mockup-diff/
+            e2e/reports/design-review/
+            e2e/reports/pr-screenshots.md
+          retention-days: 30
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'e2e/reports/pr-screenshots.md';
+            if (!fs.existsSync(path)) {
+              core.setFailed(`Report file not found: ${path}`);
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
