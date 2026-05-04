@@ -50,6 +50,13 @@
   z-index: 10;
 }
 
+/* tablet / desktop: hero 高度自适应 viewport · 避免大屏上仅占顶部 1/4 */
+@media (min-width: 768px) {
+  .hero {
+    height: clamp(380px, 50vh, 540px);
+  }
+}
+
 /* blob 1: 紫右上 */
 .hero::before {
   content: "";
@@ -153,6 +160,17 @@
   overflow-y: auto;
 }
 
+/* tablet / desktop: 约束登录区宽度 · 居中 · 同步 hero 高度偏移 */
+@media (min-width: 768px) {
+  .scroll {
+    top: calc(clamp(380px, 50vh, 540px) - 50px);
+    max-width: 520px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+
 /* 圆角白底盖在 hero 上 */
 .scroll::before {
   content: "";
@@ -173,6 +191,9 @@
   padding: 24px 20px 20px;
   margin-top: 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 22px rgba(40, 50, 90, 0.06);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .cardTitle {
