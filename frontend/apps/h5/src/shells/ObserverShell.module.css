@@ -405,7 +405,10 @@
 }
 
 /* ── B6 · RevokeRedirectModal（默认 hidden · 由 useObserverGuard 触发）── */
-/* hidden 属性原生隐藏，无需 .hidden class；下方仅描述显示态视觉 */
+/* hidden 属性原生隐藏，下方 display:flex 必须被 [hidden] 覆盖 */
+.revokeModal[hidden] {
+  display: none !important; /* 修: 之前 display:flex 覆盖 hidden attr · 默认 modal 全屏遮挡整页 */
+}
 .revokeModal {
   position: fixed;
   inset: 0;

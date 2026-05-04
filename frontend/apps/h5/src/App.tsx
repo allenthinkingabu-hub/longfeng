@@ -38,7 +38,7 @@ import { ReviewDonePage } from './pages/ReviewDone';
 import { AuthPage } from './pages/Auth';
 import { HomePage } from './pages/Home';
 import { NotificationsPage } from './pages/Notifications';
-import { MePage } from './pages/Settings';
+import { MePage, SettingsPage } from './pages/Settings';
 
 // ── 占位页（待后续 FE Agent 实现 · lazy 加载）──────────────────────────────
 // 暂时用内联占位，避免破坏 build
@@ -191,6 +191,8 @@ export const App: React.FC = () => (
 
       {/* Tab 5: P13 我的 */}
       <Route path="/me" element={<MePage />} />
+      {/* P13 Settings · /me/settings 子路径 (per spec.md) · 跟 /me 同组件 */}
+      <Route path="/me/settings" element={<SettingsPage />} />
     </Route>
 
     {/* ── 默认重定向（冷启动 → /welcome，由 resolve-entry 实际控制）── */}
