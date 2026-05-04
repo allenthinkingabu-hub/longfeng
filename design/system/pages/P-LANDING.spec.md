@@ -11,8 +11,9 @@ persona:
   - 犹豫期潜在用户
 scenarios:
   - SC-11
-mockup_canonical: design/mockups/wrongbook/14_landing.html
-mockup_version: v1
+mockup_canonical: design/mockups/wrongbook/_archive/14_landing.html
+mockup_version: v0-archive
+mockup_canonical_note: per CLAUDE.md "archive 已有页面优先 cp 作参考" · _archive 是真权威 · current 14_landing.html 是 PM 后期改的偏离版本 (token + 文案差异)
 last_reviewed: 2026-05-02
 status: spec-draft
 sprint: S3
