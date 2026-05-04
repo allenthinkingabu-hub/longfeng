@@ -9,13 +9,13 @@ import com.longfeng.fileservice.provider.AttachmentStorage.PresignResult;
 import com.longfeng.fileservice.repo.WbFileRepository;
 import com.longfeng.fileservice.repo.WbFileLifecycleRepository;
 import com.longfeng.fileservice.entity.WbFileLifecycle;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.longfeng.fileservice.support.ObjectKeyBuilder;
 import com.longfeng.fileservice.support.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -32,18 +32,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Presign controller — TDD §12.5.1 POST /api/files/presign.
+ * Presign controller — TDD §12.5.1 POST /api/file/presign.
  *
  * <p>Generates a D-OSS-Key path via {@link ObjectKeyBuilder}, creates a presigned PUT URL
  * via {@link AttachmentStorage}, saves a {@link WbFile} PENDING record, and returns the URL
  * to the frontend for direct OSS upload.
+ *
+ * <p>Path is intentionally singular ({@code /api/file}) to align with the frontend
+ * GuestCapture call site (frontend/apps/h5/src/pages/GuestCapture/index.tsx). The
+ * request DTO uses snake_case ({@code content_type}) to match the FE JSON payload.
  *
  * <p>C7: no byte[] in this controller or its service dependencies.
  * C8: all BusinessException messages carry "msgkey:" prefix.
  * C9: OffsetDateTime for all time fields.
  */
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/file")
 @Validated
 public class PresignController {
 
@@ -86,16 +90,25 @@ public class PresignController {
     }
 
     /**
-     * POST /api/files/presign
+     * POST /api/file/presign
      *
-     * <p>Request body (TDD §12.5.1):
+     * <p>Request body (snake_case to match frontend GuestCapture payload):
      * <pre>
-     * { "mimeType": "image/jpeg", "bytes": 4500000, "purpose": "wrongbook" }
+     * { "filename": "math.jpg", "content_type": "image/jpeg" }
      * </pre>
      *
-     * <p>Response:
+     * <p>Optional fields {@code bytes} and {@code purpose} are accepted for forward
+     * compatibility but are not currently sent by the frontend.
+     *
+     * <p>Response (snake_case for FE; only {@code url} + {@code image_url} are consumed today):
      * <pre>
-     * { "url": "https://...", "method": "PUT", "objectKey": "wrongbook/...", "expiresInSec": 900 }
+     * {
+     *   "url": "https://minio/.../put?sig=...",
+     *   "image_url": "https://minio/.../get?sig=...",
+     *   "method": "PUT",
+     *   "object_key": "wrongbook/...",
+     *   "expires_in_sec": 900
+     * }
      * </pre>
      *
      * @param tenantId  injected from gateway header X-Tenant-Id (default 0 in dev)
@@ -108,11 +121,12 @@ public class PresignController {
             @RequestHeader(value = "X-User-Id", defaultValue = "0") long studentId) {
 
         // MIME validation
-        if (!ALLOWED_MIME.contains(req.mimeType())) {
+        if (!ALLOWED_MIME.contains(req.contentType())) {
             throw new BusinessException(ErrCode.VALIDATION_FAILED,
                     "msgkey:file.error.mime_not_allowed");
         }
-        // Size validation (10 MB cap) - done via @Max annotation, but double-check here
+        // Size validation (10 MB cap) - @Max annotation also enforces, but double-check
+        // when bytes is provided. FE does not send bytes today, so null is allowed.
         if (req.bytes() != null && req.bytes() > 10_485_760L) {
             throw new BusinessException(ErrCode.VALIDATION_FAILED,
                     "msgkey:file.error.file_too_large");
@@ -122,15 +136,19 @@ public class PresignController {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         // D-OSS-Key path: wrongbook/{tenantId}/{yyyyMM}/{studentId}/{snowflakeId}_{sanitizedFilename}
-        // originalName not provided in presign — use purpose as filename stub
-        String originalName = req.purpose() != null ? req.purpose() + ".bin" : "upload.bin";
+        // Use the FE-supplied filename so the object key preserves the real extension.
+        String originalName = req.filename();
         String objectKey = keyBuilder.build(tenantId, studentId, snowflakeId, originalName, now);
 
         // Determine bucket (could vary by purpose, but for MVP use default)
         String bucket = defaultBucket;
 
         Duration ttl = Duration.ofMinutes(presignTtlMin);
-        PresignResult pr = storage.presign(bucket, objectKey, req.mimeType(), ttl);
+        PresignResult pr = storage.presign(bucket, objectKey, req.contentType(), ttl);
+
+        // Long-lived GET URL for the FE to hand to downstream OCR / display.
+        // 24h is well within typical OCR + first-render windows.
+        String imageUrl = storage.get(bucket, objectKey, Duration.ofHours(24));
 
         // Persist PENDING metadata record (C7: no bytes stored here, only size number)
         WbFile file = new WbFile();
@@ -138,7 +156,7 @@ public class PresignController {
         file.setTenantId(tenantId);
         file.setStudentId(studentId);
         file.setObjectKey(objectKey);
-        file.setMimeType(req.mimeType());
+        file.setMimeType(req.contentType());
         file.setBytes(req.bytes());
         file.setStatus(WbFile.STATUS_PENDING);
         file.setStorageClass("STANDARD");
@@ -158,6 +176,7 @@ public class PresignController {
 
         PresignRespBody body = new PresignRespBody(
                 pr.uploadUrl(),
+                imageUrl,
                 "PUT",
                 objectKey,
                 pr.expiresInSec());
@@ -167,16 +186,29 @@ public class PresignController {
 
     // ── Inner DTOs ──────────────────────────────────────────────────────────
 
-    /** TDD §12.5.1 request body. */
+    /**
+     * Request body. Uses {@link JsonProperty} to map FE snake_case ({@code content_type})
+     * to Java camelCase ({@code contentType}) without forcing the rest of the codebase
+     * onto a snake_case naming strategy.
+     *
+     * <p>{@code filename} + {@code contentType} are required (FE always sends both).
+     * {@code bytes} + {@code purpose} are optional forward-compat slots.
+     */
     public record PresignReqBody(
-            @NotBlank String mimeType,
-            @NotNull @Min(0) @Max(10_485_760) Long bytes,
+            @NotBlank String filename,
+            @JsonProperty("content_type") @NotBlank String contentType,
+            @JsonProperty("bytes") @Min(0) @Max(10_485_760) Long bytes,
             String purpose) {}
 
-    /** TDD §12.5.1 response body. */
+    /**
+     * Response body. {@link JsonProperty} keeps the wire format snake_case for FE
+     * while record components stay camelCase. FE consumes only {@code url} +
+     * {@code image_url} today; the other fields are kept for callback / debug use.
+     */
     public record PresignRespBody(
             String url,
+            @JsonProperty("image_url") String imageUrl,
             String method,
-            String objectKey,
-            long expiresInSec) {}
+            @JsonProperty("object_key") String objectKey,
+            @JsonProperty("expires_in_sec") long expiresInSec) {}
 }
