@@ -10,6 +10,7 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Gateway route configuration with Nacos hot-reload support and Sentinel global rate-limit hook.
@@ -62,6 +63,7 @@ public class RouteConfig {
    * </ul>
    */
   @Bean
+  @Primary
   public RateLimiterRegistry extendedRateLimiterRegistry() {
     RateLimiterConfig anonGuestCfg =
         RateLimiterConfig.custom()
