@@ -1,0 +1,52 @@
+# auth-service · S7 BUG-LF-09 · WeChat login stub
+server:
+  port: ${SERVER_PORT:9086}
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:15432/longfeng_dev?currentSchema=lfwb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:wb}
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        default_schema: lfwb
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    out-of-order: true
+    locations: classpath:db/migration
+    schemas: lfwb
+
+auth:
+  jwt:
+    # Prod: override via env JWT_PRIVATE_KEY_PATH=/absolute/path/to/privkey.pem
+    # Dev: classpath fallback jwt-dev-privkey.pem (also checks docs/dev/ relative to cwd)
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:docs/dev/jwt-dev-privkey.pem}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [health, info, prometheus]
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -70,6 +70,10 @@ spring:
           uri: http://localhost:9885
           predicates:
             - Path=/api/v1/anon/**
+        - id: auth-service
+          uri: http://localhost:9086
+          predicates:
+            - Path=/api/auth/**
     # Nacos config center (prod profile) — routes hot-reload from gateway-sentinel-flow-rule.yaml
     nacos:
       config:
