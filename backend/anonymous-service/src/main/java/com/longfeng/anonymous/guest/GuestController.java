@@ -19,9 +19,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
+import java.util.Map;
 
 /**
  * GuestController · {@code /api/guest/*} · plan §S7 BUG-LF-09 fix.
@@ -58,10 +61,15 @@ public class GuestController {
 
   private final GuestRateLimiter rateLimiter;
   private final GuestSessionService sessionService;
+  private final RestClient aiClient;
 
-  public GuestController(GuestRateLimiter rateLimiter, GuestSessionService sessionService) {
+  public GuestController(
+      GuestRateLimiter rateLimiter,
+      GuestSessionService sessionService,
+      @Value("${longfeng.ai-analysis.base-url:http://localhost:9882}") String aiBaseUrl) {
     this.rateLimiter = rateLimiter;
     this.sessionService = sessionService;
+    this.aiClient = RestClient.builder().baseUrl(aiBaseUrl).build();
   }
 
   @GetMapping("/quota")
@@ -106,12 +114,25 @@ public class GuestController {
         "landing", // entry_source — FE always lands here in the BUG-LF-09 funnel
         "default"); // experiment_bucket — single-bucket until A/B framework lands
 
-    // 3. TODO(WT4): kick off real AI analysis via Feign to ai-analysis-service.
-    //    POST /api/ai/analyze-by-url { image_url, subject, callback_session_id }
-    //    For now we return a mock task id — FE polls but tolerates ANALYZING forever in mock-b.
+    // 3. Kick off real AI analysis via RestClient → ai-analysis-service
+    //    POST /api/ai/analyze-by-url · async worker · 202 + task_id 立返
+    //    失败仍 200 给 FE · task 走 mock UUID · FE polling 容忍 (但 ai_usage_log 不会有 row)
     String taskId = UUID.randomUUID().toString();
-    log.info("guest-analyze created session={} task={} subject={}",
-        session.getId(), taskId, body.subject());
+    try {
+      var resp = aiClient.post()
+          .uri("/api/ai/analyze-by-url")
+          .body(Map.of(
+              "task_id", taskId,
+              "subject", body.subject(),
+              "image_url", body.imageUrl()))
+          .retrieve()
+          .toBodilessEntity();
+      log.info("guest-analyze ai-call OK status={} session={} task={}",
+          resp.getStatusCode(), session.getId(), taskId);
+    } catch (Exception ex) {
+      log.warn("guest-analyze ai-call FAIL fallback-to-mock-task session={} task={} err={}",
+          session.getId(), taskId, ex.getMessage());
+    }
 
     return ResponseEntity.ok(new GuestAnalyzeResponse(
         String.valueOf(session.getId()),
