@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * P00 · 登录 · AuthPage
  * Mood A (hero+overlap) · 深蓝 hero 380px + 3 blob + conic logo
@@ -9,6 +10,13 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import s from './Auth.module.css';
+
+/* ── Global augmentation for dev/e2e wx code injection ── */
+declare global {
+  interface Window {
+    __lf_dev_wx_code__?: string;
+  }
+}
 
 /* ── Types (spec §4) ── */
 type AuthState = 'IDLE' | 'CONSENT_REQUIRED' | 'LOGGING_IN' | 'CLAIMING' | 'SUCCESS' | 'ERROR';
@@ -74,20 +82,61 @@ export const AuthPage: React.FC = () => {
     setErrorMsg(null);
 
     try {
-      // In real implementation: call wx.login() → get code → POST /api/auth/wechat-login
-      // Simulated for frontend-only implementation
-      await new Promise((r) => setTimeout(r, 800));
+      // dev / e2e 注入：window.__lf_dev_wx_code__ 优先 · 否则 fallback dev_code_alice
+      // 生产环境（小程序内）应该调真 wx.login() 拿 code · H5 demo 暂时用 stub code
+      const wxCode =
+        (typeof window !== 'undefined' && window.__lf_dev_wx_code__) ||
+        'dev_code_alice';
+      const deviceFp = localStorage.getItem('__lf_device_fp__') || 'fp_unknown';
 
-      // If guest_session_id exists, claim it
+      const apiBase = import.meta.env.VITE_API_BASE || '';
+      const resp = await fetch(`${apiBase}/api/auth/wechat-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wx_code: wxCode,
+          device_fp: deviceFp,
+          consent_accepted: true,
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json() as {
+        access_token: string;
+        refresh_token: string;
+        student_id: string;
+        is_new_user: boolean;
+        expires_at?: number;
+      };
+
+      localStorage.setItem('lf:token', data.access_token);
+      localStorage.setItem('lf_user_tier', 'NORMAL');
+
+      // claim guest_session（如有）— 后端尚未实现 /api/guest/claim 故先静默尝试
       if (guestSessionId) {
         setAuthState('CLAIMING');
-        await new Promise((r) => setTimeout(r, 400));
+        try {
+          await fetch(`${apiBase}/api/guest/claim`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${data.access_token}`,
+            },
+            body: JSON.stringify({ guest_session_id: guestSessionId, device_fp: deviceFp }),
+          });
+        } catch {
+          // claim 失败不阻塞登录主流程（spec §9 异常路径）
+        }
         localStorage.removeItem('guest_session_token');
       }
 
       setAuthState('SUCCESS');
       nav(redirect ?? '/', { replace: true });
-    } catch {
+    } catch (err) {
+      console.error('[wechat-login] failed', err);
       setAuthState('ERROR');
       setErrorMsg('登录失败 · 请重试');
       setTimeout(() => setAuthState('IDLE'), 3000);

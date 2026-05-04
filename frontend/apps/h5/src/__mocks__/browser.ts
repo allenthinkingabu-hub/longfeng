@@ -1,6 +1,7 @@
 /**
  * MSW · 全 handler 注册（B 轨 e2e 用）
  * S9 扩展：review / guest / share / observer / ai-models / calendar
+ * S7 扩展：auth (wechat-login)
  */
 import { setupWorker } from 'msw/browser';
 import { wrongbookHandlers } from './handlers/wrongbook';
@@ -13,6 +14,7 @@ import { shareHandlers } from './handlers/share';
 import { observerHandlers } from './handlers/observer';
 import { aiModelsHandlers } from './handlers/ai-models';
 import { calendarHandlers } from './handlers/calendar';
+import { authHandlers } from './handlers/auth';
 
 export const worker = setupWorker(
   ...wrongbookHandlers,
@@ -25,4 +27,5 @@ export const worker = setupWorker(
   ...observerHandlers,
   ...aiModelsHandlers,
   ...calendarHandlers,
+  ...authHandlers,
 );
