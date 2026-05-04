@@ -356,7 +356,21 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* B5 KPI banner 已删除 · _archive/14_landing.html 中无此 section · 跟 mockup 1:1 */}
+        {/* B5 · KPI banner · spec §3 + §8 AC-LANDING-005 */}
+        {kpi && (
+          <section
+            data-testid="landing-kpi"
+            aria-label="社区数据"
+            className={s.kpi}
+          >
+            <div data-testid="landing-kpi-total" className={s.kpiTotal}>
+              {kpi.headline}
+            </div>
+            <div data-testid="landing-kpi-retention" className={s.kpiRetention}>
+              7 日留存 {Math.round(kpi.retention7d * 100)}%
+            </div>
+          </section>
+        )}
 
         {/* Social proof */}
         <div className={s.social} role="region" aria-label="社区用户数量">

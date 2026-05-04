@@ -686,6 +686,39 @@
   background: var(--lf-sep);
 }
 
+/* B5 KPI banner · spec §3 testid-named classes */
+.kpi {
+  margin-top: 14px;
+  padding: 16px 14px;
+  /* spec §3: --tkn-color-encouragement-soft background */
+  background: var(--tkn-color-encouragement-soft, rgba(255, 149, 0, 0.08));
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  /* spec §3: --tkn-radius-lg */
+  border-radius: var(--tkn-radius-lg, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  text-align: center;
+}
+
+.kpiTotal {
+  /* spec §3: --tkn-type-display-hero typography */
+  font-size: var(--tkn-type-display-hero-size, 20px);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+  /* spec §3: --tkn-color-encouragement-DEFAULT */
+  color: var(--tkn-color-encouragement-DEFAULT, var(--lf-orange));
+}
+
+.kpiRetention {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lf-sec);
+  letter-spacing: 0.2px;
+}
+
 /* Token aliases (required by spec §14 — ensures token-coverage passes) */
 /* These reference the actual --tkn-* vars from tokens.css */
 .tokenRef {
