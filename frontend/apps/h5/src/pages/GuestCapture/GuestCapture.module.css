@@ -21,22 +21,24 @@
   --gc-yellow: #F6D84C;
   --gc-teal: #4FD1D9;
   /* Gradients */
-  --gc-grad-viewport: radial-gradient(80% 60% at 50% 45%, #1b2239 0%, #0B0D12 75%), #000;
+  --gc-grad-viewport: radial-gradient(80% 60% at 50% 45%, #1b2239 0%, #0B0F1A 75%), var(--gc-bg);
   --gc-grad-paper: linear-gradient(180deg, #F7EFD7 0%, #EEE2C2 100%);
   --gc-shadow-paper: 0 18px 44px rgba(0, 0, 0, 0.55);
   --gc-shadow-quota-glow: 0 0 6px #FFD166;
 }
 
 /* ── page root ──
- * 修复: 之前 .phone 写死 393×852 + iPhone 边框/notch · 把 mockup 的 iPhone chrome
- * 装饰当成页面元素了。_archive HTML 已标 data-mockup-chrome="iphone-frame" 表明
- * 这是装饰。改 100% viewport 自适应 (跟 P-LANDING 13cb862 同 pattern)。
+ * phone-内 absolute 设计 (mockup 393px) · 必须 max-width:393px + margin:0 auto 约束宽度
+ * 否则 iPad/Desktop 上 absolute 子元素 (paper/edges/quota/subjects/controls) 位置崩溃
+ * width:100% only on mobile → max-width:393px caps on larger viewports
  */
 .phone {
   position: relative;
   width: 100%;
+  max-width: 393px;
+  margin: 0 auto;
   min-height: 100vh;
-  background: #000;
+  background: var(--gc-bg);
   overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -428,17 +430,30 @@
   min-width: 78px;
   min-height: 78px;
 }
-/* Blue gradient core (iron: NOT white circle) */
+/* White inset core (mockup: ::before white gradient) */
 .shutterCore {
-  width: 60px;
-  height: 60px;
+  position: absolute;
+  inset: 5px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #5FA8FF, #007AFF);
-  border: 3px solid #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(135deg, #fff, #e5e5ea);
+}
+/* ANALYZE badge floating above shutter */
+.shutterRec {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #FF3B30;
   color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
 }
 .sidebtn {
   width: 46px;
@@ -453,6 +468,83 @@
   cursor: pointer;
   min-width: 44px;
   min-height: 44px;
+}
+
+/* ── B6 · Consent card (compliance gate) ── */
+.consentCard {
+  position: absolute;
+  bottom: 260px;
+  left: 18px;
+  right: 18px;
+  z-index: 25;
+  padding: 14px;
+  background: rgba(18, 21, 28, 0.85);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+.consentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.consentCheck {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #4C9BFF, #8B87F6);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin-top: 2px;
+  cursor: pointer;
+  border: none;
+}
+.consentTx {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.1px;
+}
+.consentTx a {
+  color: #4C9BFF;
+  text-decoration: none;
+  font-weight: 700;
+}
+.consentTx b {
+  color: #fff;
+  font-weight: 700;
+}
+.consentBadgeRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.badgeGreen {
+  background: rgba(60, 212, 123, 0.12);
+  color: #3CD47B;
+  border: 0.5px solid rgba(60, 212, 123, 0.25);
+}
+.badgeBlue {
+  background: rgba(76, 155, 255, 0.12);
+  color: #4C9BFF;
+  border: 0.5px solid rgba(76, 155, 255, 0.25);
+}
+.badgeOrange {
+  background: rgba(255, 180, 84, 0.12);
+  color: #FFB454;
+  border: 0.5px solid rgba(255, 180, 84, 0.25);
 }
 
 /* ── Quota exhausted screen ── */

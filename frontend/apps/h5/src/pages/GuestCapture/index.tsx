@@ -217,7 +217,7 @@ export const GuestCapturePage: React.FC = () => {
   /* QUOTA_EXHAUSTED full-screen block */
   if (captureState === 'QUOTA_EXHAUSTED') {
     return (
-      <div className={s.phone} data-testid="p-guest-capture" data-mood="C">
+      <div className={s.phone} data-testid="guest-capture-page" data-mood="C">
         <div className={s.quotaExhausted} data-testid="quota-exhausted-screen" role="alertdialog" aria-modal="true" aria-label="今日额度已用完">
           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#FFD166" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>
@@ -241,7 +241,7 @@ export const GuestCapturePage: React.FC = () => {
   return (
     <div
       className={s.phone}
-      data-testid="p-guest-capture"
+      data-testid="guest-capture-page"
       data-mood="C"
     >
       {/* B1 StatusBar 已删 · 浏览器原生提供时间/信号/电池 · _archive 中是 mockup chrome */}
@@ -358,6 +358,37 @@ export const GuestCapturePage: React.FC = () => {
         ))}
       </nav>
 
+      {/* B6 · Consent card (compliance gate) */}
+      <div
+        className={s.consentCard}
+        data-testid="guest-consent-card"
+        role="group"
+        aria-label="隐私同意"
+      >
+        <div className={s.consentRow}>
+          <button
+            className={s.consentCheck}
+            data-testid="consent-checkbox"
+            aria-label="同意隐私条款"
+            aria-checked="true"
+            role="checkbox"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+          <div className={s.consentTx}>
+            我已阅读并同意 <a href="/terms/minor">《未成年人保护条款》</a> 与 <a href="/terms/guest">《游客试用协议》</a>。<br/>
+            <b>上传的图片仅用于本次 AI 分析</b>，24 小时后自动清理；如您为未成年人，须取得家长同意。
+          </div>
+        </div>
+        <div className={s.consentBadgeRow}>
+          <span className={`${s.badge} ${s.badgeGreen}`}>&#10003; 图片端到端加密</span>
+          <span className={`${s.badge} ${s.badgeBlue}`}>设备指纹：a4c9…7e21</span>
+          <span className={`${s.badge} ${s.badgeOrange}`}>IP 限流：10 次 / 天</span>
+        </div>
+      </div>
+
       {/* B5 · Capture controls */}
       <footer
         className={s.controls}
@@ -366,6 +397,7 @@ export const GuestCapturePage: React.FC = () => {
         aria-label="拍照控件"
       >
         <div className={s.sources} role="group" aria-label="输入来源">
+          {/* Source: 相册 */}
           <button className={s.srcBtn} onClick={handleGallery} aria-label="从相册选择图片">
             <div className={s.srcIco}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -376,10 +408,54 @@ export const GuestCapturePage: React.FC = () => {
             </div>
             <span className={s.srcLbl}>相册</span>
           </button>
+          {/* Source: 相机 */}
+          <button className={s.srcBtn} onClick={handleShutter} aria-label="用相机拍题">
+            <div className={s.srcIco}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+            <span className={s.srcLbl}>相机</span>
+          </button>
+          {/* Source: 文件 */}
+          <button
+            className={s.srcBtn}
+            onClick={() => {
+              const inp = document.createElement('input');
+              inp.type = 'file';
+              inp.accept = '.pdf,.doc,.docx,image/*';
+              inp.onchange = (e) => {
+                const f = (e.target as HTMLInputElement).files?.[0];
+                if (f) void processCapture(f);
+              };
+              inp.click();
+            }}
+            aria-label="上传文件"
+          >
+            <div className={s.srcIco}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span className={s.srcLbl}>文件</span>
+          </button>
         </div>
 
         <div className={s.shutterRow}>
-          {/* Shutter button · 78px (AC-GUEST-005) · nth(1) in capture-controls after gallery */}
+          {/* Left sidebtn: settings gear */}
+          <button
+            className={s.sidebtn}
+            data-testid="capture-controls-settings"
+            aria-label="设置"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+          {/* Shutter button · 78px (AC-GUEST-005) · white core + ANALYZE badge */}
           <button
             className={s.shutter}
             data-testid="capture-controls-shutter"
@@ -388,12 +464,20 @@ export const GuestCapturePage: React.FC = () => {
             aria-label="拍题"
             aria-busy={captureState === 'UPLOADING' || captureState === 'ANALYZING'}
           >
-            <div className={s.shutterCore} aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
+            <span className={s.shutterRec} aria-hidden="true">&#9679; Analyze</span>
+            <div className={s.shutterCore} aria-hidden="true" />
+          </button>
+          {/* Right sidebtn: flip camera */}
+          <button
+            className={s.sidebtn}
+            data-testid="capture-controls-flip"
+            aria-label="切换相机"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
           </button>
         </div>
       </footer>
