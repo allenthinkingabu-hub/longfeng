@@ -56,6 +56,9 @@
   overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* LF01-01 fix: natural flex column so .scroll grows to full content height */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Statusbar ── */
@@ -284,19 +287,26 @@
 }
 
 /* ── Scroll area (Mood A overlap) ── */
+/*
+ * LF01-01 fix: removed position:absolute + top:370px + bottom:0 + overflow-y:auto.
+ * The absolute inner-scroll was an artefact of the mockup's fixed 393x852 iPhone shell.
+ * In a real H5 viewport, content should flow naturally. Hero is already absolute(z:5)
+ * so it visually overlays the top of this section — the 370px padding-top preserves
+ * the Mood A overlap without constraining height to 1 viewport.
+ *
+ * z-index: 10 (below heroCopy/metrics z:20 so hero content stays visible in padding zone).
+ * background: transparent for the top 370px (hero zone) then --lf-bg below it,
+ * achieved with a hard-stop linear-gradient so the hero gradient shows through.
+ * border-top-left-radius / border-top-right-radius kept for the visual overlap edge.
+ * ctaDock is now page-level position:fixed so padding-bottom gives clearance.
+ */
 .scroll {
-  position: absolute;
-  top: 370px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
-  padding: 0 14px 120px;
-  z-index: 20;
-  background: var(--lf-bg);
+  flex: 1;
+  padding: 370px 14px 140px;
+  z-index: 10;
+  background: linear-gradient(to bottom, transparent 370px, var(--lf-bg) 370px);
   border-top-left-radius: 26px;
   border-top-right-radius: 26px;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Section headers ── */
@@ -563,8 +573,14 @@
 }
 
 /* ── Sticky CTA dock ── */
+/*
+ * LF01-01 fix: changed from position:absolute (phone-level) to position:fixed (page-level).
+ * This ensures the dock stays at the bottom of the viewport regardless of scroll position,
+ * while the .scroll content grows to full natural height below it.
+ * padding-bottom on .scroll (140px) provides clearance so content is not obscured.
+ */
 .ctaDock {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
