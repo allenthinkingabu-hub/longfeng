@@ -1,0 +1,15 @@
+{
+  "name": "welcome-landing-e2e-scripts",
+  "version": "0.1.0",
+  "description": "QA · 欢迎页全漏斗 E2E driver scripts (sustainability layer)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "smoke": "node sweep.mjs --grep smoke",
+    "all": "node sweep.mjs",
+    "report": "playwright show-report ../../e2e/reports/html"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.42.0"
+  }
+}
