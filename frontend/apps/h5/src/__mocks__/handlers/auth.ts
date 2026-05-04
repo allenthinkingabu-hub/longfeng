@@ -39,12 +39,18 @@ export const authHandlers = [
     }));
     const accessToken = `${header}.${payload}.mocksig`;
 
+    // BE 用统一 envelope · mock 跟 hybrid 真链路保持格式一致
     return HttpResponse.json({
-      access_token: accessToken,
-      refresh_token: `mock-refresh-${studentId}`,
-      student_id: studentId,
-      is_new_user: wxCode === 'dev_code_new_user',
-      expires_at: Math.floor(Date.now() / 1000) + 24 * 3600,
+      code: 0,
+      message: 'OK',
+      data: {
+        access_token: accessToken,
+        refresh_token: `mock-refresh-${studentId}`,
+        student_id: studentId,
+        is_new_user: wxCode === 'dev_code_new_user',
+        expires_at: Math.floor(Date.now() / 1000) + 24 * 3600,
+      },
+      trace_id: `mock-trace-${Date.now()}`,
     });
   }),
 ];

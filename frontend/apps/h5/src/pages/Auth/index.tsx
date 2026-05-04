@@ -104,13 +104,23 @@ export const AuthPage: React.FC = () => {
         throw new Error(`HTTP ${resp.status}`);
       }
 
-      const data = await resp.json() as {
-        access_token: string;
-        refresh_token: string;
-        student_id: string;
-        is_new_user: boolean;
-        expires_at?: number;
+      // BE 用统一 envelope { code, message, data, trace_id } · 解一层
+      const envelope = await resp.json() as {
+        code: number;
+        message: string;
+        data: {
+          access_token: string;
+          refresh_token: string;
+          student_id: string;
+          is_new_user: boolean;
+          expires_at?: number | string;
+        };
+        trace_id?: string;
       };
+      if (envelope.code !== 0 || !envelope.data) {
+        throw new Error(`BE error code=${envelope.code} msg=${envelope.message}`);
+      }
+      const data = envelope.data;
 
       localStorage.setItem('lf:token', data.access_token);
       localStorage.setItem('lf_user_tier', 'NORMAL');
