@@ -127,6 +127,9 @@
             <include>**/*Tests.java</include>
             <include>**/*UT.java</include>
           </includes>
+          <!-- ByteBuddy < 1.15 does not officially support JDK > 22 · enable experimental
+               so Mockito-driven WebMvcTest slices boot under JDK 25 (developer machines). -->
+          <argLine>-Dnet.bytebuddy.experimental=true</argLine>
         </configuration>
       </plugin>
     </plugins>
