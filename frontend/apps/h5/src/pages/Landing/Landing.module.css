@@ -43,30 +43,19 @@
   --lf-shadow-card-deep: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 22px rgba(40, 50, 90, 0.06);
 }
 
-/* ── phone shell ── */
+/* ── page root ──
+ * 修复: 之前 .phone 写死 393×852 + iPhone 边框/notch · 把 _archive mockup 的
+ * iPhone chrome 装饰当成页面元素了。_archive HTML 已标 data-mockup-chrome=
+ * "iphone-frame" 表明 chrome 不实现。改 100% viewport 自适应。
+ */
 .phone {
   position: relative;
-  width: 393px;
-  height: 852px;
+  width: 100%;
+  min-height: 100vh;
   background: var(--lf-bg);
-  border-radius: 54px;
-  box-shadow: inset 0 0 0 6px #111, 0 24px 64px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-/* Notch */
-.phone::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 11px;
-  transform: translateX(-50%);
-  width: 126px;
-  height: 37px;
-  background: #000;
-  border-radius: 20px;
-  z-index: 50;
 }
 
 /* ── Statusbar ── */

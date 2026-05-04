@@ -207,11 +207,7 @@ export const LandingPage: React.FC = () => {
       data-testid="landing-page"
       data-mood="A"
     >
-      {/* B1 StatusBar */}
-      <div className={s.statusbar} data-testid="p-landing-statusbar" aria-hidden="true">
-        <span className={s.time}>9:41</span>
-        <StatusIcons />
-      </div>
+      {/* B1 StatusBar 已删除 · 浏览器原生提供时间/信号/电池 · _archive 中是 mockup chrome */}
 
       {/* Hero (Mood A · 380px) */}
       <div
@@ -360,29 +356,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* B5 · KPI banner */}
-        <section data-testid="landing-kpi" aria-label="平台数据">
-          <div className={s.kpiBanner} role="region" aria-label="平台关键数据">
-            <div className={s.kpiStat}>
-              <div className={s.kpiN} data-testid="landing-kpi-total" role="img" aria-label={`已分析 ${kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : DEFAULT_KPI.totalQuestionsAnalyzed / 10000}w+ 错题`}>
-                {kpi ? Math.floor(kpi.totalQuestionsAnalyzed / 10000) : Math.floor(DEFAULT_KPI.totalQuestionsAnalyzed / 10000)}w+
-              </div>
-              <div className={s.kpiL}>已分析错题</div>
-            </div>
-            <div className={s.kpiSep} aria-hidden="true" />
-            <div className={s.kpiStat}>
-              <div className={s.kpiN} data-testid="landing-kpi-retention" role="img" aria-label={`7日留存率 ${kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%`}>
-                {kpi ? Math.round(kpi.retention7d * 100) : Math.round(DEFAULT_KPI.retention7d * 100)}%
-              </div>
-              <div className={s.kpiL}>7 日留存</div>
-            </div>
-            <div className={s.kpiSep} aria-hidden="true" />
-            <div className={s.kpiStat}>
-              <div className={s.kpiN} role="img" aria-label="AI 分析准确率 98%">98%</div>
-              <div className={s.kpiL}>AI 准确率</div>
-            </div>
-          </div>
-        </section>
+        {/* B5 KPI banner 已删除 · _archive/14_landing.html 中无此 section · 跟 mockup 1:1 */}
 
         {/* Social proof */}
         <div className={s.social} role="region" aria-label="社区用户数量">
@@ -438,7 +412,7 @@ export const LandingPage: React.FC = () => {
         >
           <IconCamera />
           试一次 · 无需注册
-          <span className={s.ctaTryBadge} aria-hidden="true">FREE</span>
+          <span className={s.ctaTryBadge} aria-hidden="true">免费 · 1 题</span>
         </button>
         <button
           className={s.ctaLogin}
@@ -460,7 +434,7 @@ export const LandingPage: React.FC = () => {
         </p>
       </div>
 
-      <div className={s.homebar} aria-hidden="true" />
+      {/* homebar 已删除 · iOS chrome 装饰 · _archive data-mockup-chrome="iphone-homebar" */}
     </div>
   );
 };

@@ -140,9 +140,11 @@ const ObserverHomePage = () => <PlaceholderPage name="P-OBSERVER 观察者主页
  */
 export const App: React.FC = () => (
   <Routes>
+    {/* P-LANDING 独立挂 · 自带 hero/nav/CTA dock (per _archive/14_landing.html) · 不进 shell · 避免 shell nav + page nav 双重渲染 */}
+    <Route path="/welcome" element={<LandingPage />} />
+
     {/* ── 匿名 Shell（Mood A · 无 TabBar）── */}
     <Route element={<AnonymousShell loginRoute="/auth" />}>
-      <Route path="/welcome" element={<LandingPage />} />
       <Route path="/guest/capture" element={<GuestCapturePage />} />
       <Route path="/s/:shareToken" element={<SharedPage />} />
       <Route path="/welcome-back" element={<WelcomeBackPage />} />

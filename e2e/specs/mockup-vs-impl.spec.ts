@@ -64,12 +64,31 @@ test.describe('@mockup-diff · 实现页 vs 高保真 mockup', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500); // 静态资源稳定
 
-      // F 机制: 注入 CSS 隐藏 mockup chrome 装饰 (iPhone 边框/statusbar/notch/homebar)
-      // 这样 pixel diff 只比 page content
+      // F 机制: 注入 CSS 处理 mockup chrome
+      //   - "iphone-frame" wrapper: 元素本身是 page 容器 + chrome 装饰 (border/notch/shadow)
+      //     → 重置装饰 · 保留 wrapper (否则隐藏后整页空白)
+      //   - "iphone-statusbar/iphone-homebar" 等纯装饰元素 → display:none 整个移除
       const chromeCount = await page.locator('[data-mockup-chrome]').count();
       if (chromeCount > 0) {
-        await page.addStyleTag({ content: '[data-mockup-chrome]{display:none !important;}' });
-        await page.waitForTimeout(200);
+        await page.addStyleTag({ content: `
+          /* page wrapper: 重置 chrome 装饰但保留布局 */
+          [data-mockup-chrome="iphone-frame"]{
+            position: relative !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+          }
+          [data-mockup-chrome="iphone-frame"]::before,
+          [data-mockup-chrome="iphone-frame"]::after { display: none !important; }
+          /* 纯装饰元素: 整体隐藏 */
+          [data-mockup-chrome="iphone-statusbar"],
+          [data-mockup-chrome="iphone-homebar"],
+          [data-mockup-chrome="iphone-notch"]{ display: none !important; }
+        `});
+        await page.waitForTimeout(300);
       } else {
         console.warn(`⚠ ${p.id}: mockup 缺 [data-mockup-chrome] attr · 全屏对比含 chrome (verdict=AMBIGUOUS)`);
       }
