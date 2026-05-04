@@ -67,10 +67,14 @@ public class AnalysisStreamHub {
   }
 
   /**
-   * D-AI-Cancel 入口 · 取消上游订阅 + 完成 sink + 清理资源。
+   * D-AI-Cancel 入口 · 取消上游订阅 + 推 CANCELLED 事件 + 完成 sink + 清理资源。
    *
    * <p>注意："已经付费给供应商的 token 不退" —— LLM 调用已发出的 chunk 仍会被消费，
    * 但 dispose 后不再产生新 chunk · sink complete 后 SSE/WS 客户端收到 {@code complete} 事件。
+   *
+   * <p><b>WT4 · 2026-05-04</b>：在 complete 之前先 emit 一条 CANCELLED chunk · 让 FE
+   * {@code useEventSource.ts} 通过 JSON {@code type:"CANCELLED"} 触发 onCancelled 回调
+   * · 否则 FE 只能通过 fetch 自然结束被动判定 · 体验差。
    *
    * @param taskId 任务 ID
    * @return true 若找到并取消 · false 若 taskId 不存在
@@ -85,10 +89,17 @@ public class AnalysisStreamHub {
     }
     Sinks.Many<AnalysisChunk> sink = sinks.remove(taskId);
     if (sink != null) {
+      // WT4 · FE 期望 type:"CANCELLED" 终结事件
+      sink.tryEmitNext(AnalysisChunk.cancelled());
       sink.tryEmitComplete();
       found = true;
     }
     return found;
+  }
+
+  /** Alias of {@link #dispose(String)} preserved for callers that already use {@code cancel(...)}. */
+  public boolean cancel(String taskId) {
+    return dispose(taskId);
   }
 
   /** 查询 sink 是否存在（fallback polling 端点用 · TDD §8.7）。 */
