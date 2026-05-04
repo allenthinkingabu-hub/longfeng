@@ -68,17 +68,18 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
   }
 
   private long createItem(String requestId, String stem) throws Exception {
+    // common/ObjectMapperConfig enforces snake_case on the wire — bodies must use snake_case keys.
     Map<String, Object> body =
         Map.of(
-            "studentId",
+            "student_id",
             STUDENT_ID,
             "subject",
             "math",
-            "gradeCode",
+            "grade_code",
             "G7",
-            "sourceType",
+            "source_type",
             1,
-            "stemText",
+            "stem_text",
             stem);
     MvcResult res =
         mvc.perform(
@@ -89,7 +90,8 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
             .andExpect(status().isCreated())
             .andReturn();
     var root = om.readTree(res.getResponse().getContentAsString());
-    return root.path("data").path("id").asLong();
+    // common ObjectMapperConfig serialises Long → String to avoid JS precision loss.
+    return Long.parseLong(root.path("data").path("id").asText());
   }
 
   @Test
@@ -118,13 +120,13 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
   @DisplayName("V-S3-04 · optimistic lock — second PATCH with stale version is 409")
   void optimisticLockConflict() throws Exception {
     long id = createItem("rid-lock", "a + b");
-    Map<String, Object> body = Map.of("version", 0, "stemText", "A");
+    Map<String, Object> body = Map.of("version", 0, "stem_text", "A");
     mvc.perform(
             patch("/wrongbook/items/" + id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(body)))
         .andExpect(status().isOk());
-    Map<String, Object> stale = Map.of("version", 0, "stemText", "B");
+    Map<String, Object> stale = Map.of("version", 0, "stem_text", "B");
     mvc.perform(
             patch("/wrongbook/items/" + id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -218,13 +220,13 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
   void imageConfirm() throws Exception {
     long id = createItem("rid-img", "img-test");
     Map<String, Object> body =
-        Map.of("objectKey", "oss://bucket/key1", "role", "ORIGIN", "byteSize", 1024L);
+        Map.of("object_key", "oss://bucket/key1", "role", "ORIGIN", "byte_size", 1024L);
     mvc.perform(
             post("/wrongbook/items/" + id + "/images")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(body)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.objectKey").value("oss://bucket/key1"));
+        .andExpect(jsonPath("$.data.object_key").value("oss://bucket/key1"));
   }
 
   @Test
@@ -246,7 +248,14 @@ class WrongItemIT extends WrongbookIntegrationTestBase {
     long id = createItem("rid-att", "att-test");
     Map<String, Object> body =
         Map.of(
-            "studentId", STUDENT_ID, "answerText", "x=2", "isCorrect", false, "clientSource", "app");
+            "student_id",
+            STUDENT_ID,
+            "answer_text",
+            "x=2",
+            "is_correct",
+            false,
+            "client_source",
+            "app");
     mvc.perform(
             post("/wrongbook/items/" + id + "/attempts")
                 .contentType(MediaType.APPLICATION_JSON)
