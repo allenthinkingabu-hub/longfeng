@@ -209,12 +209,12 @@ export const LandingPage: React.FC = () => {
     >
       {/* B1 StatusBar 已删除 · 浏览器原生提供时间/信号/电池 · _archive 中是 mockup chrome */}
 
-      {/* Hero (Mood A · 380px) */}
+      {/* Hero (Mood A · 380px) · LF-05 fix: role banner per spec §12 a11y landmark */}
       <div
         className={s.hero}
         data-testid="landing-hero"
         data-mood="A"
-        role="img"
+        role="banner"
         aria-label="AI 错题本访客落地页"
       >
         <span className={s.blob} aria-hidden="true" />

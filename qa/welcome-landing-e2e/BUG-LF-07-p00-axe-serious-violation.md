@@ -1,4 +1,4 @@
-**Status:** OPEN
+**Status:** ✅ RESOLVED · Round 3 (2026-05-04 19:15)
 **Severity:** P2 (a11y serious · 屏幕阅读器/keyboard 用户体验)
 **Spec ref:** P00.spec.md §12 a11y · "axe 0 serious"
 **Discovered in:** sc-p00.spec.ts J12 test
@@ -43,3 +43,11 @@ per P00.spec.md §12 a11y + plan §8 红线:
 ## QA Verification Log
 
 ### Round 0 — discovered (2026-05-04 18:42)
+
+### Round 3 — RESOLVED (2026-05-04 19:15)
+
+**根因 (probe 后确认)**：唯一 1 条 critical · `label` 规则 fail · `<input id="consent-checkbox" type="checkbox" data-testid="p00-consent-bar-checkbox">` 缺关联 label。`<label htmlFor>` 已存在但**无文本**（label 内只有 checkbox + visual div）· axe 找不到 accessible name。
+
+**Fix**：`Auth/index.tsx:240-251` input 加 `aria-label="同意《用户协议》和《隐私政策》"` 一行属性 · 不动 DOM 结构。
+
+**Verify**：sc-p00 J12 axe 0 serious ✅

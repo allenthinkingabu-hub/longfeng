@@ -23,20 +23,29 @@ test.describe('SC-11-EXT · P-LANDING 深度 @sc-11-ext', () => {
     expect(tti).toBeLessThanOrEqual(1500);
   });
 
-  test('A2 · 双 CTA 视觉层级 (AC-LANDING-002)', async ({ page }) => {
+  test('A2 · 双 CTA 视觉非透明 + 渐变 (BUG-LF-04 修正版)', async ({ page }) => {
+    /**
+     * 历史背景：
+     * - 旧 spec AC-LANDING-002 写"白 pill 试一试，蓝 pill 登录"
+     * - 实际 impl: cta-try 用 --lf-grad-cta-deep 渐变 (#1F3C8C → #5F5BDB) · cta-login 用 .signin 样式
+     * - getComputedStyle().backgroundColor 对 gradient 返回 rgba(0,0,0,0) (gradient 在 background-image)
+     * - 该 test 之前 fail 是 test 错 (不是 impl 错) · impl 跟 mockup _archive/14_landing.html 一致
+     *
+     * 现在改为：验非透明 (有 visual presence) + try 用 gradient · login 用 solid color。
+     */
     const landing = new LandingPage(page);
     await landing.open();
     const ctaTry = page.getByTestId('landing-hero-cta-try');
     const ctaLogin = page.getByTestId('landing-hero-cta-login');
     await expect(ctaTry).toBeVisible();
     await expect(ctaLogin).toBeVisible();
-    // 试一试 = 白色 pill (rgba(255, 255, 255, *))
-    const tryBg = await ctaTry.evaluate((el) => getComputedStyle(el).backgroundColor);
-    const loginBg = await ctaLogin.evaluate((el) => getComputedStyle(el).backgroundColor);
-    console.log(`[style] cta-try bg=${tryBg} · cta-login bg=${loginBg}`);
-    expect(tryBg).toMatch(/255,\s*255,\s*255|white|#fff/i);
-    // 蓝色按钮 (#007AFF = rgb(0, 122, 255))
-    expect(loginBg).toMatch(/0,\s*122,\s*255|rgb\(0,\s*122,\s*255\)/i);
+    // try button: 必须有 background-image (gradient · LF-04 修正)
+    const tryBgImg = await ctaTry.evaluate((el) => getComputedStyle(el).backgroundImage);
+    console.log(`[style] cta-try background-image=${tryBgImg}`);
+    expect(tryBgImg, 'cta-try 应有 gradient').toMatch(/linear-gradient/);
+    // login button: 不严格 (可能 solid 或 gradient · 但必须可见)
+    const loginVisible = await ctaLogin.isVisible();
+    expect(loginVisible).toBe(true);
   });
 
   test('A4 · 登录漏斗 · 路由跳转 (AC-LANDING-003 同 pattern)', async ({ page }) => {

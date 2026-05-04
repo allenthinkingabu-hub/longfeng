@@ -1,4 +1,4 @@
-**Status:** OPEN
+**Status:** ✅ RESOLVED · Round 3 (2026-05-04 19:15)
 **Severity:** P2 (a11y · 屏幕阅读器无法识别 hero 区)
 **Spec ref:** P-LANDING.spec.md §12 a11y · 第一条 "Landmarks: <header role='banner'> (B2)"
 **Discovered in:** sc-11-extended.spec.ts E2 test
@@ -53,3 +53,9 @@ or 包一个 `<header>` 在外。
 ## QA Verification Log
 
 ### Round 0 — discovered (2026-05-04 18:35)
+
+### Round 3 — RESOLVED (2026-05-04 19:15)
+
+**实施**：`Landing/index.tsx:215` `<div className={s.hero} role="img">` → `<div className={s.hero} role="banner">` · 1 个 attribute 改动。
+
+**Verify**：sc-11-extended E2 console: `[a11y] main=1 · banner=1` ✅

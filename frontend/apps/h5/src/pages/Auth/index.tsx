@@ -247,6 +247,7 @@ export const AuthPage: React.FC = () => {
                 }}
                 role="checkbox"
                 aria-checked={consentAccepted}
+                aria-label="同意《用户协议》和《隐私政策》"
                 data-testid="p00-consent-bar-checkbox"
               />
               <div className={s.checkboxVisual}>
