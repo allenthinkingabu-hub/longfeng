@@ -88,6 +88,42 @@ public class GuestRateLimiter {
     }
   }
 
+  /**
+   * Read-only peek at the remaining fp quota for today (does NOT consume).
+   *
+   * <p>Used by {@code GET /api/guest/quota} to render the "今日还剩 X 次" banner without
+   * burning the user's daily slot. Returns {@link #FP_LIMIT_PER_DAY} if the key has not been
+   * seen yet (Redis MISS), or {@code FP_LIMIT_PER_DAY - currentCount} clamped to [0, limit].
+   *
+   * <p>If Redis is unavailable, degrades to "1 left" (allow-through · matches the existing
+   * {@link #checkAndConsume} fallback philosophy).
+   *
+   * @param deviceFp device fingerprint hash (must be non-blank — caller validates)
+   * @return remaining quota in [0, FP_LIMIT_PER_DAY]
+   */
+  public int peekRemainingFp(String deviceFp) {
+    if (deviceFp == null || deviceFp.isBlank()) {
+      return FP_LIMIT_PER_DAY;
+    }
+    LocalDate today = LocalDate.now(CST);
+    String key = fpKeyPrefix + deviceFp + ":" + today;
+    try {
+      String raw = redis.opsForValue().get(key);
+      int used = raw == null ? 0 : Integer.parseInt(raw);
+      int remaining = FP_LIMIT_PER_DAY - used;
+      if (remaining < 0) {
+        return 0;
+      }
+      return Math.min(remaining, FP_LIMIT_PER_DAY);
+    } catch (NumberFormatException nfe) {
+      log.warn("peekRemainingFp: malformed counter for fp={} val={}", deviceFp, nfe.getMessage());
+      return FP_LIMIT_PER_DAY;
+    } catch (Exception ex) {
+      log.warn("peekRemainingFp: Redis unavailable — assume full quota: {}", ex.getMessage());
+      return FP_LIMIT_PER_DAY;
+    }
+  }
+
   // ── fp dimension ──────────────────────────────────────────────────────────
 
   private boolean tryConsumeFp(String deviceFp, LocalDate day) {
@@ -137,7 +173,7 @@ public class GuestRateLimiter {
    * A proper HMAC-SHA256 would require a stable secret; for rate-limiting purposes,
    * plain SHA-256 is sufficient since we only need bucketing, not cryptographic binding.
    */
-  static String hmacIp(String rawIp) {
+  public static String hmacIp(String rawIp) {
     try {
       MessageDigest md = MessageDigest.getInstance("SHA-256");
       byte[] digest = md.digest(safe(rawIp).getBytes(StandardCharsets.UTF_8));
