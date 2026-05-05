@@ -18,6 +18,25 @@ const GUEST_SESSION_KEY = 'guest_session_token'; // C3 compliant key name
 type Subject = 'math' | 'physics' | 'chemistry' | 'english';
 type CaptureState = 'IDLE' | 'CAPTURED' | 'UPLOADING' | 'ANALYZING' | 'QUOTA_EXHAUSTED' | 'ERROR';
 
+/** ERROR overlay 文案分类 · BUG-LF-20 fix 后增 · 替代 hardcode "请检查相机权限" 误导文案 */
+type ErrorCode = 'PRESIGN' | 'UPLOAD' | 'ANALYZE' | 'NETWORK' | 'CAMERA_PERMISSION';
+
+/** BE presign envelope · 跟 BUG-LF-20 修法对齐 */
+type PresignResp = {
+  code: number;
+  message: string;
+  data?: { url: string; image_url: string; object_key?: string; expires_in_sec?: string; method?: string };
+  trace_id?: string;
+};
+
+const ERROR_COPY: Record<ErrorCode, { title: string; desc: string }> = {
+  PRESIGN: { title: '上传准备失败', desc: '服务器暂时不可用 · 请稍后再试' },
+  UPLOAD: { title: '图片上传失败', desc: '请检查网络后重试 · 或换张更小的图' },
+  ANALYZE: { title: 'AI 分析失败', desc: '服务暂时繁忙 · 请稍后再试' },
+  NETWORK: { title: '网络异常', desc: '请检查 WiFi / 4G 后重试' },
+  CAMERA_PERMISSION: { title: '需要相机权限', desc: '浏览器拒绝了相机访问 · 你也可以选相册图片' },
+};
+
 const SUBJECTS: { value: Subject; label: string }[] = [
   { value: 'math', label: '数学' },
   { value: 'physics', label: '物理' },
@@ -55,7 +74,21 @@ export const GuestCapturePage: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject>('math');
   const [captureState, setCaptureState] = useState<CaptureState>('IDLE');
   const [quotaRemaining, setQuotaRemaining] = useState<number>(1);
+  /** BUG-LF-20 / Phase 1.1 fix · 文案根据 errorCode 切换 · 替代 hardcode "请检查相机权限" */
+  const [lastError, setLastError] = useState<{ code: ErrorCode; detail?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /** Phase 1.2 · ERROR overlay fallback · "选文件" 按钮共用 · 跟 source-file tab 同实现 */
+  const openFileDialog = useCallback(() => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.pdf,.doc,.docx,image/*';
+    inp.onchange = (e) => {
+      const f = (e.target as HTMLInputElement).files?.[0];
+      if (f) void processCapture(f);
+    };
+    inp.click();
+  }, []); // processCapture 是 function declaration · 不进 deps
 
   /* Emit view event once fp ready */
   useEffect(() => {
@@ -120,6 +153,7 @@ export const GuestCapturePage: React.FC = () => {
   async function processCapture(file: File) {
     // B 轨：deviceFp 可能因 localStorage key 不对齐暂为 null，用空串 fallback 继续 MSW mock 流程
     const fp = deviceFp ?? '';
+    setLastError(null); // 清上次错 · 进新 attempt
     try {
       // 1. Presign upload URL
       setCaptureState('UPLOADING');
@@ -129,13 +163,26 @@ export const GuestCapturePage: React.FC = () => {
         body: JSON.stringify({ filename: file.name, content_type: file.type }),
       });
       if (!presignRes.ok) {
+        setLastError({ code: 'PRESIGN', detail: `HTTP ${presignRes.status}` });
         setCaptureState('ERROR');
         return;
       }
-      const { url: uploadUrl, image_url: imageUrl } = await presignRes.json() as { url: string; image_url: string };
+      // BUG-LF-20 fix · BE 返 envelope { code, message, data: { url, image_url } } · 不能直接解构顶层
+      const json = (await presignRes.json()) as PresignResp;
+      if (json.code !== 0 || !json.data?.url || !json.data?.image_url) {
+        setLastError({ code: 'PRESIGN', detail: `BE envelope invalid · code=${json.code}` });
+        setCaptureState('ERROR');
+        return;
+      }
+      const { url: uploadUrl, image_url: imageUrl } = json.data;
 
-      // 2. Upload to presigned URL
-      await fetch(uploadUrl, { method: 'PUT', body: file });
+      // 2. Upload to presigned URL · BUG-LF-20 fix · 加 status check (PUT MinIO 失败时不再静默继续)
+      const putRes = await fetch(uploadUrl, { method: 'PUT', body: file });
+      if (!putRes.ok) {
+        setLastError({ code: 'UPLOAD', detail: `MinIO PUT HTTP ${putRes.status}` });
+        setCaptureState('ERROR');
+        return;
+      }
 
       // 3. Emit analyze start event
       void fetch('/api/analytics/event', {
@@ -172,6 +219,7 @@ export const GuestCapturePage: React.FC = () => {
         return;
       }
       if (!analyzeRes.ok) {
+        setLastError({ code: 'ANALYZE', detail: `HTTP ${analyzeRes.status}` });
         setCaptureState('ERROR');
         return;
       }
@@ -194,7 +242,8 @@ export const GuestCapturePage: React.FC = () => {
 
       // Navigate to analyzing page
       nav(`/analyzing/${data.task_id}`);
-    } catch {
+    } catch (e) {
+      setLastError({ code: 'NETWORK', detail: e instanceof Error ? e.message : 'fetch reject' });
       setCaptureState('ERROR');
     }
   }
@@ -398,7 +447,7 @@ export const GuestCapturePage: React.FC = () => {
       >
         <div className={s.sources} role="group" aria-label="输入来源">
           {/* Source: 相册 */}
-          <button className={s.srcBtn} onClick={handleGallery} aria-label="从相册选择图片">
+          <button className={s.srcBtn} data-testid="source-album" onClick={handleGallery} aria-label="从相册选择图片">
             <div className={s.srcIco}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -409,7 +458,7 @@ export const GuestCapturePage: React.FC = () => {
             <span className={s.srcLbl}>相册</span>
           </button>
           {/* Source: 相机 */}
-          <button className={s.srcBtn} onClick={handleShutter} aria-label="用相机拍题">
+          <button className={s.srcBtn} data-testid="source-camera" onClick={handleShutter} aria-label="用相机拍题">
             <div className={s.srcIco}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
@@ -421,16 +470,8 @@ export const GuestCapturePage: React.FC = () => {
           {/* Source: 文件 */}
           <button
             className={s.srcBtn}
-            onClick={() => {
-              const inp = document.createElement('input');
-              inp.type = 'file';
-              inp.accept = '.pdf,.doc,.docx,image/*';
-              inp.onchange = (e) => {
-                const f = (e.target as HTMLInputElement).files?.[0];
-                if (f) void processCapture(f);
-              };
-              inp.click();
-            }}
+            data-testid="source-file"
+            onClick={openFileDialog}
             aria-label="上传文件"
           >
             <div className={s.srcIco}>
@@ -493,31 +534,49 @@ export const GuestCapturePage: React.FC = () => {
         aria-hidden="true"
       />
 
-      {/* Error overlay */}
+      {/* Error overlay · BUG-LF-20 / Phase 1.2 fix · 文案根据 errorCode 切换 + 加 fallback button (按 P02 spec §9 "选图库代替") */}
       {captureState === 'ERROR' && (
-        <div className={s.permOverlay} role="alertdialog" aria-modal="true" aria-label="出错了">
+        <div className={s.permOverlay} role="alertdialog" aria-modal="true" aria-label="出错了" data-testid="error-overlay" data-error-code={lastError?.code ?? 'UNKNOWN'}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF5A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          <h2 className={s.permOverlayTitle}>请检查相机权限</h2>
-          <p className={s.permOverlayDesc}>允许访问相机后即可拍题</p>
-          <button
-            onClick={() => setCaptureState('IDLE')}
-            style={{
-              marginTop: 20,
-              padding: '12px 24px',
-              borderRadius: 12,
-              background: '#4C9BFF',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: 'pointer',
-            }}
-            aria-label="重试"
-          >
-            重试
-          </button>
+          <h2 className={s.permOverlayTitle} data-testid="error-overlay-title">
+            {ERROR_COPY[lastError?.code ?? 'NETWORK'].title}
+          </h2>
+          <p className={s.permOverlayDesc} data-testid="error-overlay-desc">
+            {ERROR_COPY[lastError?.code ?? 'NETWORK'].desc}
+          </p>
+          {lastError?.detail && (
+            <p className={s.permOverlayDetail} data-testid="error-overlay-detail">
+              {lastError.detail}
+            </p>
+          )}
+          <div className={s.permOverlayActions}>
+            <button
+              className={`${s.permOverlayBtn} ${s.permOverlayBtnPrimary}`}
+              onClick={() => { setCaptureState('IDLE'); setLastError(null); handleGallery(); }}
+              data-testid="error-overlay-fallback-album"
+              aria-label="选相册图片代替"
+            >
+              选相册代替
+            </button>
+            <button
+              className={s.permOverlayBtn}
+              onClick={() => { setCaptureState('IDLE'); setLastError(null); openFileDialog(); }}
+              data-testid="error-overlay-fallback-file"
+              aria-label="选文件代替"
+            >
+              选文件代替
+            </button>
+            <button
+              className={s.permOverlayBtn}
+              onClick={() => { setCaptureState('IDLE'); setLastError(null); }}
+              data-testid="error-overlay-retry"
+              aria-label="重试"
+            >
+              重试
+            </button>
+          </div>
         </div>
       )}
 

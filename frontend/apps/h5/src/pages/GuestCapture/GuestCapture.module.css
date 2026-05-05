@@ -628,6 +628,44 @@
   color: rgba(255, 255, 255, 0.7);
   margin-top: 6px;
 }
+/* Phase 1.2 · 详细错误码 (HTTP 4xx/5xx) · 仅 dev 帮排查 · 字号小灰 */
+.permOverlayDetail {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 8px;
+  font-family: 'SF Mono', Menlo, ui-monospace, monospace;
+}
+/* Phase 1.2 · ERROR overlay 3-button row · 主次按钮区分 · 替代单一 "重试" */
+.permOverlayActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.permOverlayBtn {
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px; /* a11y · iOS HIG hit target */
+  min-width: 96px;
+}
+.permOverlayBtn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+.permOverlayBtnPrimary {
+  background: #4C9BFF;
+  border-color: #4C9BFF;
+  font-weight: 700;
+}
+.permOverlayBtnPrimary:active {
+  background: #3a85e6;
+}
 
 /* Token aliases for token-coverage */
 .tokenRef {

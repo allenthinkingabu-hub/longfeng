@@ -39,4 +39,38 @@ export class GuestCapturePage extends BasePage {
     await banner.getByRole('link', { name: /注册|不限次/ }).click();
     await this.page.waitForLoadState('networkidle');
   }
+
+  /** Phase 2 / BUG-LF-20 · ERROR overlay 出错恢复路径 */
+  async expectErrorOverlay(expectedCode: 'PRESIGN' | 'UPLOAD' | 'ANALYZE' | 'NETWORK' | 'CAMERA_PERMISSION') {
+    const overlay = this.byTestId('error-overlay');
+    await expect(overlay).toBeVisible({ timeout: 10_000 });
+    await expect(overlay).toHaveAttribute('data-error-code', expectedCode);
+  }
+
+  async expectErrorTitle(expectedText: RegExp | string) {
+    await expect(this.byTestId('error-overlay-title')).toContainText(expectedText);
+  }
+
+  async clickErrorFallback(target: 'album' | 'file' | 'retry') {
+    await this.byTestId(`error-overlay-fallback-${target === 'retry' ? 'retry' : target}`).click();
+    // 注: retry 没 -fallback 后缀 · 下行 fallback 修正
+  }
+
+  async clickErrorAlbumFallback() {
+    const fileChooserPromise = this.page.waitForEvent('filechooser', { timeout: 5_000 });
+    await this.byTestId('error-overlay-fallback-album').click();
+    return await fileChooserPromise; // 返回 chooser 给调用方 · 验"选相册代替"真触发 file picker
+  }
+
+  async clickErrorFileFallback() {
+    const fileChooserPromise = this.page.waitForEvent('filechooser', { timeout: 5_000 });
+    await this.byTestId('error-overlay-fallback-file').click();
+    return await fileChooserPromise;
+  }
+
+  async clickErrorRetry() {
+    await this.byTestId('error-overlay-retry').click();
+    // 重试 · overlay 应消失 (state IDLE)
+    await expect(this.byTestId('error-overlay')).toBeHidden({ timeout: 2_000 });
+  }
 }
