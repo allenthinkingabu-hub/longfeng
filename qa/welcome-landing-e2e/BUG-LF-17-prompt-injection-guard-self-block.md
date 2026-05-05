@@ -54,3 +54,17 @@ PGPASSWORD=wb psql -h localhost -p 15432 -U postgres -d longfeng_ai \
   -c "SELECT * FROM ai_usage_log ORDER BY id DESC LIMIT 1"
 # → 1 row · status=9 · tokens=0
 ```
+
+---
+
+## ✅ FIXED · 2026-05-05 · commit 1b32a62
+
+**修法**: PromptInjectionGuardAdvisor 加 `PromptRole` enum (SYSTEM | USER) + 重载 `guard(text, role)` · SYSTEM role 跳查 · USER role 严查不变。
+
+**效果** (真 hybrid 验证):
+- POST /api/guest/analyze 200
+- ai_usage_log id=3 · status=0 SUCCESS · provider=dashscope · tokens_in=290 / tokens_out=7
+- (从修前 status=9 PENDING / tokens=0 升)
+
+**遗留 (新 BUG)**:
+- BUG-LF-19 · QianwenClientConfig 仍 `return new StubChatClient` · 真 DashScope HTTP 集成 TODO · ai_usage_log 数字是 stub 假造 (290/7 固定值)
