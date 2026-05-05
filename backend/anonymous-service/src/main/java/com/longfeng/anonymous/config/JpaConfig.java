@@ -18,7 +18,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.longfeng.anonymous.session",
     "com.longfeng.anonymous.device",
     "com.longfeng.anonymous.ratelimit",
-    "com.longfeng.anonymous.analytics"
+    "com.longfeng.anonymous.analytics",
+    "com.longfeng.anonymous.observer",
+    "com.longfeng.anonymous.share",
+    "com.longfeng.anonymous.landing",
+    "com.longfeng.anonymous.guest"
 })
 @EntityScan(basePackages = "com.longfeng.anonymous.entity")
 @EnableJpaAuditing
