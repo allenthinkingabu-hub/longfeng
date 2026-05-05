@@ -84,7 +84,7 @@ class PresignControllerWebMvcTest {
 
         when(storage.name()).thenReturn("minio");
         when(storage.get(anyString(), anyString(), any())).thenReturn("https://minio/get?sig=xyz");
-        when(fileRepo.save(any(WbFile.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(fileRepo.saveAndFlush(any(WbFile.class))).thenAnswer(inv -> inv.getArgument(0));
         when(lifecycleRepo.save(any(WbFileLifecycle.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 

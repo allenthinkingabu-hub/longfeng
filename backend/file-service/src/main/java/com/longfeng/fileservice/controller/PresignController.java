@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -115,6 +116,7 @@ public class PresignController {
      * @param studentId injected from gateway header X-User-Id
      */
     @PostMapping("/presign")
+    @Transactional
     public ResponseEntity<ApiResult<PresignRespBody>> presign(
             @Valid @RequestBody PresignReqBody req,
             @RequestHeader(value = "X-Tenant-Id", defaultValue = "0") long tenantId,
@@ -150,7 +152,11 @@ public class PresignController {
         // 24h is well within typical OCR + first-render windows.
         String imageUrl = storage.get(bucket, objectKey, Duration.ofHours(24));
 
-        // Persist PENDING metadata record (C7: no bytes stored here, only size number)
+        // Persist PENDING metadata record (C7: no bytes stored here, only size number).
+        // saveAndFlush ensures the wb_file row is INSERT-ed before the lifecycle row
+        // references it via @MapsId. Without flush, Hibernate observed an unsaved
+        // associated entity while resolving the OneToOneType during merge and threw
+        // AssertionFailure: null identifier (com.longfeng.fileservice.entity.WbFileLifecycle).
         WbFile file = new WbFile();
         file.setId(snowflakeId);
         file.setTenantId(tenantId);
@@ -161,11 +167,12 @@ public class PresignController {
         file.setStatus(WbFile.STATUS_PENDING);
         file.setStorageClass("STANDARD");
         file.setCreatedAt(now);
-        fileRepo.save(file);
+        file = fileRepo.saveAndFlush(file);
 
-        // Persist lifecycle record (D-OSS-TTL)
+        // Persist lifecycle record (D-OSS-TTL).
+        // Do NOT setFileId — @MapsId derives the PK from file.id. Setting both was the
+        // double-set conflict that caused the original null-identifier failure.
         WbFileLifecycle lifecycle = new WbFileLifecycle();
-        lifecycle.setFileId(snowflakeId);
         lifecycle.setFile(file);
         lifecycle.setTenantId(tenantId);
         lifecycle.setPromoteAt(now.plusDays(iaAfterDays));

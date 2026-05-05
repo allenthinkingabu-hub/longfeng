@@ -59,8 +59,9 @@ class PresignControllerTest {
         setField(controller, "iaAfterDays", 30L);
         setField(controller, "archiveAfterDays", 180L);
 
-        // Default stub: fileRepo.save returns the file
-        when(fileRepo.save(any(WbFile.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Default stub: fileRepo.saveAndFlush returns the file (controller uses saveAndFlush
+        // so the wb_file row is INSERT-ed before WbFileLifecycle's @MapsId resolves the PK).
+        when(fileRepo.saveAndFlush(any(WbFile.class))).thenAnswer(inv -> inv.getArgument(0));
         when(lifecycleRepo.save(any(WbFileLifecycle.class))).thenAnswer(inv -> inv.getArgument(0));
         when(storage.name()).thenReturn("minio");
         // Default stub: storage.get returns a deterministic GET URL (image_url)
@@ -120,7 +121,7 @@ class PresignControllerTest {
         controller.presign(new PresignReqBody("note.png", "image/png", 500_000L, "wrongbook"), 1L, 42L);
 
         ArgumentCaptor<WbFile> captor = ArgumentCaptor.forClass(WbFile.class);
-        verify(fileRepo).save(captor.capture());
+        verify(fileRepo).saveAndFlush(captor.capture());
         WbFile saved = captor.getValue();
         assertThat(saved.getStatus()).isEqualTo(WbFile.STATUS_PENDING);
         assertThat(saved.getStudentId()).isEqualTo(42L);
@@ -138,7 +139,7 @@ class PresignControllerTest {
         controller.presign(new PresignReqBody("a.jpg", "image/jpeg", null, null), 0L, 7L);
 
         ArgumentCaptor<WbFile> captor = ArgumentCaptor.forClass(WbFile.class);
-        verify(fileRepo).save(captor.capture());
+        verify(fileRepo).saveAndFlush(captor.capture());
         assertThat(captor.getValue().getBytes()).isNull();
     }
 
@@ -173,7 +174,7 @@ class PresignControllerTest {
                 () -> controller.presign(req, 0L, 0L));
 
         verify(storage, never()).presign(any(), any(), any(), any());
-        verify(fileRepo, never()).save(any());
+        verify(fileRepo, never()).saveAndFlush(any());
     }
 
     @Test
