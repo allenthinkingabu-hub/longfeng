@@ -249,10 +249,12 @@ public class QuestionAnalyzerImpl implements QuestionAnalyzer {
           .replace("{userAnswer}", "")
           .replace("{ocrHint}", "");
 
-      // Prompt injection guard
+      // Prompt injection guard · BUG-LF-17 fix · 此 prompt 是 BE 自家 system template
+      // (wrong-question-analysis.st) 拼成 · 无用户输入混入 · 标 SYSTEM role 跳查
+      // 防 BE 自家 "你是 K12..." 字串误命中 \你\s*现在\s*是\ 正则
       String guardedPrompt;
       try {
-        guardedPrompt = injectionGuard.guard(prompt);
+        guardedPrompt = injectionGuard.guard(prompt, PromptInjectionGuardAdvisor.PromptRole.SYSTEM);
       } catch (BusinessException be) {
         LOG.warn("prompt injection detected · taskId={}", taskId);
         throw be;

@@ -60,21 +60,56 @@ public class PromptInjectionGuardAdvisor {
     return "PromptInjectionGuard";
   }
 
+  /** Prompt 角色 · BUG-LF-17 fix · SYSTEM 角色 (BE 自家模板) 信任 · USER 角色 (用户输入) 严查。 */
+  public enum PromptRole {
+    SYSTEM,
+    USER
+  }
+
   /**
-   * 核心拦截 + 包裹定界符。
+   * 老 API · 默认按 USER 严查 · 防破坏现有调用方 (向后兼容)。
    *
-   * @param text 用户输入文本（OCR 提示词 / 用户文字）
-   * @return 包裹后的文本（用户文本被夹在 {@code <<USER_INPUT>>} 标签中）
-   * @throws BusinessException 若命中任一注入模式
+   * @deprecated 推荐用 {@link #guard(String, PromptRole)} 显式声明角色 · 防 BE 自家 SYSTEM
+   *     prompt 误命中 (BUG-LF-17)
    */
+  @Deprecated
   public String guard(String text) {
+    return guard(text, PromptRole.USER);
+  }
+
+  /**
+   * Role-aware prompt 拦截 + 包裹定界符 · BUG-LF-17 fix。
+   *
+   * <p>设计:
+   *
+   * <ul>
+   *   <li>{@link PromptRole#SYSTEM}: BE 自家模板 (e.g. wrong-question-analysis.st) · 信任 · 直接返
+   *       原文 · 不检测 · 不包裹
+   *   <li>{@link PromptRole#USER}: 用户/外部输入 (e.g. OCR 文本 · 学生提问) · 严查 5 类 injection ·
+   *       命中即抛 · 否则包裹 {@code <<USER_INPUT>>}
+   * </ul>
+   *
+   * <p>背景: 旧 {@link #guard(String)} 把 ALL 文本视为用户输入 · BE 自家 system prompt "你是 K12
+   * 错题分析助手..." 命中正则 {@code 你\s*现在\s*是} · 触发 BusinessException · LLM 真 API 永远
+   * 没被调 · 见 {@code qa/welcome-landing-e2e/BUG-LF-17-prompt-injection-guard-self-block.md}。
+   *
+   * @param text 待检测文本
+   * @param role 文本角色 · SYSTEM 跳查 · USER 严查
+   * @return SYSTEM: 原文 · USER: 包裹后的文本
+   * @throws BusinessException 仅 USER role + 命中任一注入模式 时抛
+   */
+  public String guard(String text, PromptRole role) {
     if (text == null || text.isBlank()) {
+      return text;
+    }
+    if (role == PromptRole.SYSTEM) {
+      // BUG-LF-17 fix: BE 自家模板信任 · 不检测 · 不包裹
       return text;
     }
     for (Pattern p : INJECTION_PATTERNS) {
       if (p.matcher(text).find()) {
         LOG.warn(
-            "Prompt injection detected · pattern={} · text(前40字)={}",
+            "Prompt injection detected in USER input · pattern={} · text(前40字)={}",
             p.pattern(),
             text.length() > 40 ? text.substring(0, 40) + "..." : text);
         throw new BusinessException(
