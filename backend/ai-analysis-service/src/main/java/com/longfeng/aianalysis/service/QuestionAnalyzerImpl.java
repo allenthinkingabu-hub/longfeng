@@ -3,6 +3,8 @@ package com.longfeng.aianalysis.service;
 import com.longfeng.aianalysis.entity.AiUsageLog;
 import com.longfeng.aianalysis.llm.AnalysisResult;
 import com.longfeng.aianalysis.llm.ChatClientFactory;
+import com.longfeng.aianalysis.llm.ChatResponse;
+import com.longfeng.aianalysis.llm.Usage;
 import com.longfeng.aianalysis.pii.FaceMaskingService;
 import com.longfeng.aianalysis.pii.ImageNsfwDetector;
 import com.longfeng.aianalysis.pii.PromptInjectionGuardAdvisor;
@@ -122,7 +124,7 @@ public class QuestionAnalyzerImpl implements QuestionAnalyzer {
 
   @Override
   public Mono<AnalysisResult> analyze(String taskId, Resource image, String subject) {
-    return Mono.fromCallable(() -> doAnalyze(taskId, image, subject, null))
+    return Mono.fromCallable(() -> doAnalyze(taskId, image, subject, null).result())
         .subscribeOn(Schedulers.boundedElastic())
         .timeout(SYNC_TIMEOUT)
         .onErrorResume(
@@ -164,13 +166,26 @@ public class QuestionAnalyzerImpl implements QuestionAnalyzer {
                   // Step 3 · 错因诊断（LLM 调用 + ai_usage_log 写库）
                   long t3 = System.currentTimeMillis();
                   sink.tryEmitNext(AnalysisChunk.stepStart(3));
-                  AnalysisResult result = doAnalyze(taskId, image, subject, masked);
+                  ChatResponse chatResponse = doAnalyze(taskId, image, subject, masked);
+                  AnalysisResult result = chatResponse.result();
                   long step3Ms = System.currentTimeMillis() - t3;
+                  // BUG-LF-19 · 用真实 LLM usage · stub 路径 (Usage.zero) 回退 length 估算保兼容
+                  Usage usage = chatResponse.usage();
+                  int tokensIn =
+                      usage.isZero()
+                          ? promptTemplate.length() / STUB_TOKENS_IN_DIV
+                          : usage.promptTokens();
+                  int tokensOut =
+                      usage.isZero()
+                          ? (result.stem() == null
+                              ? 0
+                              : result.stem().length() / STUB_TOKENS_IN_DIV)
+                          : usage.completionTokens();
                   recordUsage(
                       chatClientFactory.activeProvider(),
                       "chat",
-                      promptTemplate.length() / STUB_TOKENS_IN_DIV,
-                      result.stem() == null ? 0 : result.stem().length() / STUB_TOKENS_IN_DIV,
+                      tokensIn,
+                      tokensOut,
                       (int) step3Ms,
                       USAGE_STATUS_SUCCESS);
                   sink.tryEmitNext(AnalysisChunk.stepDone(3, step3Ms));
@@ -222,16 +237,18 @@ public class QuestionAnalyzerImpl implements QuestionAnalyzer {
   /**
    * 核心分析调用 · 同步阻塞 · 调用方包 Mono.fromCallable 切线程。
    *
-   * <p>C-14 stub：调用自定义 {@link ChatClient#analyze(String, String, String)} 返回 placeholder。
-   * Prompt injection guard 先行拦截 · PII 过滤已在上层完成。
+   * <p>BUG-LF-19 fix：返回类型升级到 {@link ChatResponse}（含真实 token usage） · 调用方据此
+   * 写 ai_usage_log 真实 token 数 · stub 路径回退 length 估算保兼容。
+   *
+   * <p>Prompt injection guard 先行拦截 · PII 过滤已在上层完成。
    *
    * @param taskId      任务 ID
    * @param image       原图 Resource（如果 spoolFile 已传 · 这个会被忽略）
    * @param subject     学科 hint
    * @param spoolFile   已经 spool 的 path（可空 · 空则本方法自己 spool）
-   * @return AnalysisResult · 全 fallback 失败返回 placeholder
+   * @return {@link ChatResponse} · 全 fallback 失败返回 placeholder + {@link Usage#zero()}
    */
-  AnalysisResult doAnalyze(String taskId, Resource image, String subject, Path spoolFile) {
+  ChatResponse doAnalyze(String taskId, Resource image, String subject, Path spoolFile) {
     Path tmp = spoolFile;
     boolean ownsFile = false;
     try {
@@ -264,7 +281,8 @@ public class QuestionAnalyzerImpl implements QuestionAnalyzer {
           activeProvider,
           provider -> {
             ChatClient client = chatClientFactory.client(/* tenantId */ null);
-            // C-14 stub: 传文件路径 · stub 实现不读取真实图片
+            // BUG-LF-19: 真 ChatClient (DashscopeChatClient) 读 finalTmp 文件 → base64 → DashScope
+            // stub ChatClient 忽略 finalTmp · 返 placeholder + Usage.zero
             return client.analyze(guardedPrompt, finalTmp.toString(), subject);
           },
           /* sink */ null);

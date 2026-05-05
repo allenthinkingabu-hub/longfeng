@@ -1,6 +1,8 @@
 package com.longfeng.aianalysis.support;
 
 import com.longfeng.aianalysis.llm.AnalysisResult;
+import com.longfeng.aianalysis.llm.ChatResponse;
+import com.longfeng.aianalysis.llm.Usage;
 import com.longfeng.common.dto.AnalysisChunk;
 import com.longfeng.common.exception.BusinessException;
 import com.longfeng.common.exception.ErrCode;
@@ -44,21 +46,24 @@ public class FallbackOrchestrator {
   }
 
   /**
-   * 按 chain 顺序逐个尝试 LLM 调用 · 全部失败时降级到手填（返回 placeholder result）。
+   * 按 chain 顺序逐个尝试 LLM 调用 · 全部失败时降级到手填（返回 placeholder result + zero usage）。
+   *
+   * <p>BUG-LF-19 fix：闭包 invoker 返回类型从 {@code AnalysisResult} 升级到 {@link ChatResponse}
+   * （含真实 token usage） · 让上游 {@code QuestionAnalyzerImpl.recordUsage()} 写真 tokens。
    *
    * @param activeProvider 当前激活 provider（用于跳过 chain 中重复项 / 日志）
-   * @param invoker        provider 名 → AnalysisResult 闭包（具体 LLM 调用 + entity 解析逻辑）
+   * @param invoker        provider 名 → {@link ChatResponse} 闭包（具体 LLM 调用 + entity 解析 + usage）
    * @param sink           SSE / WS 出口 sink · 可空（同步调用场景）
-   * @return 成功的 AnalysisResult · 全失败返回手填 placeholder
+   * @return 成功的 {@link ChatResponse} · 全失败返回手填 placeholder + {@link Usage#zero()}
    */
-  public AnalysisResult tryWithFallback(
+  public ChatResponse tryWithFallback(
       String activeProvider,
-      Function<String, AnalysisResult> invoker,
+      Function<String, ChatResponse> invoker,
       Sinks.Many<AnalysisChunk> sink) {
     List<Throwable> errors = new ArrayList<>();
     for (String provider : fallbackChain) {
       try {
-        AnalysisResult result = invoker.apply(provider);
+        ChatResponse response = invoker.apply(provider);
         if (!provider.equals(activeProvider)) {
           // fallback 命中 · 通知前端
           if (sink != null) {
@@ -66,7 +71,7 @@ public class FallbackOrchestrator {
           }
           LOG.warn("fallback hit · activeProvider={} → fallbackProvider={}", activeProvider, provider);
         }
-        return result;
+        return response;
       } catch (Exception ex) {
         LOG.warn(
             "provider {} failed · trying next in chain · cause={}",
@@ -83,7 +88,7 @@ public class FallbackOrchestrator {
     if (sink != null) {
       sink.tryEmitNext(AnalysisChunk.fail("ai.fallback.manual"));
     }
-    return manualFallbackPlaceholder();
+    return new ChatResponse(manualFallbackPlaceholder(), Usage.zero());
   }
 
   /**

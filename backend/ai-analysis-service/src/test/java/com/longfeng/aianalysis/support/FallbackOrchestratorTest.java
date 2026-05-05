@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.longfeng.aianalysis.llm.AnalysisResult;
+import com.longfeng.aianalysis.llm.ChatResponse;
+import com.longfeng.aianalysis.llm.Usage;
 import com.longfeng.common.dto.AnalysisChunk;
 import com.longfeng.common.exception.BusinessException;
 import com.longfeng.common.exception.ErrCode;
@@ -23,11 +25,14 @@ class FallbackOrchestratorTest {
     FallbackOrchestrator orch = new FallbackOrchestrator("qianwen,openai,zhipu");
     AnalysisResult dummy =
         new AnalysisResult("stem", "MATH", List.of(), "OTHER", "ok", List.of(), 1, List.of());
+    ChatResponse dummyResponse = new ChatResponse(dummy, new Usage(290, 80));
 
-    AnalysisResult got =
-        orch.tryWithFallback("qianwen", provider -> dummy, /* sink */ null);
+    ChatResponse got =
+        orch.tryWithFallback("qianwen", provider -> dummyResponse, /* sink */ null);
 
-    assertThat(got).isSameAs(dummy);
+    assertThat(got).isSameAs(dummyResponse);
+    assertThat(got.usage().promptTokens()).isEqualTo(290);
+    assertThat(got.usage().completionTokens()).isEqualTo(80);
   }
 
   @Test
@@ -35,9 +40,10 @@ class FallbackOrchestratorTest {
     FallbackOrchestrator orch = new FallbackOrchestrator("qianwen,openai,zhipu");
     AnalysisResult okResult =
         new AnalysisResult("ok", "MATH", List.of(), "OTHER", "ok", List.of(), 1, List.of());
+    ChatResponse okResponse = new ChatResponse(okResult, new Usage(100, 50));
 
     AtomicInteger callCount = new AtomicInteger(0);
-    AnalysisResult got =
+    ChatResponse got =
         orch.tryWithFallback(
             "qianwen",
             provider -> {
@@ -45,11 +51,11 @@ class FallbackOrchestratorTest {
               if (c == 1) {
                 throw new RuntimeException("primary down");
               }
-              return okResult;
+              return okResponse;
             },
             null);
 
-    assertThat(got).isSameAs(okResult);
+    assertThat(got).isSameAs(okResponse);
     assertThat(callCount.get()).isEqualTo(2);
   }
 
@@ -57,7 +63,7 @@ class FallbackOrchestratorTest {
   void allProvidersFail_returnsManualPlaceholder() {
     FallbackOrchestrator orch = new FallbackOrchestrator("qianwen,openai,zhipu");
 
-    AnalysisResult got =
+    ChatResponse got =
         orch.tryWithFallback(
             "qianwen",
             provider -> {
@@ -65,9 +71,10 @@ class FallbackOrchestratorTest {
             },
             null);
 
-    // 手填 placeholder · errorReason 包含"AI 暂不可用"
-    assertThat(got.errorReason()).contains("AI 暂不可用");
-    assertThat(got.errorType()).isEqualTo("OTHER");
+    // 手填 placeholder · errorReason 包含"AI 暂不可用" · usage 为 zero
+    assertThat(got.result().errorReason()).contains("AI 暂不可用");
+    assertThat(got.result().errorType()).isEqualTo("OTHER");
+    assertThat(got.usage().isZero()).isTrue();
   }
 
   @Test
@@ -95,6 +102,7 @@ class FallbackOrchestratorTest {
     FallbackOrchestrator orch = new FallbackOrchestrator("qianwen,openai");
     AnalysisResult ok =
         new AnalysisResult("ok", "MATH", List.of(), "OTHER", "ok", List.of(), 1, List.of());
+    ChatResponse okResponse = new ChatResponse(ok, new Usage(50, 20));
     Sinks.Many<AnalysisChunk> sink = Sinks.many().multicast().onBackpressureBuffer();
     List<AnalysisChunk> received = new ArrayList<>();
     sink.asFlux().subscribe(received::add);
@@ -105,7 +113,7 @@ class FallbackOrchestratorTest {
           if ("qianwen".equals(provider)) {
             throw new RuntimeException("primary down");
           }
-          return ok;
+          return okResponse;
         },
         sink);
 

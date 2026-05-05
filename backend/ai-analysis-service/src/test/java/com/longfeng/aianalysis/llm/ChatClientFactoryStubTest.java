@@ -28,12 +28,28 @@ class ChatClientFactoryStubTest {
   @Test
   void qianwenClientConfig_returnsStubWithCorrectProvider() {
     QianwenClientConfig config = new QianwenClientConfig();
+    // BUG-LF-19 · placeholder apiKey 仍走 stub 兜底路径 · ObjectMapper 占位即可
     ChatClient client = config.qianwenChatClient(
         "sk-qwen-test",
         "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "qwen-vl-max");
+        "qwen-vl-max",
+        new com.fasterxml.jackson.databind.ObjectMapper());
 
     assertThat(client).isInstanceOf(StubChatClient.class);
+    assertThat(client.providerName()).isEqualTo("qianwen");
+  }
+
+  @Test
+  void qianwenClientConfig_realApiKey_returnsDashscopeChatClient() {
+    QianwenClientConfig config = new QianwenClientConfig();
+    // BUG-LF-19 · 非 placeholder apiKey 应实例化 DashscopeChatClient (真 HTTP impl)
+    ChatClient client = config.qianwenChatClient(
+        "sk-real-prod-key",
+        "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "qwen-vl-max",
+        new com.fasterxml.jackson.databind.ObjectMapper());
+
+    assertThat(client).isInstanceOf(DashscopeChatClient.class);
     assertThat(client.providerName()).isEqualTo("qianwen");
   }
 
@@ -63,13 +79,15 @@ class ChatClientFactoryStubTest {
 
   @Test
   void allProviders_analyzeReturnsNonNullResult() {
-    // 验证 stub analyze 返回有效 AnalysisResult
+    // 验证 stub analyze 返回有效 ChatResponse · usage=zero (stub 路径)
     ChatClient qianwen = new StubChatClient("qianwen");
-    var result = qianwen.analyze("test prompt", "/tmp/test.jpg", "MATH");
+    var response = qianwen.analyze("test prompt", "/tmp/test.jpg", "MATH");
 
-    assertThat(result).isNotNull();
-    assertThat(result.subject()).isEqualTo("MATH");
-    assertThat(result.errorType()).isNotBlank();
-    assertThat(result.solutionSteps()).isNotEmpty();
+    assertThat(response).isNotNull();
+    assertThat(response.result()).isNotNull();
+    assertThat(response.result().subject()).isEqualTo("MATH");
+    assertThat(response.result().errorType()).isNotBlank();
+    assertThat(response.result().solutionSteps()).isNotEmpty();
+    assertThat(response.usage().isZero()).as("stub usage must be zero · 触发上游 length 估算回退").isTrue();
   }
 }
