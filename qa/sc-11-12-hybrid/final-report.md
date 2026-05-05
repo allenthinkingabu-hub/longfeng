@@ -12,7 +12,7 @@
 | Suite | L1 静态对账 | L2 mock-b UI baseline | L3 hybrid 真链路 | L4 落地穿透 | 真实保证 |
 |---|---|---|---|---|---|
 | **SC-11 Landing** | ✅ 9/9 endpoint 对账 (BE controllers 真存在) | ⚠️ 跳过 (per user 严意 · L3 才是签字依据) | ✅ Playwright hybrid 真 BE PASS · Landing 真渲染 BE 数据 | ✅ guest_session 6 row + analytics_event 9 row + landing samples 3 hard-code | **真返** |
-| **SC-12 Guest 拍题** | ✅ 9/9 endpoint 对账 | ⚠️ 跳过 | ⚠️ Playwright FE PUT MinIO CORS-blocked (BUG-LF-18) · 但 BE 链路 curl 已证 200 (presign + analyze + analytics) | ✅ wb_file 11 row + wb_file_lifecycle + guest_session row 真 + ai_usage_log 真 dashscope (token=0 因 BUG-LF-17) | **BE 真 · FE PUT 待修** |
+| **SC-12 Guest 拍题** | ✅ 9/9 endpoint 对账 | ⚠️ 跳过 | ⚠️ Playwright FE PUT MinIO CORS-blocked (BUG-LF-18) · 但 BE 链路 curl 已证 200 (presign + analyze + analytics) | ✅ wb_file 11 row + wb_file_lifecycle + guest_session row 真 + **ai_usage_log 真 dashscope tokens=774/337 latency=9.2s** (LF-17 + LF-19 fix 后) | **BE 真 + LLM 真 · FE PUT 待修** |
 | **SC-01 P04 Result** | ✅ /api/wb/questions/:qid 真接 BE | ⚠️ 跳过 | ⚠️ 未跑 e2e (无 auth-service 完整 user fixture · BE 已证 endpoint 200/404 OK) | ⚠️ 无 wb_question 测数据 (需 wrongbook seed) | **endpoint 真 · 数据待 seed** |
 
 **汇总**: SC-11 全栈 ✅ · SC-12 BE 链路 ✅ + FE 待修 · SC-01 endpoint ✅ + 测试数据待 seed。
@@ -59,7 +59,9 @@
 
 详见 `qa/sc-11-12-hybrid/supervisor-verdict.md`:
 
-**OVERALL: PARTIAL-PASS** · 6 ✅ · 2 ⚠️ (BUG-LF-17 BE PromptInjectionGuard self-block · BUG-LF-18 FE PUT MinIO CORS · 都 file)
+**OVERALL: PASS** (LF-19 fix 后 · 2026-05-05 15:01) · 7 ✅ · 1 ⚠️ (BUG-LF-18 FE PUT MinIO Webkit CORS 仍 OPEN · 不阻塞 BE 链路 + 真 LLM 已验)
+
+**收口三连**: BUG-LF-09 (BE endpoint 缺 · `6356b5f`) → BUG-LF-17 (Guard self-block · `1b32a62`) → BUG-LF-19 (Qianwen stub · `a954f71`) · 三层 stub 链全闭环 · 真 DashScope qwen-vl-max 真消费证毕 (tokens=774/337 · latency=9.2s)。
 
 ---
 

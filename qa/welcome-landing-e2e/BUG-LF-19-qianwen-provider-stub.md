@@ -2,7 +2,37 @@
 
 **Severity**: P1 (影响真 LLM 消费 · 跟 BUG-LF-17 是孪生 bug)
 **Discovered**: 2026-05-05 · BUG-LF-17 fix verify 时连带发现
-**Status**: OPEN
+**Status**: ✅ FIXED · 2026-05-05 commit `a954f71` · hybrid 真 DashScope 消费证毕
+
+## ✅ Fix 落地证据 (2026-05-05 15:01)
+
+**commit**: `a954f71` (zhe.wang) — `fix(s7/ai-analysis/lf-19): real DashScope HTTP integration · replace StubChatClient`
+
+**实施**: 选项 B (okhttp 直调 OpenAI 兼容端点)
+- 新文件 `Usage.java` `ChatResponse.java` `DashscopeChatClient.java` (327 行真 HTTP impl)
+- `ChatClient.analyze()` 返回类型升级 `AnalysisResult` → `ChatResponse(result, usage)`
+- `QianwenClientConfig` 据 apiKey 切 stub/real (key 是 `sk-qwen-test` placeholder 时仍 stub · 防 IT 跑挂)
+- `QuestionAnalyzerImpl.recordUsage()` 用真 `usage.promptTokens()`/`completionTokens()` · usage zero 时回退老估算 (stub 兜底)
+- `FallbackOrchestrator.tryWithFallback()` 签名同步升级
+- 测试同步: `StubChatModel` `ChatClientFactoryStubTest` `FallbackOrchestratorTest`
+
+**真测铁证**:
+```
+ai_usage_log row 5 (新 · 真 DashScope):
+  provider=dashscope · model=qianwen-default
+  tokens_in=774 · tokens_out=337 (真 DashScope billing)
+  status=0 SUCCESS · latency_ms=9262 (真 9.2s 网络调用)
+
+ai-analysis-service log:
+  INFO QianwenClientConfig: DashscopeChatClient activated · baseUrl=https://dashscope.aliyuncs.com/compatible-mode/v1 model=qwen-vl-max
+  INFO DashscopeChatClient: DashScope analyze · provider=qianwen model=qwen-vl-max latencyMs=9235 promptTokens=774 completionTokens=337
+```
+
+**对比修前**:
+- 修前 row 1-3: tokens_out ≤ 7 (stub 估算 length/4)
+- 修后 row 5: tokens_out=337 (真 DashScope 计费)
+- 修前 log: `[stub] ChatClient.analyze called`
+- 修后 log: `DashScope analyze · promptTokens=774 ...`
 
 ## 现象
 

@@ -16,10 +16,10 @@
 | 4 | 7 核心 endpoint 真返 | ≥6/7 非 5xx | 7/7 全真返 (5×200 + 1×204 + 1×404 not-found) | ✅ |
 | 5 | PG 3 表新 row | 各 ≥1 | guest_session=6 · analytics_event=9 · wb_file=11 | ✅ |
 | 6 | MinIO 真 image 上传 | ≥1 文件 | 1 文件 (qa-test/sample.jpg · 163B) — FE PUT 未测通 (CORS) · 仅手动 mc cp 一份 | ⚠️ |
-| 7 | ai_usage_log 真 LLM token | provider 真 + tokens_out > 0 | 2 row · provider=**dashscope** (真) · model=qianwen-default · tokens=0 · status=9 (PENDING) | ⚠️ |
-| 8 | zhe.wang 7+ commits | ≥7 个真 zhe.wang author | **42** zhe.wang commits 自 2026-05-04 (含 5 BE WT merge + WT6/WT7 + bridge + qa infra) | ✅ |
+| 7 | ai_usage_log 真 LLM token | provider 真 + tokens_out > 0 | row 5 · provider=**dashscope** · model=qianwen-default · tokens_in=**774** · tokens_out=**337** · status=0 · latency=9262ms (LF-19 fix · commit a954f71) | ✅ |
+| 8 | zhe.wang 7+ commits | ≥7 个真 zhe.wang author | **44** zhe.wang commits 自 2026-05-04 (含 5 BE WT merge + WT6/WT7 + bridge + qa infra + LF-17 + LF-19) | ✅ |
 
-**汇总: 6 ✅ · 2 ⚠️ · 0 ❌**
+**汇总: 7 ✅ · 1 ⚠️ · 0 ❌** (项 6 MinIO PUT FE-Webkit-CORS · BUG-LF-18 仍 OPEN · 不阻塞 BE 链路)
 
 ---
 
@@ -66,14 +66,20 @@ analytics_event | 9   ← 9 个漏斗事件落库
 wb_file         | 11  ← 11 个 presign 创建文件元数据
 ```
 
-### 项 7 · ai_usage_log + BUG-LF-17 引用
+### 项 7 · ai_usage_log 真 LLM 消费 (✅ LF-17 + LF-19 双 fix 后 · 2026-05-05 15:01 重测)
 ```
- id | provider  |      model      | tokens_in | tokens_out | status
-----+-----------+-----------------+-----------+------------+--------
-  2 | dashscope | qianwen-default |         0 |          0 |      9
-  1 | dashscope | qianwen-default |         0 |          0 |      9
+ id | provider  |      model      | tokens_in | tokens_out | status | latency_ms
+----+-----------+-----------------+-----------+------------+--------+------------
+  5 | dashscope | qianwen-default |       774 |        337 |      0 |       9262   ← LF-19 fix · 真 DashScope billing
+  4 | dashscope | qianwen-default |       290 |          0 |      0 |       5573   ← LF-19 fix 中间态 · 1×1 像图被拒 → fallback 兜底
+  3 | dashscope | qianwen-default |       290 |          7 |      0 |          1   ← LF-17 fix 后 · stub 估算 length/4
+  2 | dashscope | qianwen-default |         0 |          0 |      9 |          2   ← LF-17 修前 · guard 拦下
+  1 | dashscope | qianwen-default |         0 |          0 |      9 |         10   ← LF-17 修前
 ```
-Root cause: `qa/welcome-landing-e2e/BUG-LF-17-prompt-injection-guard-self-block.md` (BE PromptInjectionGuard 误把自己的 system prompt 拒了 · 在调真 LLM 之前断 · provider 真 (dashscope) · 但 token 0)。
+ai-analysis-service log: `DashScope analyze · provider=qianwen model=qwen-vl-max latencyMs=9235 promptTokens=774 completionTokens=337` · 真 DashScope HTTP API · 阿里云 request_id 见错误 row。
+
+LF-17 (PromptInjectionGuard self-block) → fixed commit `1b32a62`
+LF-19 (QianwenClientConfig stub) → fixed commit `a954f71`
 
 ### 项 8 · 42 zhe.wang commits (last 15)
 ```
@@ -95,9 +101,11 @@ d2164dd merge: WT5 gateway routes realign · /api/{module}/** 跟 FE 对齐
 
 ---
 
-## OVERALL: **PARTIAL-PASS**
+## OVERALL: **PASS** (LF-19 fix 后 · 2026-05-05 15:01)
 
-**6/8 ✅ 完整通过 · 2/8 ⚠️ 让步 (root cause 已 file BUG)**
+**7/8 ✅ 完整通过 · 1/8 ⚠️ 让步 (BUG-LF-18 FE PUT MinIO Webkit CORS · 不阻塞 BE 链路)**
+
+**Round 6 收口**: BUG-LF-09 (BE endpoint 缺) → BUG-LF-17 (Guard self-block) → BUG-LF-19 (Qianwen stub) 三层 stub 链全闭环 · 真 DashScope LLM 真消费证毕 (qwen-vl-max · 774/337 token · 9.2s)。
 
 ### 让步条款 (透明声明 · 无隐藏)
 
