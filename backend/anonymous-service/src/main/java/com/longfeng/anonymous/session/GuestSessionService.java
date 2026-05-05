@@ -4,6 +4,9 @@ import com.longfeng.anonymous.entity.GuestSession;
 import com.longfeng.anonymous.support.SnowflakeIdGenerator;
 import com.longfeng.common.exception.BusinessException;
 import com.longfeng.common.exception.ErrCode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -56,6 +59,8 @@ public class GuestSessionService {
     GuestSession session = new GuestSession();
     session.setId(idGen.nextId());
     session.setDeviceFp(deviceFp);
+    // V1.0.030 legacy compat: device_fp_hash CHAR(64) NOT NULL · CHECK char_length=64
+    session.setDeviceFpHash(sha256Hex(deviceFp));
     session.setIpHash(ipHash);
     session.setUa(ua != null && ua.length() > 256 ? ua.substring(0, 256) : ua);
     session.setEntrySource(entrySource);
@@ -65,6 +70,24 @@ public class GuestSessionService {
     GuestSession saved = repo.save(session);
     log.info("guest-session created id={} fp={}", saved.getId(), deviceFp);
     return saved;
+  }
+
+  /**
+   * SHA-256 hex digest · 64 chars · used to populate the legacy V1.0.030 {@code device_fp_hash}
+   * column whose CHECK constraint requires {@code char_length=64}.
+   */
+  static String sha256Hex(String input) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] digest = md.digest((input == null ? "" : input).getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder(64);
+      for (byte b : digest) {
+        sb.append(String.format("%02x", b));
+      }
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 unavailable", e);
+    }
   }
 
   // ── Query ────────────────────────────────────────────────────────────────
